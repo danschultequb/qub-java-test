@@ -21,11 +21,9 @@ public class FakeJavaRunner extends JavaRunner
         {
             String command = "java.exe";
 
-            final File jacocoAgentJarFile = getJacocoAgentJarFile();
-            if (jacocoAgentJarFile != null)
+            if (getJacocoFolder() != null)
             {
-                final File coverageExecFile = getCoverageExecFile();
-                command += " -javaagent:" + getJacocoAgentJarFile().toString() + "=destfile=" + coverageExecFile.toString();
+                command += " -javaagent:" + getJacocoAgentJarFile().toString() + "=destfile=" + getCoverageExecFile().toString();
             }
 
             command += " -classpath " + getClassPath();
@@ -42,6 +40,9 @@ public class FakeJavaRunner extends JavaRunner
 
             QubTest.verbose(console, command);
         }
+
+        console.writeLine().await();
+
         return Result.success(exitCode);
     }
 }

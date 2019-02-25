@@ -95,11 +95,7 @@ public class QubTest
                     final String pattern = getPattern(console);
                     final boolean coverage = getCoverage(console);
                     final Folder outputFolder = folderToTest.getFolder("outputs").await();
-
-                    final Iterable<String> fullClassNames = outputFolder.getFilesRecursively().await()
-                        .where((File file) -> Comparer.equal(file.getFileExtension(), ".class"))
-                        .map((File classFile) -> classFile.relativeTo(outputFolder).withoutFileExtension().toString().replace('/', '.').replace('\\', '.'));
-                    verbose(console, "Found " + fullClassNames.getCount() + " class files.");
+                    final Folder sourceFolder = folderToTest.getFolder("sources").await();
 
                     final String qubHome = console.getEnvironmentVariable("QUB_HOME");
                     final Folder qubFolder = console.getFileSystem().getFolder(qubHome).await();
@@ -123,22 +119,20 @@ public class QubTest
                         }));
                     }
 
-                    File jacocoAgentJarFile = null;
+                    Folder jacocoFolder = null;
                     if (coverage)
                     {
-                        final Folder jacocoFolder = qubFolder.getFolder("jacoco").await();
-                        final Folder jacocoCLIFolder = jacocoFolder.getFolder("jacococli").await();
-                        final Folder jacocoVersionFolder = jacocoCLIFolder.getFolders().await()
+                        jacocoFolder = qubFolder.getFolder("jacoco/jacococli").await()
+                            .getFolders().await()
                             .maximum((Folder lhs, Folder rhs) -> VersionNumber.parse(lhs.getName()).compareTo(VersionNumber.parse(rhs.getName())));
-                        jacocoAgentJarFile = jacocoVersionFolder.getFile("jacocoagent.jar").await();
                     }
 
                     final JavaRunner javaTestRunner = getJavaRunner();
                     javaTestRunner.setClassPaths(classPaths);
                     javaTestRunner.setPattern(pattern);
                     javaTestRunner.setOutputFolder(outputFolder);
-                    javaTestRunner.setFullClassNames(fullClassNames);
-                    javaTestRunner.setJacocoAgentJarFile(jacocoAgentJarFile);
+                    javaTestRunner.setJacocoFolder(jacocoFolder);
+                    javaTestRunner.setSourceFolder(sourceFolder);
                     javaTestRunner.run(console).await();
                 }
             }

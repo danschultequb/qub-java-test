@@ -171,7 +171,8 @@ public class QubTestTests
                         Iterable.create(
                             "Compiling...",
                             "Creating jar file...",
-                            "Running tests..."),
+                            "Running tests...",
+                            ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });
 
@@ -203,8 +204,115 @@ public class QubTestTests
                             "VERBOSE: Compilation finished.",
                             "Creating jar file...",
                             "Running tests...",
-                            "VERBOSE: Found 1 class files.",
-                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner A"),
+                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner A",
+                            ""),
+                        Strings.getLines(output.getText().await()).skipLast());
+                });
+
+                runner.test("with one source file and coverage", (Test test) ->
+                {
+                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final Folder currentFolder = getInMemoryCurrentFolder(test);
+                    currentFolder.getFile("project.json").await()
+                        .setContentsAsString(JSON.object(projectJson ->
+                        {
+                            projectJson.objectProperty("java");
+                        }).toString()).await();
+                    currentFolder.getFile("sources/A.java").await()
+                        .setContentsAsString("A.java source").await();
+
+                    try (final Console console = createConsole(output, currentFolder, "-coverage"))
+                    {
+                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
+                        console.setEnvironmentVariables(Map.<String,String>create()
+                            .set("QUB_HOME", "/qub/"));
+                        main(console);
+                        test.assertEqual(0, console.getExitCode());
+                    }
+
+                    test.assertEqual(
+                        Iterable.create(
+                            "Compiling...",
+                            "Creating jar file...",
+                            "Running tests...",
+                            ""),
+                        Strings.getLines(output.getText().await()).skipLast());
+                });
+
+                runner.test("with one source file, verbose, and coverage", (Test test) ->
+                {
+                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final Folder currentFolder = getInMemoryCurrentFolder(test);
+                    currentFolder.getFile("project.json").await()
+                        .setContentsAsString(JSON.object(projectJson ->
+                        {
+                            projectJson.objectProperty("java");
+                        }).toString()).await();
+                    currentFolder.getFile("sources/A.java").await()
+                        .setContentsAsString("A.java source").await();
+
+                    try (final Console console = createConsole(output, currentFolder, "-verbose", "-coverage"))
+                    {
+                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
+                        console.setEnvironmentVariables(Map.<String,String>create()
+                            .set("QUB_HOME", "/qub/"));
+                        main(console);
+                        test.assertEqual(0, console.getExitCode());
+                    }
+
+                    test.assertEqual(
+                        Iterable.create(
+                            "Compiling...",
+                            "VERBOSE: Parsing project.json...",
+                            "VERBOSE: Detecting java source files to compile...",
+                            "VERBOSE: Compiling all source files.",
+                            "VERBOSE: Starting compilation...",
+                            "VERBOSE: Compilation finished.",
+                            "Creating jar file...",
+                            "Running tests...",
+                            "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner A",
+                            ""),
+                        Strings.getLines(output.getText().await()).skipLast());
+                });
+
+                runner.test("with one source file, verbose, coverage, and multiple jacoco installations", (Test test) ->
+                {
+                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final Folder currentFolder = getInMemoryCurrentFolder(test);
+                    currentFolder.getFile("project.json").await()
+                        .setContentsAsString(JSON.object(projectJson ->
+                        {
+                            projectJson.objectProperty("java");
+                        }).toString()).await();
+                    currentFolder.getFile("sources/A.java").await()
+                        .setContentsAsString("A.java source").await();
+
+                    try (final Console console = createConsole(output, currentFolder, "-verbose", "-coverage"))
+                    {
+                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        qubFolder.createFile("jacoco/jacococli/0.5.0/jacocoagent.jar").await();
+                        qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
+                        qubFolder.createFile("jacoco/jacococli/0.9.2/jacocoagent.jar").await();
+                        console.setEnvironmentVariables(Map.<String,String>create()
+                            .set("QUB_HOME", "/qub/"));
+                        main(console);
+                        test.assertEqual(0, console.getExitCode());
+                    }
+
+                    test.assertEqual(
+                        Iterable.create(
+                            "Compiling...",
+                            "VERBOSE: Parsing project.json...",
+                            "VERBOSE: Detecting java source files to compile...",
+                            "VERBOSE: Compiling all source files.",
+                            "VERBOSE: Starting compilation...",
+                            "VERBOSE: Compilation finished.",
+                            "Creating jar file...",
+                            "Running tests...",
+                            "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner A",
+                            ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });
             });

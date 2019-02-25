@@ -5,8 +5,8 @@ public abstract class JavaRunner
     private Iterable<String> classPaths;
     private String pattern;
     private Folder outputFolder;
-    private Iterable<String> fullClassNames;
-    private File jacocoAgentJarFile;
+    private Folder sourceFolder;
+    private Folder jacocoFolder;
 
     public void setClassPaths(Iterable<String> classPaths)
     {
@@ -55,30 +55,56 @@ public abstract class JavaRunner
         return result;
     }
 
-    public void setFullClassNames(Iterable<String> fullClassNames)
+    public void setSourceFolder(Folder sourceFolder)
     {
-        PreCondition.assertNotNull(fullClassNames, "fullClassNames");
+        PreCondition.assertNotNull(sourceFolder, "sourceFolder");
 
-        this.fullClassNames = fullClassNames;
+        this.sourceFolder = sourceFolder;
     }
 
-    public Iterable<String> getFullClassNames()
+    public Folder getSourceFolder()
     {
-        final Iterable<String> result = fullClassNames;
+        final Folder result = sourceFolder;
 
         PostCondition.assertNotNull(result, "result");
 
         return result;
     }
 
-    public void setJacocoAgentJarFile(File jacocoAgentJarFile)
+    public Iterable<File> getClassFiles()
     {
-        this.jacocoAgentJarFile = jacocoAgentJarFile;
+        return getOutputFolder().getFilesRecursively().await()
+            .where((File file) -> Comparer.equal(file.getFileExtension(), ".class"));
+    }
+
+    public Iterable<String> getFullClassNames()
+    {
+        final Folder outputFolder = getOutputFolder();
+        final Iterable<String> result = getClassFiles()
+            .map((File classFile) -> classFile.relativeTo(outputFolder)
+                .withoutFileExtension().toString()
+                .replace('/', '.').replace('\\', '.'));
+
+        PostCondition.assertNotNull(result, "result");
+
+        return result;
+    }
+
+    public void setJacocoFolder(Folder jacocoFolder)
+    {
+        this.jacocoFolder = jacocoFolder;
+    }
+
+    public Folder getJacocoFolder()
+    {
+        return jacocoFolder;
     }
 
     public File getJacocoAgentJarFile()
     {
-        return jacocoAgentJarFile;
+        PreCondition.assertNotNull(getJacocoFolder(), "getJacocoFolder()");
+
+        return getJacocoFolder().getFile("jacocoagent.jar").await();
     }
 
     public File getCoverageExecFile()
