@@ -4,6 +4,7 @@ public class QubTest
 {
     private Build build;
     private JavaRunner javaRunner;
+    private Boolean showTotalDuration;
 
     /**
      * Set the Build object that will be used to build the source code.
@@ -61,6 +62,20 @@ public class QubTest
         return result;
     }
 
+    public void setShowTotalDuration(boolean showTotalDuration)
+    {
+        this.showTotalDuration = showTotalDuration;
+    }
+
+    public boolean getShowTotalDuration()
+    {
+        if (showTotalDuration == null)
+        {
+            showTotalDuration = true;
+        }
+        return showTotalDuration;
+    }
+
     public void main(Console console)
     {
         PreCondition.assertNotNull(console, "console");
@@ -79,8 +94,12 @@ public class QubTest
         }
         else
         {
+            final boolean showTotalDuration = getShowTotalDuration();
             final Stopwatch stopwatch = console.getStopwatch();
-            stopwatch.start();
+            if (showTotalDuration)
+            {
+                stopwatch.start();
+            }
             try
             {
                 final Build build = getBuild();
@@ -138,8 +157,11 @@ public class QubTest
             }
             finally
             {
-                final Duration compilationDuration = stopwatch.stop().toSeconds();
-                console.writeLine("Done (" + compilationDuration.toString("0.0") + ")").await();
+                if (showTotalDuration)
+                {
+                    final Duration compilationDuration = stopwatch.stop().toSeconds();
+                    console.writeLine("Done (" + compilationDuration.toString("0.0") + ")").await();
+                }
             }
         }
     }
