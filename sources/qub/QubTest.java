@@ -2,33 +2,33 @@ package qub;
 
 public class QubTest
 {
-    private Build build;
+    private QubBuild qubBuild;
     private JavaRunner javaRunner;
     private Boolean showTotalDuration;
 
     /**
-     * Set the Build object that will be used to build the source code.
-     * @param build The Build object that will be used to build the source code.
+     * Set the QubBuild object that will be used to build the source code.
+     * @param qubBuild The QubBuild object that will be used to build the source code.
      * @return This object for method chaining.
      */
-    public QubTest setBuild(Build build)
+    public QubTest setQubBuild(QubBuild qubBuild)
     {
-        this.build = build;
+        this.qubBuild = qubBuild;
         return this;
     }
 
     /**
-     * Get the Build object that will be used to build the source code. If no Build object has been
+     * Get the Build object that will be used to qubBuild the source code. If no Build object has been
      * set, a default one will be created and returned.
-     * @return The Build object that will be used to build the source code.
+     * @return The Build object that will be used to qubBuild the source code.
      */
-    public Build getBuild()
+    public QubBuild getQubBuild()
     {
-        if (build == null)
+        if (qubBuild == null)
         {
-            build = new Build();
+            qubBuild = new QubBuild();
         }
-        final Build result = build;
+        final QubBuild result = qubBuild;
 
         PostCondition.assertNotNull(result, "result");
 
@@ -102,9 +102,9 @@ public class QubTest
             }
             try
             {
-                final Build build = getBuild();
-                build.setShowTotalDuration(false);
-                build.main(console);
+                final QubBuild qubBuild = getQubBuild();
+                qubBuild.setShowTotalDuration(false);
+                qubBuild.main(console);
 
                 if (console.getExitCode() == 0)
                 {

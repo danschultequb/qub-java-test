@@ -53,7 +53,7 @@ public class RealJavaRunner extends JavaRunner
                     final File jacocoCLIJarFile = jacocoFolder.getFile("jacococli.jar").await();
                     final Folder coverageFolder = outputFolder.getFolder("coverage").await();
 
-                    final ProcessBuilder jacococli = console.getProcessBuilder("java").getValue();
+                    final ProcessBuilder jacococli = console.getProcessBuilder("java").awaitError();
                     if (isVerbose)
                     {
                         jacococli.redirectOutput(console.getOutputAsByteWriteStream());

@@ -372,13 +372,13 @@ public class QubTestTests
     {
         PreCondition.assertNotNull(console, "console");
 
-        final Build build = new Build();
+        final QubBuild build = new QubBuild();
         build.setJavaCompiler(new FakeJavaCompiler());
         build.setJarCreator(new FakeJarCreator());
 
         final QubTest test = new QubTest();
         test.setJavaRunner(new FakeJavaRunner());
-        test.setBuild(build);
+        test.setQubBuild(build);
 
         test.main(console);
     }
