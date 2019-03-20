@@ -348,7 +348,7 @@ public class QubTestTests
 
         final Console result = new Console(Iterable.create(commandLineArguments));
         result.setLineSeparator("\n");
-        result.setOutput(output);
+        result.setOutputCharacterWriteStream(output);
 
         return result;
     }

@@ -6,8 +6,8 @@ public class RealJavaRunner extends JavaRunner
     public Result<Integer> run(Console console)
     {
         final ProcessBuilder javaExe = console.getProcessBuilder("java.exe").await();
-        javaExe.redirectOutput(console.getOutputAsByteWriteStream());
-        javaExe.redirectError(console.getErrorAsByteWriteStream());
+        javaExe.redirectOutput(console.getOutputByteWriteStream());
+        javaExe.redirectError(console.getErrorByteWriteStream());
 
         final Folder outputFolder = getOutputFolder();
 
@@ -38,27 +38,22 @@ public class RealJavaRunner extends JavaRunner
         console.writeLine().await();
 
         return javaExe.run()
-            .thenResult((Integer exitCode) ->
+            .then((Integer exitCode) ->
             {
-                Result<Integer> result;
+                Integer result;
                 if (exitCode == null || exitCode != 0 || jacocoFolder == null)
                 {
-                    result = Result.success(exitCode);
+                    result = exitCode;
                 }
                 else
                 {
-                    console.writeLine();
-                    console.writeLine("Analyzing coverage...");
+                    console.writeLine().await();
+                    console.writeLine("Analyzing coverage...").await();
 
                     final File jacocoCLIJarFile = jacocoFolder.getFile("jacococli.jar").await();
                     final Folder coverageFolder = outputFolder.getFolder("coverage").await();
 
                     final ProcessBuilder jacococli = console.getProcessBuilder("java").awaitError();
-                    if (isVerbose)
-                    {
-                        jacococli.redirectOutput(console.getOutputAsByteWriteStream());
-                        jacococli.redirectError(console.getErrorAsByteWriteStream());
-                    }
                     jacococli.addArguments("-jar", jacocoCLIJarFile.toString());
                     jacococli.addArgument("report");
                     jacococli.addArgument(getCoverageExecFile().toString());
@@ -74,12 +69,12 @@ public class RealJavaRunner extends JavaRunner
 
                     if (isVerbose)
                     {
-                        console.writeLine();
+                        console.writeLine().await();
                         QubTest.verbose(console, jacococli.getCommand());
-                        jacococli.redirectOutput(console.getOutputAsByteWriteStream());
-                        jacococli.redirectError(console.getErrorAsByteWriteStream());
+                        jacococli.redirectOutput(console.getOutputByteWriteStream());
+                        jacococli.redirectError(console.getErrorByteWriteStream());
                     }
-                    result = jacococli.run();
+                    result = jacococli.run().await();
 
                     final File coverageHtmlFile = coverageFolder.getFile("index.html").await();
                     try
