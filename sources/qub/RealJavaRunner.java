@@ -39,49 +39,56 @@ public class RealJavaRunner extends JavaRunner
 
             console.writeLine().await();
 
-            final Integer testsExitCode = javaExe.run().await();
+            int result = javaExe.run().await();
 
-            console.writeLine().await();
-            console.writeLine("Analyzing coverage...").await();
-
-            final File jacocoCLIJarFile = jacocoFolder.getFile("jacococli.jar").await();
-            final Folder coverageFolder = outputFolder.getFolder("coverage").await();
-
-            final ProcessBuilder jacococli = console.getProcessBuilder("java").await();
-            jacococli.addArguments("-jar", jacocoCLIJarFile.toString());
-            jacococli.addArgument("report");
-            jacococli.addArgument(getCoverageExecFile().toString());
-
-            final Path currentFolderPath = console.getCurrentFolderPath();
-            final Iterable<File> classFiles = getClassFiles();
-            for (final File classFile : classFiles)
-            {
-                jacococli.addArguments("--classfiles", classFile.relativeTo(currentFolderPath).toString());
-            }
-            jacococli.addArguments("--sourcefiles", getSourceFolder().toString());
-            jacococli.addArguments("--html", coverageFolder.toString());
-
-            if (isVerbose)
+            if (jacocoFolder != null)
             {
                 console.writeLine().await();
-                QubTest.verbose(console, jacococli.getCommand());
-                jacococli.redirectOutput(console.getOutputByteWriteStream());
-                jacococli.redirectError(console.getErrorByteWriteStream());
+                console.writeLine("Analyzing coverage...").await();
+
+                final File jacocoCLIJarFile = jacocoFolder.getFile("jacococli.jar").await();
+                final Folder coverageFolder = outputFolder.getFolder("coverage").await();
+
+                final ProcessBuilder jacococli = console.getProcessBuilder("java").await();
+                jacococli.addArguments("-jar", jacocoCLIJarFile.toString());
+                jacococli.addArgument("report");
+                jacococli.addArgument(getCoverageExecFile().toString());
+
+                final Path currentFolderPath = console.getCurrentFolderPath();
+                final Iterable<File> classFiles = getClassFiles();
+                for (final File classFile : classFiles)
+                {
+                    jacococli.addArguments("--classfiles", classFile.relativeTo(currentFolderPath).toString());
+                }
+                jacococli.addArguments("--sourcefiles", getSourceFolder().toString());
+                jacococli.addArguments("--html", coverageFolder.toString());
+
+                if (isVerbose)
+                {
+                    console.writeLine().await();
+                    QubTest.verbose(console, jacococli.getCommand());
+                    jacococli.redirectOutput(console.getOutputByteWriteStream());
+                    jacococli.redirectError(console.getErrorByteWriteStream());
+                }
+
+                final int coverageExitCode = jacococli.run().await();
+                if (result == 0)
+                {
+                    result = coverageExitCode;
+                }
+
+                final File coverageHtmlFile = coverageFolder.getFile("index.html").await();
+                try
+                {
+                    java.awt.Desktop.getDesktop().open(new java.io.File(coverageHtmlFile.toString()));
+                }
+                catch (java.io.IOException e)
+                {
+                    e.printStackTrace();
+                }
             }
 
-            final Integer coverageExitCode = jacococli.run().await();
-
-            final File coverageHtmlFile = coverageFolder.getFile("index.html").await();
-            try
-            {
-                java.awt.Desktop.getDesktop().open(new java.io.File(coverageHtmlFile.toString()));
-            }
-            catch (java.io.IOException e)
-            {
-                e.printStackTrace();
-            }
-
-            return testsExitCode != 0 ? testsExitCode : coverageExitCode;
+            return result;
         });
     }
 }
