@@ -94,11 +94,10 @@ public class QubTest
         }
         else
         {
-            final boolean profile = QubBuild.takeProfileArgument(console);
-            if (profile)
+            final boolean profiler = Profiler.takeProfilerArgument(console);
+            if (profiler)
             {
-                console.writeLine("Attach a profiler now for " + Types.getTypeName(QubTest.class) + ". Press enter to continue...").await();
-                console.readLine().await();
+                Profiler.waitForProfiler(console, QubTest.class).await();
             }
 
             final boolean showTotalDuration = getShowTotalDuration();
@@ -160,7 +159,7 @@ public class QubTest
                     javaTestRunner.setOutputFolder(outputFolder);
                     javaTestRunner.setJacocoFolder(jacocoFolder);
                     javaTestRunner.setSourceFolder(sourceFolder);
-                    javaTestRunner.run(console, profile).await();
+                    javaTestRunner.run(console, profiler).await();
                 }
             }
             finally

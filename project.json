@@ -1,7 +1,7 @@
 {
   "publisher": "qub",
   "project": "qub-test",
-  "version": "22",
+  "version": "23",
   "java": {
     "mainClass": "qub.QubTest",
     "shortcutName": "qub-test",
@@ -16,12 +16,12 @@
       {
         "publisher": "qub",
         "project": "qub-build",
-        "version": "65"
+        "version": "66"
       },
       {
         "publisher": "qub",
         "project": "qub-java",
-        "version": "60"
+        "version": "61"
       }
     ]
   }

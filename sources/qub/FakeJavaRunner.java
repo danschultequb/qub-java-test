@@ -28,7 +28,7 @@ public class FakeJavaRunner extends JavaRunner
 
             if (profile)
             {
-                command += " -profile";
+                command += " -profiler";
             }
 
             command += " -classpath " + getClassPath();
