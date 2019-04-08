@@ -19,14 +19,14 @@ public class RealJavaRunner extends JavaRunner
                 javaExe.addArgument("-javaagent:" + getJacocoAgentJarFile().toString() + "=destfile=" + getCoverageExecFile().toString());
             }
 
+            javaExe.addArguments("-classpath", getClassPath());
+
+            javaExe.addArgument("qub.ConsoleTestRunner");
+
             if (profile)
             {
                 javaExe.addArgument("-profiler");
             }
-
-            javaExe.addArguments("-classpath", getClassPath());
-
-            javaExe.addArgument("qub.ConsoleTestRunner");
 
             javaExe.addArguments(getFullClassNames());
 
