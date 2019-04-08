@@ -117,7 +117,7 @@ public class QubTest
 
                     if (profile)
                     {
-                        console.writeLine("Attach a profiler now. Press enter to continue...").await();
+                        console.writeLine("Attach a profiler now for " + Types.getTypeName(QubTest.class) + ". Press enter to continue...").await();
                         console.readLine().await();
                     }
 
