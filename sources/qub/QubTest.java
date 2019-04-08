@@ -113,6 +113,14 @@ public class QubTest
                     final Folder folderToTest = getFolderToTest(console);
                     final String pattern = getPattern(console);
                     final boolean coverage = getCoverage(console);
+                    final boolean profile = QubBuild.getProfile(console);
+
+                    if (profile)
+                    {
+                        console.writeLine("Attach a profiler now. Press enter to continue...").await();
+                        console.readLine().await();
+                    }
+
                     final Folder outputFolder = folderToTest.getFolder("outputs").await();
                     final Folder sourceFolder = folderToTest.getFolder("sources").await();
 
