@@ -25,7 +25,7 @@ public class RealJavaRunner extends JavaRunner
 
             if (profile)
             {
-                javaExe.addArgument("-profiler");
+                javaExe.addArgument("-" + Profiler.parameterName);
             }
 
             javaExe.addArguments(getFullClassNames());
