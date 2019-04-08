@@ -10,6 +10,7 @@ public class RealJavaRunner extends JavaRunner
             final ProcessBuilder javaExe = console.getProcessBuilder("java.exe").await();
             javaExe.redirectOutput(console.getOutputByteWriteStream());
             javaExe.redirectError(console.getErrorByteWriteStream());
+            javaExe.redirectInput(console.getInputByteReadStream());
 
             final Folder outputFolder = getOutputFolder();
 
