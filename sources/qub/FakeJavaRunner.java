@@ -15,7 +15,7 @@ public class FakeJavaRunner extends JavaRunner
     }
 
     @Override
-    public Result<Integer> run(Console console)
+    public Result<Integer> run(Console console, boolean profile)
     {
         if (QubTest.isVerbose(console))
         {
@@ -24,6 +24,11 @@ public class FakeJavaRunner extends JavaRunner
             if (getJacocoFolder() != null)
             {
                 command += " -javaagent:" + getJacocoAgentJarFile().toString() + "=destfile=" + getCoverageExecFile().toString();
+            }
+
+            if (profile)
+            {
+                command += " -profile";
             }
 
             command += " -classpath " + getClassPath();

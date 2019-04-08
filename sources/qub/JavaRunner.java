@@ -112,5 +112,5 @@ public abstract class JavaRunner
         return getOutputFolder().getFile("coverage.exec").await();
     }
 
-    public abstract Result<Integer> run(Console console);
+    public abstract Result<Integer> run(Console console, boolean profile);
 }

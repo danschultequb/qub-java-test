@@ -94,6 +94,13 @@ public class QubTest
         }
         else
         {
+            final boolean profile = QubBuild.takeProfileArgument(console);
+            if (profile)
+            {
+                console.writeLine("Attach a profiler now for " + Types.getTypeName(QubTest.class) + ". Press enter to continue...").await();
+                console.readLine().await();
+            }
+
             final boolean showTotalDuration = getShowTotalDuration();
             final Stopwatch stopwatch = console.getStopwatch();
             if (showTotalDuration)
@@ -113,13 +120,6 @@ public class QubTest
                     final Folder folderToTest = getFolderToTest(console);
                     final String pattern = getPattern(console);
                     final boolean coverage = getCoverage(console);
-                    final boolean profile = QubBuild.getProfile(console);
-
-                    if (profile)
-                    {
-                        console.writeLine("Attach a profiler now for " + Types.getTypeName(QubTest.class) + ". Press enter to continue...").await();
-                        console.readLine().await();
-                    }
 
                     final Folder outputFolder = folderToTest.getFolder("outputs").await();
                     final Folder sourceFolder = folderToTest.getFolder("sources").await();
@@ -160,7 +160,7 @@ public class QubTest
                     javaTestRunner.setOutputFolder(outputFolder);
                     javaTestRunner.setJacocoFolder(jacocoFolder);
                     javaTestRunner.setSourceFolder(sourceFolder);
-                    javaTestRunner.run(console).await();
+                    javaTestRunner.run(console, profile).await();
                 }
             }
             finally

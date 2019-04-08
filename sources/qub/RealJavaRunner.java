@@ -3,7 +3,7 @@ package qub;
 public class RealJavaRunner extends JavaRunner
 {
     @Override
-    public Result<Integer> run(Console console)
+    public Result<Integer> run(Console console, boolean profile)
     {
         return Result.create(() ->
         {
@@ -17,6 +17,11 @@ public class RealJavaRunner extends JavaRunner
             if (jacocoFolder != null)
             {
                 javaExe.addArgument("-javaagent:" + getJacocoAgentJarFile().toString() + "=destfile=" + getCoverageExecFile().toString());
+            }
+
+            if (profile)
+            {
+                javaExe.addArgument("-profile");
             }
 
             javaExe.addArguments("-classpath", getClassPath());
