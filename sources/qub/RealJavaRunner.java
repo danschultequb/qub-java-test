@@ -67,6 +67,10 @@ public class RealJavaRunner extends JavaRunner
                     jacococli.addArguments("--classfiles", classFile.relativeTo(currentFolderPath).toString());
                 }
                 jacococli.addArguments("--sourcefiles", getSourceFolder().toString());
+                if (getTestFolder() != null)
+                {
+                    jacococli.addArguments("--sourcefiles", getTestFolder().toString());
+                }
                 jacococli.addArguments("--html", coverageFolder.toString());
 
                 if (isVerbose)

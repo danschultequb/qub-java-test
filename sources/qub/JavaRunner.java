@@ -6,6 +6,7 @@ public abstract class JavaRunner
     private String pattern;
     private Folder outputFolder;
     private Folder sourceFolder;
+    private Folder testFolder;
     private Folder jacocoFolder;
 
     public void setClassPaths(Iterable<String> classPaths)
@@ -69,6 +70,18 @@ public abstract class JavaRunner
         PostCondition.assertNotNull(result, "result");
 
         return result;
+    }
+
+    public void setTestFolder(Folder testFolder)
+    {
+        PreCondition.assertNotNull(testFolder, "testFolder");
+
+        this.testFolder = testFolder;
+    }
+
+    public Folder getTestFolder()
+    {
+        return testFolder;
     }
 
     public Iterable<File> getClassFiles()

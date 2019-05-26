@@ -122,6 +122,7 @@ public class QubTest
 
                     final Folder outputFolder = folderToTest.getFolder("outputs").await();
                     final Folder sourceFolder = folderToTest.getFolder("sources").await();
+                    final Folder testFolder = folderToTest.getFolder("tests").await();
 
                     final String qubHome = console.getEnvironmentVariable("QUB_HOME");
                     final Folder qubFolder = console.getFileSystem().getFolder(qubHome).await();
@@ -159,6 +160,7 @@ public class QubTest
                     javaTestRunner.setOutputFolder(outputFolder);
                     javaTestRunner.setJacocoFolder(jacocoFolder);
                     javaTestRunner.setSourceFolder(sourceFolder);
+                    javaTestRunner.setTestFolder(testFolder);
                     javaTestRunner.run(console, profiler).await();
                 }
             }
