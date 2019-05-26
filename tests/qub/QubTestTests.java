@@ -1,8 +1,8 @@
 package qub;
 
-public class QubTestTests
+public interface QubTestTests
 {
-    public static void test(TestRunner runner)
+    static void test(TestRunner runner)
     {
         runner.testGroup(QubTest.class, () ->
         {
@@ -334,29 +334,29 @@ public class QubTestTests
         });
     }
 
-    private static InMemoryCharacterStream getInMemoryCharacterStream(Test test)
+    static InMemoryCharacterStream getInMemoryCharacterStream(Test test)
     {
-        return new InMemoryCharacterStream(test.getParallelAsyncRunner());
+        return new InMemoryCharacterStream();
     }
 
-    private static InMemoryFileSystem getInMemoryFileSystem(Test test)
+    static InMemoryFileSystem getInMemoryFileSystem(Test test)
     {
         PreCondition.assertNotNull(test, "test");
 
-        final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getParallelAsyncRunner(), test.getClock());
+        final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
         fileSystem.createRoot("/");
 
         return fileSystem;
     }
 
-    private static Folder getInMemoryCurrentFolder(Test test)
+    static Folder getInMemoryCurrentFolder(Test test)
     {
         PreCondition.assertNotNull(test, "test");
 
         return getInMemoryFileSystem(test).getFolder("/").await();
     }
 
-    private static Console createConsole(CharacterWriteStream output, String... commandLineArguments)
+    static Console createConsole(CharacterWriteStream output, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(commandLineArguments, "commandLineArguments");
@@ -368,7 +368,7 @@ public class QubTestTests
         return result;
     }
 
-    private static Console createConsole(CharacterWriteStream output, Folder currentFolder, String... commandLineArguments)
+    static Console createConsole(CharacterWriteStream output, Folder currentFolder, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(currentFolder, "currentFolder");
@@ -383,7 +383,7 @@ public class QubTestTests
         return result;
     }
 
-    private static void main(Console console)
+    static void main(Console console)
     {
         PreCondition.assertNotNull(console, "console");
 
