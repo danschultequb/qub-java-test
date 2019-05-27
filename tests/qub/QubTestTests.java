@@ -170,7 +170,6 @@ public interface QubTestTests
                     test.assertEqual(
                         Iterable.create(
                             "Compiling...",
-                            "Creating jar file...",
                             "Running tests...",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
@@ -207,7 +206,6 @@ public interface QubTestTests
                             "VERBOSE: Compiling all source files.",
                             "VERBOSE: Starting compilation...",
                             "VERBOSE: Compilation finished.",
-                            "Creating jar file...",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner A",
                             ""),
@@ -239,7 +237,6 @@ public interface QubTestTests
                     test.assertEqual(
                         Iterable.create(
                             "Compiling...",
-                            "Creating jar file...",
                             "Running tests...",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
@@ -280,7 +277,6 @@ public interface QubTestTests
                             "VERBOSE: Compiling all source files.",
                             "VERBOSE: Starting compilation...",
                             "VERBOSE: Compilation finished.",
-                            "Creating jar file...",
                             "Running tests...",
                             "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner A",
                             ""),
@@ -324,7 +320,6 @@ public interface QubTestTests
                             "VERBOSE: Compiling all source files.",
                             "VERBOSE: Starting compilation...",
                             "VERBOSE: Compilation finished.",
-                            "Creating jar file...",
                             "Running tests...",
                             "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner A",
                             ""),
@@ -389,7 +384,6 @@ public interface QubTestTests
 
         final QubBuild build = new QubBuild();
         build.setJavaCompiler(new FakeJavaCompiler());
-        build.setJarCreator(new FakeJarCreator());
 
         final QubTest test = new QubTest();
         test.setJavaRunner(new FakeJavaRunner());
