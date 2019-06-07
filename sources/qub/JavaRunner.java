@@ -9,11 +9,13 @@ public abstract class JavaRunner
     private Folder testFolder;
     private Folder jacocoFolder;
 
-    public void setClassPaths(Iterable<String> classPaths)
+    public JavaRunner setClassPaths(Iterable<String> classPaths)
     {
         PreCondition.assertNotNull(classPaths, "classPaths");
 
         this.classPaths = classPaths;
+
+        return this;
     }
 
     public Iterable<String> getClassPaths()
@@ -30,9 +32,11 @@ public abstract class JavaRunner
         return Strings.join(';', getClassPaths());
     }
 
-    public void setPattern(String pattern)
+    public JavaRunner setPattern(String pattern)
     {
         this.pattern = pattern;
+
+        return this;
     }
 
     public String getPattern()
@@ -40,11 +44,13 @@ public abstract class JavaRunner
         return pattern;
     }
 
-    public void setOutputFolder(Folder outputFolder)
+    public JavaRunner setOutputFolder(Folder outputFolder)
     {
         PreCondition.assertNotNull(outputFolder, "outputFolder");
 
         this.outputFolder = outputFolder;
+
+        return this;
     }
 
     public Folder getOutputFolder()
@@ -56,11 +62,13 @@ public abstract class JavaRunner
         return result;
     }
 
-    public void setSourceFolder(Folder sourceFolder)
+    public JavaRunner setSourceFolder(Folder sourceFolder)
     {
         PreCondition.assertNotNull(sourceFolder, "sourceFolder");
 
         this.sourceFolder = sourceFolder;
+
+        return this;
     }
 
     public Folder getSourceFolder()
@@ -72,11 +80,13 @@ public abstract class JavaRunner
         return result;
     }
 
-    public void setTestFolder(Folder testFolder)
+    public JavaRunner setTestFolder(Folder testFolder)
     {
         PreCondition.assertNotNull(testFolder, "testFolder");
 
         this.testFolder = testFolder;
+
+        return this;
     }
 
     public Folder getTestFolder()
@@ -103,9 +113,11 @@ public abstract class JavaRunner
         return result;
     }
 
-    public void setJacocoFolder(Folder jacocoFolder)
+    public JavaRunner setJacocoFolder(Folder jacocoFolder)
     {
         this.jacocoFolder = jacocoFolder;
+
+        return this;
     }
 
     public Folder getJacocoFolder()
@@ -125,5 +137,5 @@ public abstract class JavaRunner
         return getOutputFolder().getFile("coverage.exec").await();
     }
 
-    public abstract Result<Integer> run(Console console, boolean profile);
+    public abstract Result<Void> run(Console console, boolean profile);
 }

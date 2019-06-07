@@ -4,9 +4,11 @@ public class FakeJavaRunner extends JavaRunner
 {
     private int exitCode;
 
-    public void setExitCode(int exitCode)
+    public FakeJavaRunner setExitCode(int exitCode)
     {
         this.exitCode = exitCode;
+
+        return this;
     }
 
     public int getExitCode()
@@ -15,7 +17,7 @@ public class FakeJavaRunner extends JavaRunner
     }
 
     @Override
-    public Result<Integer> run(Console console, boolean profile)
+    public Result<Void> run(Console console, boolean profile)
     {
         if (QubTest.isVerbose(console))
         {
@@ -48,6 +50,8 @@ public class FakeJavaRunner extends JavaRunner
 
         console.writeLine().await();
 
-        return Result.success(exitCode);
+        console.setExitCode(exitCode);
+
+        return Result.success();
     }
 }

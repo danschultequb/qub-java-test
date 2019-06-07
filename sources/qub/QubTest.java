@@ -62,9 +62,10 @@ public class QubTest
         return result;
     }
 
-    public void setShowTotalDuration(boolean showTotalDuration)
+    public QubTest setShowTotalDuration(boolean showTotalDuration)
     {
         this.showTotalDuration = showTotalDuration;
+        return this;
     }
 
     public boolean getShowTotalDuration()

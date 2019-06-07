@@ -3,7 +3,7 @@ package qub;
 public class RealJavaRunner extends JavaRunner
 {
     @Override
-    public Result<Integer> run(Console console, boolean profile)
+    public Result<Void> run(Console console, boolean profile)
     {
         return Result.create(() ->
         {
@@ -98,7 +98,7 @@ public class RealJavaRunner extends JavaRunner
                 }
             }
 
-            return result;
+            console.setExitCode(result);
         });
     }
 }
