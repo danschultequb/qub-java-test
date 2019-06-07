@@ -124,9 +124,6 @@ public class QubTest
                     final Folder sourceFolder = folderToTest.getFolder("sources").await();
                     final Folder testFolder = folderToTest.getFolder("tests").await();
 
-                    final String qubHome = console.getEnvironmentVariable("QUB_HOME");
-                    final Folder qubFolder = console.getFileSystem().getFolder(qubHome).await();
-
                     final List<String> classPaths = List.create(outputFolder.toString());
 
                     final File projectJsonFile = folderToTest.getFile("project.json").await();
@@ -135,6 +132,7 @@ public class QubTest
                     final Iterable<Dependency> dependencies = projectJson.getJava().getDependencies();
                     if (!Iterable.isNullOrEmpty(dependencies))
                     {
+                        final Folder qubFolder = getQubHomeFolder(console);
                         classPaths.addAll(dependencies.map((Dependency dependency) ->
                         {
                             final String dependencyRelativePath =
@@ -149,6 +147,7 @@ public class QubTest
                     Folder jacocoFolder = null;
                     if (coverage)
                     {
+                        final Folder qubFolder = getQubHomeFolder(console);
                         jacocoFolder = qubFolder.getFolder("jacoco/jacococli").await()
                             .getFolders().await()
                             .maximum((Folder lhs, Folder rhs) -> VersionNumber.parse(lhs.getName()).compareTo(VersionNumber.parse(rhs.getName())));
@@ -173,6 +172,18 @@ public class QubTest
                 }
             }
         }
+    }
+
+    private static Folder getQubHomeFolder(Console console)
+    {
+        PreCondition.assertNotNullAndNotEmpty(console.getEnvironmentVariable("QUB_HOME"), "console.getEnvironmentVariable(\"QUB_HOME\")");
+
+        final String qubHome = console.getEnvironmentVariable("QUB_HOME");
+        final Folder result = console.getFileSystem().getFolder(qubHome).await();
+
+        PostCondition.assertNotNull(result, "result");
+
+        return result;
     }
 
     private static boolean shouldShowUsage(Console console)
