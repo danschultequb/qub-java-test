@@ -136,12 +136,7 @@ public class QubTest
                         final Folder qubFolder = getQubHomeFolder(console);
                         classPaths.addAll(dependencies.map((Dependency dependency) ->
                         {
-                            final String dependencyRelativePath =
-                                dependency.getPublisher() + "/" +
-                                    dependency.getProject() + "/" +
-                                    dependency.getVersion() + "/" +
-                                    dependency.getProject() + ".jar";
-                            return qubFolder.getFile(dependencyRelativePath).await().toString();
+                            return QubBuild.resolveDependencyReference(qubFolder, dependency).toString();
                         }));
                     }
 
