@@ -22,11 +22,11 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://C:/qub/qub/qub-java-build/1/qub-java-build.jar!/" />
+          <root url="jar://C:/qub/qub/qub-java-build/3/qub-java-build.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://C:/qub/qub/qub-java-build/1/qub-java-build.sources.jar!/" />
+          <root url="jar://C:/qub/qub/qub-java-build/3/qub-java-build.sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

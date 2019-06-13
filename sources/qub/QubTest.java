@@ -130,10 +130,11 @@ public class QubTest
                     final File projectJsonFile = folderToTest.getFile("project.json").await();
                     final ProjectJSON projectJson = ProjectJSON.parse(projectJsonFile).await();
 
-                    final Iterable<Dependency> dependencies = projectJson.getJava().getDependencies();
+                    Iterable<Dependency> dependencies = projectJson.getJava().getDependencies();
                     if (!Iterable.isNullOrEmpty(dependencies))
                     {
                         final Folder qubFolder = getQubHomeFolder(console);
+                        dependencies = QubBuild.getAllDependencies(qubFolder, dependencies).getKeys();
                         classPaths.addAll(dependencies.map((Dependency dependency) ->
                         {
                             return QubBuild.resolveDependencyReference(qubFolder, dependency).toString();
