@@ -81,25 +81,28 @@ public class QubTest
     {
         PreCondition.assertNotNull(console, "console");
 
-        if (shouldShowUsage(console))
+        final CommandLineParameters parameters = console.createCommandLineParameters();
+        final CommandLineParameter<Folder> folderToTestParameter = parameters.addPositionalFolder("folder", console)
+            .setValueName("<folder-to-test>")
+            .setDescription("The folder to run tests in. Defaults to the current folder.");
+        final CommandLineParameter<String> patternParameter = parameters.addString("pattern")
+            .setValueName("<test-name-pattern>")
+            .setDescription("The pattern to match against tests to determine if they will be run or not.");
+        final CommandLineParameterBoolean coverageParameter = parameters.addBoolean("coverage")
+            .setDescription("Whether or not to collect code coverage information while running tests.");
+        final CommandLineParameterVerbose verbose = parameters.addVerbose(console);
+        final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(console, QubTest.class);
+        final CommandLineParameterBoolean help = parameters.addHelp();
+
+        if (help.getValue().await())
         {
-            console.writeLine("Usage: qub-test [[-folder=]<folder-path-to-test>] [-pattern=<test-name-pattern>] [-coverage] [-verbose]");
-            console.writeLine("  Used to run tests in source code projects.");
-            console.writeLine("  -folder: The folder to run tests in. This can be specified either with the");
-            console.writeLine("           -folder argument name or without it.");
-            console.writeLine("  -pattern: The pattern to match against tests to determine if they will be run");
-            console.writeLine("            or not.");
-            console.writeLine("  -coverage: Whether or not to collect code coverage information while running tests.");
-            console.writeLine("  -verbose: Whether or not to show verbose logs.");
+            parameters.writeHelpLines(console, "qub-test", "Used to run tests in source code projects.").await();
             console.setExitCode(-1);
         }
         else
         {
-            final boolean profiler = Profiler.takeProfilerArgument(console);
-            if (profiler)
-            {
-                Profiler.waitForProfiler(console, QubTest.class).await();
-            }
+            profilerParameter.await();
+            profilerParameter.removeValue().await();
 
             final boolean showTotalDuration = getShowTotalDuration();
             final Stopwatch stopwatch = console.getStopwatch();
@@ -117,9 +120,9 @@ public class QubTest
                 {
                     console.writeLine("Running tests...").await();
 
-                    final Folder folderToTest = getFolderToTest(console);
-                    final String pattern = getPattern(console);
-                    final boolean coverage = getCoverage(console);
+                    final Folder folderToTest = folderToTestParameter.getValue().await();
+                    final String pattern = patternParameter.getValue().await();
+                    final boolean coverage = coverageParameter.getValue().await();
 
                     final Folder outputFolder = folderToTest.getFolder("outputs").await();
                     final Folder sourceFolder = folderToTest.getFolder("sources").await();
@@ -157,7 +160,8 @@ public class QubTest
                     javaTestRunner.setJacocoFolder(jacocoFolder);
                     javaTestRunner.setSourceFolder(sourceFolder);
                     javaTestRunner.setTestFolder(testFolder);
-                    javaTestRunner.run(console, profiler).await();
+                    javaTestRunner.setVerbose(verbose);
+                    javaTestRunner.run(console, profilerParameter).await();
                 }
             }
             finally
@@ -183,148 +187,9 @@ public class QubTest
         return result;
     }
 
-    private static boolean shouldShowUsage(Console console)
-    {
-        PreCondition.assertNotNull(console, "console");
-
-        return console.getCommandLine().contains(
-            (CommandLineArgument argument) ->
-            {
-                final String argumentString = argument.toString();
-                return argumentString.equals("/?") || argumentString.equals("-?");
-            });
-    }
-
-    private static Path getFolderPathToTest(Console console)
-    {
-        PreCondition.assertNotNull(console, "console");
-
-        Path result = null;
-        final CommandLine commandLine = console.getCommandLine();
-        if (commandLine.any())
-        {
-            CommandLineArgument folderArgument = commandLine.get("folder");
-            if (folderArgument == null)
-            {
-                folderArgument = commandLine.getArguments()
-                    .first((CommandLineArgument argument) -> argument.getName() == null);
-            }
-            if (folderArgument != null)
-            {
-                result = Path.parse(folderArgument.getValue());
-            }
-        }
-
-        if (result == null)
-        {
-            result = console.getCurrentFolderPath();
-        }
-
-        if (!result.isRooted())
-        {
-            result = console.getCurrentFolderPath().resolve(result).await();
-        }
-
-        PostCondition.assertNotNull(result, "result");
-        PostCondition.assertTrue(result.isRooted(), "result.isRooted()");
-
-        return result;
-    }
-
-    private static Folder getFolderToTest(Console console)
-    {
-        PreCondition.assertNotNull(console, "console");
-
-        final Folder result = console.getFileSystem().getFolder(getFolderPathToTest(console)).await();
-
-        PostCondition.assertNotNull(result, "result");
-
-        return result;
-    }
-
-    private static String getPattern(Console console)
-    {
-        String pattern = null;
-        CommandLineArgument patternArgument = console.getCommandLine().get("pattern");
-        if (patternArgument != null)
-        {
-            pattern = patternArgument.getValue();
-        }
-        return pattern;
-    }
-
-    private static boolean getCoverage(Console console)
-    {
-        boolean result = false;
-
-        CommandLineArgument coverageArgument = console.getCommandLine().get("coverage");
-        if (coverageArgument != null)
-        {
-            final String coverageArgumentValue = coverageArgument.getValue();
-            result = Strings.isNullOrEmpty(coverageArgumentValue) ||
-                Booleans.isTrue(java.lang.Boolean.valueOf(coverageArgumentValue));
-        }
-
-        return result;
-    }
-
-    public static boolean isVerbose(Console console)
-    {
-        boolean result = false;
-
-        CommandLineArgument verboseArgument = console.getCommandLine().get("verbose");
-        if (verboseArgument != null)
-        {
-            final String verboseArgumentValue = verboseArgument.getValue();
-            result = Strings.isNullOrEmpty(verboseArgumentValue) ||
-                Booleans.isTrue(java.lang.Boolean.valueOf(verboseArgumentValue));
-        }
-
-        return result;
-    }
-
-    public static Result<Void> verbose(Console console, String message)
-    {
-        return verbose(console, false, message);
-    }
-
-    public static Result<Void> verbose(Console console, boolean showTimestamp, String message)
-    {
-        PreCondition.assertNotNull(console, "console");
-        PreCondition.assertNotNull(message, "message");
-
-        Result<Void> result = Result.success();
-        if (isVerbose(console))
-        {
-            result = console.writeLine("VERBOSE" + (showTimestamp ? "(" + System.currentTimeMillis() + ")" : "") + ": " + message)
-                .then(() -> {});
-        }
-
-        PostCondition.assertNotNull(result, "result");
-
-        return result;
-    }
-
-    public static Result<Void> error(Console console, String message)
-    {
-        return error(console, false, message);
-    }
-
-    public static Result<Void> error(Console console, boolean showTimestamp, String message)
-    {
-        PreCondition.assertNotNull(console, "console");
-        PreCondition.assertNotNull(message, "message");
-
-        final Result<Void> result = console.writeLine("ERROR" + (showTimestamp ? "(" + System.currentTimeMillis() + ")" : "") + ": " + message).then(() -> {});
-        console.incrementExitCode();
-
-        PostCondition.assertNotNull(result, "result");
-
-        return result;
-    }
-
     public static void main(String[] args)
     {
-        Console.run(args, (Console console) -> new QubTest().main(console));
+        final QubTest qubTest = new QubTest();
+        Console.run(args, qubTest::main);
     }
 }

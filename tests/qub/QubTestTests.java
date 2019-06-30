@@ -21,27 +21,6 @@ public interface QubTestTests
                     test.assertThrows(() -> main((Console)null), new PreConditionFailure("console cannot be null."));
                 });
 
-                runner.test("with /? command line argument", (Test test) ->
-                {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
-                    try (final Console console = createConsole(output, "/?"))
-                    {
-                        main(console);
-                        test.assertEqual(-1, console.getExitCode());
-                    }
-                    test.assertEqual(
-                        Iterable.create(
-                            "Usage: qub-test [[-folder=]<folder-path-to-test>] [-pattern=<test-name-pattern>] [-coverage] [-verbose]",
-                            "  Used to run tests in source code projects.",
-                            "  -folder: The folder to run tests in. This can be specified either with the",
-                            "           -folder argument name or without it.",
-                            "  -pattern: The pattern to match against tests to determine if they will be run",
-                            "            or not.",
-                            "  -coverage: Whether or not to collect code coverage information while running tests.",
-                            "  -verbose: Whether or not to show verbose logs."),
-                        Strings.getLines(output.getText().await()));
-                });
-
                 runner.test("with -? command line argument", (Test test) ->
                 {
                     final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
@@ -52,14 +31,14 @@ public interface QubTestTests
                     }
                     test.assertEqual(
                         Iterable.create(
-                            "Usage: qub-test [[-folder=]<folder-path-to-test>] [-pattern=<test-name-pattern>] [-coverage] [-verbose]",
+                            "Usage: qub-test [[--folder=]<folder-to-test>] [--pattern=<test-name-pattern>] [--coverage] [--verbose] [--profiler] [--help]",
                             "  Used to run tests in source code projects.",
-                            "  -folder: The folder to run tests in. This can be specified either with the",
-                            "           -folder argument name or without it.",
-                            "  -pattern: The pattern to match against tests to determine if they will be run",
-                            "            or not.",
-                            "  -coverage: Whether or not to collect code coverage information while running tests.",
-                            "  -verbose: Whether or not to show verbose logs."),
+                            "  --folder: The folder to run tests in. Defaults to the current folder.",
+                            "  --pattern: The pattern to match against tests to determine if they will be run or not.",
+                            "  --coverage: Whether or not to collect code coverage information while running tests.",
+                            "  --verbose: Whether or not to show verbose logs.",
+                            "  --profiler: Whether or not this application should pause before it is run to allow a profiler to be attached.",
+                            "  --help(?): Show the help message for this application."),
                         Strings.getLines(output.getText().await()));
                 });
 
@@ -79,7 +58,7 @@ public interface QubTestTests
                         Strings.getLines(output.getText().await()).skipLast());
                 });
 
-                runner.test("with named folder argument to unrooted folder that doesn't exist", (Test test) ->
+                runner.test("with unnamed folder argument to unrooted folder that doesn't exist", (Test test) ->
                 {
                     final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
@@ -475,7 +454,7 @@ public interface QubTestTests
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(commandLineArguments, "commandLineArguments");
 
-        final Console result = new Console(Iterable.create(commandLineArguments));
+        final Console result = new Console(CommandLineArguments.create(commandLineArguments));
         result.setLineSeparator("\n");
         result.setOutputCharacterWriteStream(output);
 

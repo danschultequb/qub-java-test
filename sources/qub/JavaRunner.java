@@ -8,6 +8,7 @@ public abstract class JavaRunner
     private Folder sourceFolder;
     private Folder testFolder;
     private Folder jacocoFolder;
+    private CommandLineParameterVerbose verbose;
 
     public JavaRunner setClassPaths(Iterable<String> classPaths)
     {
@@ -137,5 +138,32 @@ public abstract class JavaRunner
         return getOutputFolder().getFile("coverage.exec").await();
     }
 
-    public abstract Result<Void> run(Console console, boolean profile);
+    public JavaRunner setVerbose(CommandLineParameterVerbose verbose)
+    {
+        this.verbose = verbose;
+        return this;
+    }
+
+    public boolean isVerbose()
+    {
+        return verbose != null && verbose.getValue().await();
+    }
+
+    public CommandLineParameterVerbose getVerbose()
+    {
+        return verbose;
+    }
+
+    public Result<Void> writeVerboseLine(String message)
+    {
+        return Result.create(() ->
+        {
+            if (verbose != null)
+            {
+                verbose.writeLine(message).await();
+            }
+        });
+    }
+
+    public abstract Result<Void> run(Console console, CommandLineParameterProfiler profile);
 }

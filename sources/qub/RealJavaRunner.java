@@ -3,8 +3,11 @@ package qub;
 public class RealJavaRunner extends JavaRunner
 {
     @Override
-    public Result<Void> run(Console console, boolean profile)
+    public Result<Void> run(Console console, CommandLineParameterProfiler profile)
     {
+        PreCondition.assertNotNull(console, "console");
+        PreCondition.assertNotNull(profile, "profile");
+
         return Result.create(() ->
         {
             final ProcessBuilder javaExe = console.getProcessBuilder("java.exe").await();
@@ -24,9 +27,9 @@ public class RealJavaRunner extends JavaRunner
 
             javaExe.addArgument("qub.ConsoleTestRunner");
 
-            if (profile)
+            if (profile.getValue().await())
             {
-                javaExe.addArgument("-" + Profiler.parameterName);
+                javaExe.addArgument("--" + profile.getName());
             }
 
             javaExe.addArguments(getFullClassNames());
@@ -34,14 +37,10 @@ public class RealJavaRunner extends JavaRunner
             final String pattern = getPattern();
             if (!Strings.isNullOrEmpty(pattern))
             {
-                javaExe.addArgument("-pattern=" + pattern);
+                javaExe.addArgument("--pattern=" + pattern);
             }
 
-            final boolean isVerbose = QubTest.isVerbose(console);
-            if (isVerbose)
-            {
-                QubTest.verbose(console, javaExe.getCommand());
-            }
+            writeVerboseLine(javaExe.getCommand()).await();
 
             console.writeLine().await();
 
@@ -73,10 +72,10 @@ public class RealJavaRunner extends JavaRunner
                 }
                 jacococli.addArguments("--html", coverageFolder.toString());
 
-                if (isVerbose)
+                if (isVerbose())
                 {
                     console.writeLine().await();
-                    QubTest.verbose(console, jacococli.getCommand());
+                    writeVerboseLine(jacococli.getCommand()).await();
                     jacococli.redirectOutput(console.getOutputByteWriteStream());
                     jacococli.redirectError(console.getErrorByteWriteStream());
                 }

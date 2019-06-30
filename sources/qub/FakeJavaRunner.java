@@ -17,9 +17,9 @@ public class FakeJavaRunner extends JavaRunner
     }
 
     @Override
-    public Result<Void> run(Console console, boolean profile)
+    public Result<Void> run(Console console, CommandLineParameterProfiler profile)
     {
-        if (QubTest.isVerbose(console))
+        if (isVerbose())
         {
             String command = "java.exe";
 
@@ -28,9 +28,9 @@ public class FakeJavaRunner extends JavaRunner
                 command += " -javaagent:" + getJacocoAgentJarFile().toString() + "=destfile=" + getCoverageExecFile().toString();
             }
 
-            if (profile)
+            if (profile != null && profile.getValue().await())
             {
-                command += " -profiler";
+                command += profile.toString();
             }
 
             command += " -classpath " + getClassPath();
@@ -42,10 +42,10 @@ public class FakeJavaRunner extends JavaRunner
             final String pattern = getPattern();
             if (!Strings.isNullOrEmpty(pattern))
             {
-                command += " -pattern=" + pattern;
+                command += " --pattern=" + pattern;
             }
 
-            QubTest.verbose(console, command);
+            writeVerboseLine(command).await();
         }
 
         console.writeLine().await();
