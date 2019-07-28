@@ -17,7 +17,7 @@ public class FakeJavaRunner extends JavaRunner
     }
 
     @Override
-    public Result<Void> run(Console console, CommandLineParameterProfiler profile)
+    public Result<Void> run(Console console)
     {
         if (isVerbose())
         {
@@ -28,14 +28,21 @@ public class FakeJavaRunner extends JavaRunner
                 command += " -javaagent:" + getJacocoAgentJarFile().toString() + "=destfile=" + getCoverageExecFile().toString();
             }
 
-            if (profile != null && profile.getValue().await())
-            {
-                command += profile.toString();
-            }
-
             command += " -classpath " + getClassPath();
 
             command += " qub.ConsoleTestRunner";
+
+            final CommandLineParameterProfiler profiler = getProfiler();
+            if (profiler != null)
+            {
+                command += " --" + profiler.getName() + "=" + profiler.getValue().await();
+            }
+
+            final CommandLineParameterBoolean testJson = getTestJson();
+            if (testJson != null)
+            {
+                command += " --" + testJson.getName() + "=" + testJson.getValue().await();
+            }
 
             command += " " + Strings.join(' ', getFullClassNames());
 

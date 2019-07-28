@@ -3,10 +3,9 @@ package qub;
 public class RealJavaRunner extends JavaRunner
 {
     @Override
-    public Result<Void> run(Console console, CommandLineParameterProfiler profile)
+    public Result<Void> run(Console console)
     {
         PreCondition.assertNotNull(console, "console");
-        PreCondition.assertNotNull(profile, "profile");
 
         return Result.create(() ->
         {
@@ -27,9 +26,16 @@ public class RealJavaRunner extends JavaRunner
 
             javaExe.addArgument("qub.ConsoleTestRunner");
 
-            if (profile.getValue().await())
+            final CommandLineParameterProfiler profiler = getProfiler();
+            if (profiler != null)
             {
-                javaExe.addArgument("--" + profile.getName());
+                javaExe.addArgument("--" + profiler.getName() + "=" + profiler.getValue().await());
+            }
+
+            final CommandLineParameterBoolean testJson = getTestJson();
+            if (testJson != null)
+            {
+                javaExe.addArgument("--" + testJson.getName() + "=" + testJson.getValue().await());
             }
 
             javaExe.addArguments(getFullClassNames());

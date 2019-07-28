@@ -9,6 +9,8 @@ public abstract class JavaRunner
     private Folder testFolder;
     private Folder jacocoFolder;
     private CommandLineParameterVerbose verbose;
+    private CommandLineParameterProfiler profiler;
+    private CommandLineParameterBoolean testJson;
 
     public JavaRunner setClassPaths(Iterable<String> classPaths)
     {
@@ -165,5 +167,27 @@ public abstract class JavaRunner
         });
     }
 
-    public abstract Result<Void> run(Console console, CommandLineParameterProfiler profile);
+    public JavaRunner setProfiler(CommandLineParameterProfiler profiler)
+    {
+        this.profiler = profiler;
+        return this;
+    }
+
+    public CommandLineParameterProfiler getProfiler()
+    {
+        return profiler;
+    }
+
+    public JavaRunner setTestJson(CommandLineParameterBoolean testJson)
+    {
+        this.testJson = testJson;
+        return this;
+    }
+
+    public CommandLineParameterBoolean getTestJson()
+    {
+        return testJson;
+    }
+
+    public abstract Result<Void> run(Console console);
 }
