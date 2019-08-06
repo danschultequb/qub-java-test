@@ -1,5 +1,7 @@
 package qub;
 
+import java.io.ByteArrayOutputStream;
+
 public interface QubTestTests
 {
     static void test(TestRunner runner)
@@ -116,7 +118,7 @@ public interface QubTestTests
                             "  Used to run tests in source code projects.",
                             "  --folder: The folder to run tests in. Defaults to the current folder.",
                             "  --pattern: The pattern to match against tests to determine if they will be run or not.",
-                            "  --coverage: Whether or not to collect code coverage information while running tests.",
+                            "  --coverage(c): Whether or not to collect code coverage information while running tests.",
                             "  --testjson: Whether or not to write the test results to a test.json file.",
                             "  --verbose(v): Whether or not to show verbose logs.",
                             "  --profiler: Whether or not this application should pause before it is run to allow a profiler to be attached.",
@@ -200,14 +202,14 @@ public interface QubTestTests
 
                     try (final Console console = createConsole(output, currentFolder))
                     {
-                        main(console);
+                        main(console, false);
                         test.assertEqual(1, console.getExitCode());
                     }
                     test.assertEqual(
                         Iterable.create(
                             "Compiling...",
                             "ERROR: No java source files found in /."),
-                        Strings.getLines(output.getText().await()).skipLast());
+                        Strings.getLines(output.getText().await()));
                 });
 
                 runner.test("with one source file", (Test test) ->
@@ -674,6 +676,11 @@ public interface QubTestTests
 
     static void main(Console console)
     {
+        main(console, true);
+    }
+
+    static void main(Console console, boolean showTotalDuration)
+    {
         PreCondition.assertNotNull(console, "console");
 
         final QubBuild build = new QubBuild();
@@ -682,6 +689,7 @@ public interface QubTestTests
         final QubTest test = new QubTest();
         test.setJavaRunner(new FakeJavaRunner());
         test.setQubBuild(build);
+        test.setShowTotalDuration(showTotalDuration);
 
         test.main(console);
     }

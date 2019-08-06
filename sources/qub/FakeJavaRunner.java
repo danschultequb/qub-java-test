@@ -19,6 +19,8 @@ public class FakeJavaRunner extends JavaRunner
     @Override
     public Result<Void> run(Console console)
     {
+        PreCondition.assertNotNull(console, "console");
+
         if (isVerbose())
         {
             String command = "java.exe";
@@ -44,7 +46,10 @@ public class FakeJavaRunner extends JavaRunner
                 command += " --" + testJson.getName() + "=" + testJson.getValue().await();
             }
 
-            command += " " + Strings.join(' ', getFullClassNames());
+            for (final String fullClassName : getFullClassNames())
+            {
+                command += " " + fullClassName;
+            }
 
             final String pattern = getPattern();
             if (!Strings.isNullOrEmpty(pattern))

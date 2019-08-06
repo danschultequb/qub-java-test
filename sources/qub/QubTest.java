@@ -87,6 +87,7 @@ public class QubTest
             .setValueName("<test-name-pattern>")
             .setDescription("The pattern to match against tests to determine if they will be run or not.");
         final CommandLineParameterBoolean coverageParameter = parameters.addBoolean("coverage")
+            .addAlias("c")
             .setDescription("Whether or not to collect code coverage information while running tests.");
         final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson")
             .setDescription("Whether or not to write the test results to a test.json file.");

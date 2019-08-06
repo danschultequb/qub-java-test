@@ -91,8 +91,10 @@ public class ConsoleTestRunner implements TestRunner
         return testRunner.getFailedTestCount();
     }
 
-    private void writeFailure(TestError failure)
+    public void writeFailure(TestError failure)
     {
+        PreCondition.assertNotNull(failure, "failure");
+
         increaseIndent();
         writeMessageLines(failure);
         writeStackTrace(failure);
@@ -105,8 +107,10 @@ public class ConsoleTestRunner implements TestRunner
         }
     }
 
-    private void writeMessageLines(TestError failure)
+    public void writeMessageLines(TestError failure)
     {
+        PreCondition.assertNotNull(failure, "failure");
+
         for (final String messageLine : failure.getMessageLines())
         {
             if (messageLine != null)

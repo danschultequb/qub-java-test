@@ -426,6 +426,226 @@ public interface JavaRunnerTests
                     test.assertThrows(javaRunner::getCoverageExecFile,
                         new PostConditionFailure("result cannot be null."));
                 });
+
+                runner.test("when non-existing outputFolder has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    fileSystem.createRoot("/").await();
+                    final Folder folder = fileSystem.getFolder("/i/exist").await();
+
+                    javaRunner.setOutputFolder(folder);
+
+                    test.assertEqual(folder.getFile("coverage.exec").await(), javaRunner.getCoverageExecFile());
+                });
+
+                runner.test("when existing outputFolder has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    fileSystem.createRoot("/").await();
+                    final Folder folder = fileSystem.getFolder("/i/exist").await();
+                    folder.create().await();
+
+                    javaRunner.setOutputFolder(folder);
+
+                    test.assertEqual(folder.getFile("coverage.exec").await(), javaRunner.getCoverageExecFile());
+                });
+            });
+
+            runner.testGroup("setVerbose()", () ->
+            {
+                runner.test("with null", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+                    test.assertSame(javaRunner, javaRunner.setVerbose(null));
+                    test.assertNull(javaRunner.getVerbose());
+                });
+
+                runner.test("with non-null", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    test.assertSame(javaRunner, javaRunner.setVerbose(verbose));
+                    test.assertSame(verbose, javaRunner.getVerbose());
+                });
+            });
+
+            runner.testGroup("isVerbose()", () ->
+            {
+                runner.test("when no verbose has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+                    test.assertFalse(javaRunner.isVerbose());
+                });
+
+                runner.test("when null verbose has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+                    javaRunner.setVerbose(null);
+                    test.assertFalse(javaRunner.isVerbose());
+                });
+
+                runner.test("when non-null verbose has been set but arguments has not", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    javaRunner.setVerbose(verbose);
+
+                    test.assertThrows(() -> javaRunner.isVerbose(),
+                        new PreConditionFailure("getArguments() cannot be null."));
+                });
+
+                runner.test("when non-null verbose with empty arguments has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    javaRunner.setVerbose(verbose);
+
+                    final CommandLineArguments arguments = CommandLineArguments.create();
+                    verbose.setArguments(arguments);
+
+                    test.assertFalse(javaRunner.isVerbose());
+                });
+
+                runner.test("when non-null verbose with --verbose arguments has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    javaRunner.setVerbose(verbose);
+
+                    final CommandLineArguments arguments = CommandLineArguments.create("--verbose");
+                    verbose.setArguments(arguments);
+
+                    test.assertTrue(javaRunner.isVerbose());
+                });
+
+                runner.test("when non-null verbose with --verbose=false arguments has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    javaRunner.setVerbose(verbose);
+
+                    final CommandLineArguments arguments = CommandLineArguments.create("--verbose=false");
+                    verbose.setArguments(arguments);
+
+                    test.assertFalse(javaRunner.isVerbose());
+                });
+
+                runner.test("when non-null verbose with --verbose=true arguments has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    javaRunner.setVerbose(verbose);
+
+                    final CommandLineArguments arguments = CommandLineArguments.create("--verbose=true");
+                    verbose.setArguments(arguments);
+
+                    test.assertTrue(javaRunner.isVerbose());
+                });
+            });
+
+            runner.testGroup("writeVerboseLine()", () ->
+            {
+                runner.test("when no verbose has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+                    test.assertNull(javaRunner.writeVerboseLine("hello").await());
+                });
+
+                runner.test("when null verbose has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+                    javaRunner.setVerbose(null);
+                    test.assertNull(javaRunner.writeVerboseLine("hello there").await());
+                });
+
+                runner.test("when non-null verbose has been set but arguments has not", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    javaRunner.setVerbose(verbose);
+
+                    test.assertThrows(() -> javaRunner.writeVerboseLine("abc").await(),
+                        new PreConditionFailure("getArguments() cannot be null."));
+                    test.assertEqual("", verboseOutputStream.getText().await());
+                });
+
+                runner.test("when non-null verbose with empty arguments has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    javaRunner.setVerbose(verbose);
+
+                    final CommandLineArguments arguments = CommandLineArguments.create();
+                    verbose.setArguments(arguments);
+
+                    test.assertNull(javaRunner.writeVerboseLine("grapes").await());
+                    test.assertEqual("", verboseOutputStream.getText().await());
+                });
+
+                runner.test("when non-null verbose with --verbose arguments has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    javaRunner.setVerbose(verbose);
+
+                    final CommandLineArguments arguments = CommandLineArguments.create("--verbose");
+                    verbose.setArguments(arguments);
+
+                    test.assertNull(javaRunner.writeVerboseLine("fish").await());
+                    test.assertEqual("VERBOSE: fish\n", verboseOutputStream.getText().await());
+                });
+
+                runner.test("when non-null verbose with --verbose=false arguments has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    javaRunner.setVerbose(verbose);
+
+                    final CommandLineArguments arguments = CommandLineArguments.create("--verbose=false");
+                    verbose.setArguments(arguments);
+
+                    test.assertNull(javaRunner.writeVerboseLine("apples").await());
+                    test.assertEqual("", verboseOutputStream.getText().await());
+                });
+
+                runner.test("when non-null verbose with --verbose=true arguments has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+
+                    final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    javaRunner.setVerbose(verbose);
+
+                    final CommandLineArguments arguments = CommandLineArguments.create("--verbose=true");
+                    verbose.setArguments(arguments);
+
+                    test.assertNull(javaRunner.writeVerboseLine("it works!").await());
+                    test.assertEqual("VERBOSE: it works!\n", verboseOutputStream.getText().await());
+                });
             });
         });
     }
