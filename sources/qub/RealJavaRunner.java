@@ -83,13 +83,18 @@ public class RealJavaRunner extends JavaRunner
         processBuilder.addArgument(getCoverageExecFile().toString());
 
         final Path currentFolderPath = process.getCurrentFolderPath();
-        final Iterable<File> classFiles = getClassFiles();
+        final Iterable<File> classFiles = getClassFilesForCoverage();
         for (final File classFile : classFiles)
         {
             processBuilder.addArguments("--classfiles", classFile.relativeTo(currentFolderPath).toString());
         }
-        processBuilder.addArguments("--sourcefiles", getSourceFolder().toString());
-        if (getTestFolder() != null)
+
+        final Coverage coverage = this.getCoverage();
+        if (coverage == Coverage.Sources || coverage == Coverage.All)
+        {
+            processBuilder.addArguments("--sourcefiles", getSourceFolder().toString());
+        }
+        if ((coverage == Coverage.Tests || coverage == Coverage.All) && getTestFolder() != null)
         {
             processBuilder.addArguments("--sourcefiles", getTestFolder().toString());
         }

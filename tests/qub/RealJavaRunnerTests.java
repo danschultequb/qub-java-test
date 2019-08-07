@@ -59,8 +59,13 @@ public interface RealJavaRunnerTests
                     javaRunner.setClassPaths(Iterable.create("/outputs/"));
                     javaRunner.setOutputFolder(outputFolder);
                     final ProcessBuilder javaProcessBuilder = javaRunner.getJavaProcessBuilder(test.getProcess()).await();
-                    test.assertThrows(() -> javaRunner.addTestArguments(javaProcessBuilder),
-                        new FolderNotFoundException("/outputs"));
+                    javaRunner.addTestArguments(javaProcessBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-classpath",
+                            "/outputs/",
+                            "qub.ConsoleTestRunner"),
+                        javaProcessBuilder.getArguments());
                 });
 
                 runner.test("with output folder that exists", (Test test) ->
@@ -400,8 +405,16 @@ public interface RealJavaRunnerTests
                     javaRunner.setOutputFolder(outputFolder);
                     final Process process = test.getProcess();
                     final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
-                    test.assertThrows(() -> javaRunner.addCoverageArguments(process, processBuilder),
-                        new FolderNotFoundException("/outputs/"));
+                    javaRunner.addCoverageArguments(process, processBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-jar",
+                            "/jacoco/jacococli.jar",
+                            "report",
+                            "/outputs/coverage.exec",
+                            "--html",
+                            "/outputs/coverage"),
+                        processBuilder.getArguments());
                 });
 
                 runner.test("with no source folder set", (Test test) ->
@@ -415,8 +428,16 @@ public interface RealJavaRunnerTests
                     javaRunner.setOutputFolder(outputFolder);
                     final Process process = test.getProcess();
                     final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
-                    test.assertThrows(() -> javaRunner.addCoverageArguments(process, processBuilder),
-                        new PostConditionFailure("result cannot be null."));
+                    javaRunner.addCoverageArguments(process, processBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-jar",
+                            "/jacoco/jacococli.jar",
+                            "report",
+                            "/outputs/coverage.exec",
+                            "--html",
+                            "/outputs/coverage"),
+                        processBuilder.getArguments());
                 });
 
                 runner.test("with no class files", (Test test) ->
@@ -439,14 +460,12 @@ public interface RealJavaRunnerTests
                             "/jacoco/jacococli.jar",
                             "report",
                             "/outputs/coverage.exec",
-                            "--sourcefiles",
-                            "/sources",
                             "--html",
                             "/outputs/coverage"),
                         processBuilder.getArguments());
                 });
 
-                runner.test("with class files", (Test test) ->
+                runner.test("with class files and non-existing source folder", (Test test) ->
                 {
                     final RealJavaRunner javaRunner = new RealJavaRunner();
                     final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
@@ -468,9 +487,94 @@ public interface RealJavaRunnerTests
                             "/jacoco/jacococli.jar",
                             "report",
                             "/outputs/coverage.exec",
+                            "--html",
+                            "/outputs/coverage"),
+                        processBuilder.getArguments());
+                });
+
+                runner.test("with class files and --coverage=All", (Test test) ->
+                {
+                    final RealJavaRunner javaRunner = new RealJavaRunner();
+                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    fileSystem.createRoot("/").await();
+                    final Folder jacocoFolder = fileSystem.getFolder("/jacoco/").await();
+                    javaRunner.setJacocoFolder(jacocoFolder);
+                    final Folder outputFolder = fileSystem.createFolder("/outputs/").await();
+                    javaRunner.setOutputFolder(outputFolder);
+                    outputFolder.createFile("qub/Test.class").await();
+                    outputFolder.createFile("other/folder/Test2.class").await();
+                    final Folder sourceFolder = fileSystem.getFolder("/sources/").await();
+                    javaRunner.setSourceFolder(sourceFolder);
+                    javaRunner.setCoverage(Coverage.All);
+                    final Process process = test.getProcess();
+                    final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
+                    javaRunner.addCoverageArguments(process, processBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-jar",
+                            "/jacoco/jacococli.jar",
+                            "report",
+                            "/outputs/coverage.exec",
                             "--classfiles", "/outputs/qub/Test.class",
                             "--classfiles", "/outputs/other/folder/Test2.class",
                             "--sourcefiles", "/sources",
+                            "--html",
+                            "/outputs/coverage"),
+                        processBuilder.getArguments());
+                });
+
+                runner.test("with class files, --coverage=Sources, but no test folder set", (Test test) ->
+                {
+                    final RealJavaRunner javaRunner = new RealJavaRunner();
+                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    fileSystem.createRoot("/").await();
+                    final Folder jacocoFolder = fileSystem.getFolder("/jacoco/").await();
+                    javaRunner.setJacocoFolder(jacocoFolder);
+                    final Folder outputFolder = fileSystem.createFolder("/outputs/").await();
+                    javaRunner.setOutputFolder(outputFolder);
+                    outputFolder.createFile("qub/Test.class").await();
+                    outputFolder.createFile("other/folder/Test2.class").await();
+                    final Folder sourceFolder = fileSystem.getFolder("/sources/").await();
+                    javaRunner.setSourceFolder(sourceFolder);
+                    javaRunner.setCoverage(Coverage.Sources);
+                    final Process process = test.getProcess();
+                    final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
+                    javaRunner.addCoverageArguments(process, processBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-jar",
+                            "/jacoco/jacococli.jar",
+                            "report",
+                            "/outputs/coverage.exec",
+                            "--sourcefiles", "/sources",
+                            "--html",
+                            "/outputs/coverage"),
+                        processBuilder.getArguments());
+                });
+
+                runner.test("with class files, --coverage=Tests, but no test folder set", (Test test) ->
+                {
+                    final RealJavaRunner javaRunner = new RealJavaRunner();
+                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    fileSystem.createRoot("/").await();
+                    final Folder jacocoFolder = fileSystem.getFolder("/jacoco/").await();
+                    javaRunner.setJacocoFolder(jacocoFolder);
+                    final Folder outputFolder = fileSystem.createFolder("/outputs/").await();
+                    javaRunner.setOutputFolder(outputFolder);
+                    outputFolder.createFile("qub/Test.class").await();
+                    outputFolder.createFile("other/folder/Test2.class").await();
+                    final Folder sourceFolder = fileSystem.getFolder("/sources/").await();
+                    javaRunner.setSourceFolder(sourceFolder);
+                    javaRunner.setCoverage(Coverage.Tests);
+                    final Process process = test.getProcess();
+                    final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
+                    javaRunner.addCoverageArguments(process, processBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-jar",
+                            "/jacoco/jacococli.jar",
+                            "report",
+                            "/outputs/coverage.exec",
                             "--html",
                             "/outputs/coverage"),
                         processBuilder.getArguments());
@@ -491,6 +595,202 @@ public interface RealJavaRunnerTests
                     javaRunner.setSourceFolder(sourceFolder);
                     final Folder testFolder = fileSystem.getFolder("/tests/").await();
                     javaRunner.setTestFolder(testFolder);
+                    final Process process = test.getProcess();
+                    final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
+                    javaRunner.addCoverageArguments(process, processBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-jar",
+                            "/jacoco/jacococli.jar",
+                            "report",
+                            "/outputs/coverage.exec",
+                            "--html",
+                            "/outputs/coverage"),
+                        processBuilder.getArguments());
+                });
+
+                runner.test("with non-existing test folder set and --coverage=All", (Test test) ->
+                {
+                    final RealJavaRunner javaRunner = new RealJavaRunner();
+                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    fileSystem.createRoot("/").await();
+                    final Folder jacocoFolder = fileSystem.getFolder("/jacoco/").await();
+                    javaRunner.setJacocoFolder(jacocoFolder);
+                    final Folder outputFolder = fileSystem.createFolder("/outputs/").await();
+                    javaRunner.setOutputFolder(outputFolder);
+                    outputFolder.createFile("qub/Test.class").await();
+                    outputFolder.createFile("other/folder/Test2.class").await();
+                    final Folder sourceFolder = fileSystem.getFolder("/sources/").await();
+                    javaRunner.setSourceFolder(sourceFolder);
+                    final Folder testFolder = fileSystem.getFolder("/tests/").await();
+                    javaRunner.setTestFolder(testFolder);
+                    javaRunner.setCoverage(Coverage.All);
+                    final Process process = test.getProcess();
+                    final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
+                    javaRunner.addCoverageArguments(process, processBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-jar",
+                            "/jacoco/jacococli.jar",
+                            "report",
+                            "/outputs/coverage.exec",
+                            "--classfiles", "/outputs/qub/Test.class",
+                            "--classfiles", "/outputs/other/folder/Test2.class",
+                            "--sourcefiles", "/sources",
+                            "--sourcefiles", "/tests",
+                            "--html",
+                            "/outputs/coverage"),
+                        processBuilder.getArguments());
+                });
+
+                runner.test("with non-existing test folder set and --coverage=Tests", (Test test) ->
+                {
+                    final RealJavaRunner javaRunner = new RealJavaRunner();
+                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    fileSystem.createRoot("/").await();
+                    final Folder jacocoFolder = fileSystem.getFolder("/jacoco/").await();
+                    javaRunner.setJacocoFolder(jacocoFolder);
+                    final Folder outputFolder = fileSystem.createFolder("/outputs/").await();
+                    javaRunner.setOutputFolder(outputFolder);
+                    outputFolder.createFile("qub/Test.class").await();
+                    outputFolder.createFile("other/folder/Test2.class").await();
+                    final Folder sourceFolder = fileSystem.getFolder("/sources/").await();
+                    javaRunner.setSourceFolder(sourceFolder);
+                    final Folder testFolder = fileSystem.getFolder("/tests/").await();
+                    javaRunner.setTestFolder(testFolder);
+                    javaRunner.setCoverage(Coverage.Tests);
+                    final Process process = test.getProcess();
+                    final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
+                    javaRunner.addCoverageArguments(process, processBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-jar",
+                            "/jacoco/jacococli.jar",
+                            "report",
+                            "/outputs/coverage.exec",
+                            "--sourcefiles", "/tests",
+                            "--html",
+                            "/outputs/coverage"),
+                        processBuilder.getArguments());
+                });
+
+                runner.test("with non-existing test and source folders set and --coverage=Sources", (Test test) ->
+                {
+                    final RealJavaRunner javaRunner = new RealJavaRunner();
+                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    fileSystem.createRoot("/").await();
+                    final Folder jacocoFolder = fileSystem.getFolder("/jacoco/").await();
+                    javaRunner.setJacocoFolder(jacocoFolder);
+                    final Folder outputFolder = fileSystem.createFolder("/outputs/").await();
+                    javaRunner.setOutputFolder(outputFolder);
+                    outputFolder.createFile("qub/Test.class").await();
+                    outputFolder.createFile("other/folder/Test2.class").await();
+                    final Folder sourceFolder = fileSystem.getFolder("/sources/").await();
+                    javaRunner.setSourceFolder(sourceFolder);
+                    final Folder testFolder = fileSystem.getFolder("/tests/").await();
+                    javaRunner.setTestFolder(testFolder);
+                    javaRunner.setCoverage(Coverage.Sources);
+                    final Process process = test.getProcess();
+                    final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
+                    javaRunner.addCoverageArguments(process, processBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-jar",
+                            "/jacoco/jacococli.jar",
+                            "report",
+                            "/outputs/coverage.exec",
+                            "--sourcefiles", "/sources",
+                            "--html",
+                            "/outputs/coverage"),
+                        processBuilder.getArguments());
+                });
+
+                runner.test("with existing test and source folders set and --coverage=Sources", (Test test) ->
+                {
+                    final RealJavaRunner javaRunner = new RealJavaRunner();
+                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    fileSystem.createRoot("/").await();
+                    final Folder jacocoFolder = fileSystem.getFolder("/jacoco/").await();
+                    javaRunner.setJacocoFolder(jacocoFolder);
+                    final Folder outputFolder = fileSystem.createFolder("/outputs/").await();
+                    javaRunner.setOutputFolder(outputFolder);
+                    outputFolder.createFile("qub/Test.class").await();
+                    outputFolder.createFile("other/folder/Test2.class").await();
+                    final Folder sourceFolder = fileSystem.createFolder("/sources/").await();
+                    sourceFolder.createFile("qub/Test.java").await();
+                    javaRunner.setSourceFolder(sourceFolder);
+                    final Folder testFolder = fileSystem.createFolder("/tests/").await();
+                    testFolder.createFile("other/folder/Test2.java").await();
+                    javaRunner.setTestFolder(testFolder);
+                    javaRunner.setCoverage(Coverage.Sources);
+                    final Process process = test.getProcess();
+                    final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
+                    javaRunner.addCoverageArguments(process, processBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-jar",
+                            "/jacoco/jacococli.jar",
+                            "report",
+                            "/outputs/coverage.exec",
+                            "--classfiles", "/outputs/qub/Test.class",
+                            "--sourcefiles", "/sources",
+                            "--html",
+                            "/outputs/coverage"),
+                        processBuilder.getArguments());
+                });
+
+                runner.test("with existing test and source folders set and --coverage=Tests", (Test test) ->
+                {
+                    final RealJavaRunner javaRunner = new RealJavaRunner();
+                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    fileSystem.createRoot("/").await();
+                    final Folder jacocoFolder = fileSystem.getFolder("/jacoco/").await();
+                    javaRunner.setJacocoFolder(jacocoFolder);
+                    final Folder outputFolder = fileSystem.createFolder("/outputs/").await();
+                    javaRunner.setOutputFolder(outputFolder);
+                    outputFolder.createFile("qub/Test.class").await();
+                    outputFolder.createFile("other/folder/Test2.class").await();
+                    final Folder sourceFolder = fileSystem.createFolder("/sources/").await();
+                    sourceFolder.createFile("qub/Test.java").await();
+                    javaRunner.setSourceFolder(sourceFolder);
+                    final Folder testFolder = fileSystem.createFolder("/tests/").await();
+                    testFolder.createFile("other/folder/Test2.java").await();
+                    javaRunner.setTestFolder(testFolder);
+                    javaRunner.setCoverage(Coverage.Tests);
+                    final Process process = test.getProcess();
+                    final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
+                    javaRunner.addCoverageArguments(process, processBuilder);
+                    test.assertEqual(
+                        Iterable.create(
+                            "-jar",
+                            "/jacoco/jacococli.jar",
+                            "report",
+                            "/outputs/coverage.exec",
+                            "--classfiles", "/outputs/other/folder/Test2.class",
+                            "--sourcefiles", "/tests",
+                            "--html",
+                            "/outputs/coverage"),
+                        processBuilder.getArguments());
+                });
+
+                runner.test("with existing test and source folders set and --coverage=All", (Test test) ->
+                {
+                    final RealJavaRunner javaRunner = new RealJavaRunner();
+                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    fileSystem.createRoot("/").await();
+                    final Folder jacocoFolder = fileSystem.getFolder("/jacoco/").await();
+                    javaRunner.setJacocoFolder(jacocoFolder);
+                    final Folder outputFolder = fileSystem.createFolder("/outputs/").await();
+                    javaRunner.setOutputFolder(outputFolder);
+                    outputFolder.createFile("qub/Test.class").await();
+                    outputFolder.createFile("other/folder/Test2.class").await();
+                    final Folder sourceFolder = fileSystem.createFolder("/sources/").await();
+                    sourceFolder.createFile("qub/Test.java").await();
+                    javaRunner.setSourceFolder(sourceFolder);
+                    final Folder testFolder = fileSystem.createFolder("/tests/").await();
+                    testFolder.createFile("other/folder/Test2.java").await();
+                    javaRunner.setTestFolder(testFolder);
+                    javaRunner.setCoverage(Coverage.All);
                     final Process process = test.getProcess();
                     final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
                     javaRunner.addCoverageArguments(process, processBuilder);

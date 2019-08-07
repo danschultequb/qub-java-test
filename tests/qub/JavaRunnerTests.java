@@ -225,12 +225,12 @@ public interface JavaRunnerTests
                 });
             });
 
-            runner.testGroup("getClassFiles()", () ->
+            runner.testGroup("getAllClassFiles()", () ->
             {
                 runner.test("when outputFolder hasn't been set", (Test test) ->
                 {
                     final JavaRunner javaRunner = creator.run();
-                    test.assertThrows(javaRunner::getClassFiles,
+                    test.assertThrows(() -> javaRunner.getAllClassFiles().await(),
                         new PostConditionFailure("result cannot be null."));
                 });
 
@@ -241,8 +241,9 @@ public interface JavaRunnerTests
                     fileSystem.createRoot("/").await();
                     final Folder outputFolder = fileSystem.getFolder("/i/dont/exist").await();
                     javaRunner.setOutputFolder(outputFolder);
-                    test.assertThrows(javaRunner::getClassFiles,
-                        new FolderNotFoundException("/i/dont/exist"));
+                    test.assertEqual(
+                        Iterable.create(),
+                        javaRunner.getAllClassFiles().await());
                 });
 
                 runner.test("when outputFolder is empty", (Test test) ->
@@ -253,7 +254,7 @@ public interface JavaRunnerTests
                     final Folder outputFolder = fileSystem.getFolder("/i/exist").await();
                     outputFolder.create().await();
                     javaRunner.setOutputFolder(outputFolder);
-                    test.assertEqual(Iterable.create(), javaRunner.getClassFiles());
+                    test.assertEqual(Iterable.create(), javaRunner.getAllClassFiles().await());
                 });
 
                 runner.test("when outputFolder doesn't contain any *.class files", (Test test) ->
@@ -266,7 +267,7 @@ public interface JavaRunnerTests
                     outputFolder.createFile("code.stuff").await();
                     outputFolder.createFile("hello/there.txt").await();
                     javaRunner.setOutputFolder(outputFolder);
-                    test.assertEqual(Iterable.create(), javaRunner.getClassFiles());
+                    test.assertEqual(Iterable.create(), javaRunner.getAllClassFiles().await());
                 });
 
                 runner.test("when outputFolder contains *.class files", (Test test) ->
@@ -283,7 +284,7 @@ public interface JavaRunnerTests
                         Iterable.create(
                             "/i/exist/code.class",
                             "/i/exist/hello/there.class"),
-                        javaRunner.getClassFiles().map(File::toString));
+                        javaRunner.getAllClassFiles().await().map(File::toString));
                 });
             });
 
@@ -303,8 +304,9 @@ public interface JavaRunnerTests
                     fileSystem.createRoot("/").await();
                     final Folder outputFolder = fileSystem.getFolder("/i/dont/exist").await();
                     javaRunner.setOutputFolder(outputFolder);
-                    test.assertThrows(javaRunner::getFullClassNames,
-                        new FolderNotFoundException("/i/dont/exist"));
+                    test.assertEqual(
+                        Iterable.create(),
+                        javaRunner.getFullClassNames());
                 });
 
                 runner.test("when outputFolder is empty", (Test test) ->
@@ -346,6 +348,33 @@ public interface JavaRunnerTests
                             "code",
                             "hello.there"),
                         javaRunner.getFullClassNames());
+                });
+            });
+
+            runner.testGroup("setCoverage()", () ->
+            {
+                runner.test("with null", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+                    test.assertThrows(() -> javaRunner.setCoverage(null),
+                        new PreConditionFailure("coverage cannot be null."));
+                    test.assertEqual(Coverage.None, javaRunner.getCoverage());
+                });
+
+                runner.test("with non-null", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+                    test.assertSame(javaRunner, javaRunner.setCoverage(Coverage.Tests));
+                    test.assertEqual(Coverage.Tests, javaRunner.getCoverage());
+                });
+            });
+
+            runner.testGroup("getCoverage()", () ->
+            {
+                runner.test("before coverage has been set", (Test test) ->
+                {
+                    final JavaRunner javaRunner = creator.run();
+                    test.assertEqual(Coverage.None, javaRunner.getCoverage());
                 });
             });
 

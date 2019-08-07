@@ -111,11 +111,14 @@ public interface FakeJavaRunnerTests
 
                         javaRunner.setOutputFolder(fileSystem.getFolder("/outputs/").await());
 
-                        test.assertThrows(() -> javaRunner.run(console),
-                            new FolderNotFoundException("/outputs/"));
+                        test.assertNull(javaRunner.run(console).await());
 
                         test.assertEqual(0, console.getExitCode());
-                        test.assertEqual("", outputStream.getText().await());
+                        test.assertEqual(
+                            Iterable.create(
+                                "VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner",
+                                ""),
+                            Strings.getLines(outputStream.getText().await()));
                     }
                 });
 

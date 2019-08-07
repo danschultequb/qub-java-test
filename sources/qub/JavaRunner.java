@@ -7,6 +7,7 @@ public abstract class JavaRunner
     private Folder outputFolder;
     private Folder sourceFolder;
     private Folder testFolder;
+    private Coverage coverage = Coverage.None;
     private Folder jacocoFolder;
     private CommandLineParameterVerbose verbose;
     private CommandLineParameterProfiler profiler;
@@ -97,19 +98,130 @@ public abstract class JavaRunner
         return testFolder;
     }
 
-    public Iterable<File> getClassFiles()
+    public Result<Iterable<File>> getAllClassFiles()
     {
-        return getOutputFolder().getFilesRecursively().await()
-            .where((File file) -> Comparer.equal(file.getFileExtension(), ".class"));
+        return Result.create(() ->
+        {
+            final Folder outputFolder = getOutputFolder();
+            final Iterable<File> allOutputFiles = outputFolder.getFilesRecursively()
+                .catchError(FolderNotFoundException.class, () -> Iterable.create())
+                .await();
+            return allOutputFiles.where((File file) -> Comparer.equal(file.getFileExtension(), ".class"));
+        });
+    }
+
+    public Result<Iterable<File>> getAllSourceClassFiles()
+    {
+        return getAllFolderClassFiles(getSourceFolder());
+    }
+
+    public Result<Iterable<File>> getAllTestClassFiles()
+    {
+        return getAllFolderClassFiles(getTestFolder());
+    }
+
+    private Result<Iterable<File>> getAllFolderClassFiles(Folder sourceFolder)
+    {
+        return Result.create(() ->
+        {
+            final List<File> allFolderClassFiles = List.create();
+            if (sourceFolder != null)
+            {
+                final Iterable<File> javaFiles = sourceFolder.getFilesRecursively()
+                        .catchError(FolderNotFoundException.class, () -> Iterable.create())
+                        .await()
+                        .where((File file) -> Comparer.equal(file.getFileExtension(), ".java"));
+                if (javaFiles.any())
+                {
+                    final Iterable<File> allClassFiles = getAllClassFiles().await();
+                    allFolderClassFiles.addAll(QubTest.getSourceClassFiles(outputFolder, allClassFiles, sourceFolder, javaFiles));
+                }
+            }
+            return allFolderClassFiles;
+        });
+    }
+
+    public Iterable<File> getClassFilesForCoverage()
+    {
+        final List<File> result = List.create();
+
+        final Coverage coverage = this.getCoverage();
+        if (coverage != null && coverage != Coverage.None)
+        {
+            final Folder outputFolder = getOutputFolder();
+            final Iterable<File> allClassFiles = outputFolder.getFilesRecursively()
+                .catchError(FolderNotFoundException.class, () -> Iterable.create())
+                .await()
+                .where((File file) -> Comparer.equal(file.getFileExtension(), ".class"));
+            if (coverage == Coverage.All)
+            {
+                result.addAll(allClassFiles);
+            }
+            else if (coverage == Coverage.Sources)
+            {
+                final Folder sourceFolder = this.getSourceFolder();
+                if (sourceFolder != null)
+                {
+                    final Iterable<File> sourceJavaFiles = sourceFolder.getFilesRecursively()
+                        .catchError(FolderNotFoundException.class, () -> Iterable.create())
+                        .await()
+                        .where((File file) -> Comparer.equal(file.getFileExtension(), ".java"));
+                    result.addAll(QubTest.getSourceClassFiles(outputFolder, allClassFiles, sourceFolder, sourceJavaFiles));
+                }
+            }
+            else
+            {
+                final Folder testFolder = this.getTestFolder();
+                if (testFolder != null)
+                {
+                    final Iterable<File> testJavaFiles = testFolder.getFilesRecursively()
+                        .catchError(FolderNotFoundException.class, () -> Iterable.create())
+                        .await()
+                        .where((File file) -> Comparer.equal(file.getFileExtension(), ".java"));
+                    result.addAll(QubTest.getSourceClassFiles(outputFolder, allClassFiles, testFolder, testJavaFiles));
+                }
+            }
+        }
+
+        PostCondition.assertNotNull(result, "result");
+
+        return result;
     }
 
     public Iterable<String> getFullClassNames()
     {
         final Folder outputFolder = getOutputFolder();
-        final Iterable<String> result = getClassFiles()
+        final Iterable<String> result = getAllClassFiles().await()
             .map((File classFile) -> classFile.relativeTo(outputFolder)
                 .withoutFileExtension().toString()
                 .replace('/', '.').replace('\\', '.'));
+
+        PostCondition.assertNotNull(result, "result");
+
+        return result;
+    }
+
+    /**
+     * Set the code coverage strategy that this JavaRunner will use.
+     * @param coverage The code coverage strategy that this JavaRunner will use.
+     * @return This object for method chaining.
+     */
+    public JavaRunner setCoverage(Coverage coverage)
+    {
+        PreCondition.assertNotNull(coverage, "coverage");
+
+        this.coverage = coverage;
+
+        return this;
+    }
+
+    /**
+     * Get the code coverage strategy that this JavaRunner will use.
+     * @return The code coverage strategy that this JavaRunner will use.
+     */
+    public Coverage getCoverage()
+    {
+        final Coverage result = this.coverage;
 
         PostCondition.assertNotNull(result, "result");
 

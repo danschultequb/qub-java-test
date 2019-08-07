@@ -86,7 +86,9 @@ public class QubTest
         final CommandLineParameter<String> patternParameter = parameters.addString("pattern")
             .setValueName("<test-name-pattern>")
             .setDescription("The pattern to match against tests to determine if they will be run or not.");
-        final CommandLineParameterBoolean coverageParameter = parameters.addBoolean("coverage")
+        final CommandLineParameter<Coverage> coverageParameter = parameters.addEnum("coverage", Coverage.None, Coverage.Sources)
+            .setValueRequired(false)
+            .setValueName("<None|Sources|Tests|All>")
             .addAlias("c")
             .setDescription("Whether or not to collect code coverage information while running tests.");
         final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson")
@@ -123,7 +125,7 @@ public class QubTest
 
                     final Folder folderToTest = folderToTestParameter.getValue().await();
                     final String pattern = patternParameter.getValue().await();
-                    final boolean coverage = coverageParameter.getValue().await();
+                    final Coverage coverage = coverageParameter.getValue().await();
 
                     final Folder outputFolder = folderToTest.getFolder("outputs").await();
                     final Folder sourceFolder = folderToTest.getFolder("sources").await();
@@ -146,7 +148,7 @@ public class QubTest
                     }
 
                     Folder jacocoFolder = null;
-                    if (coverage)
+                    if (coverage != Coverage.None)
                     {
                         final Folder qubFolder = getQubHomeFolder(console);
                         jacocoFolder = qubFolder.getFolder("jacoco/jacococli").await()
@@ -159,6 +161,7 @@ public class QubTest
                     javaTestRunner.setPattern(pattern);
                     javaTestRunner.setOutputFolder(outputFolder);
                     javaTestRunner.setJacocoFolder(jacocoFolder);
+                    javaTestRunner.setCoverage(coverage);
                     javaTestRunner.setSourceFolder(sourceFolder);
                     javaTestRunner.setTestFolder(testFolder);
                     javaTestRunner.setVerbose(verbose);
@@ -188,6 +191,48 @@ public class QubTest
         PostCondition.assertNotNull(result, "result");
 
         return result;
+    }
+
+    /**
+     * Get whether or not the provided outputClassFile was created from one of the provided java
+     * files.
+     * @param outputFolder The output folder that the outputClassFiles are entries of.
+     * @param outputClassFile The outputClassFile to check.
+     * @param sourceFolder The source folder that the sourceJavaFiles are entries of.
+     * @param sourceJavaFiles The possible source files that the class file may have come from.
+     * @return Whether or not the provided outputClassFile was created from one of the provided java
+     * files.
+     */
+    public static boolean isSourceClassFile(Folder outputFolder, File outputClassFile, Folder sourceFolder, Iterable<File> sourceJavaFiles)
+    {
+        PreCondition.assertNotNull(outputFolder, "outputFolder");
+        PreCondition.assertNotNull(outputClassFile, "outputClassFile");
+        PreCondition.assertNotNull(sourceFolder, "sourceFolder");
+        PreCondition.assertNotNull(sourceJavaFiles, "sourceJavaFiles");
+
+        Path outputClassFilePath = outputClassFile.relativeTo(outputFolder).withoutFileExtension();
+        if (outputClassFilePath.getSegments().last().contains("$"))
+        {
+            final String outputClassFileRelativePathString = outputClassFilePath.toString();
+            final int dollarSignIndex = outputClassFileRelativePathString.lastIndexOf('$');
+            final String outputClassFileRelativePathStringWithoutDollarSign = outputClassFileRelativePathString.substring(0, dollarSignIndex);
+            outputClassFilePath = Path.parse(outputClassFileRelativePathStringWithoutDollarSign);
+        }
+        final Path outputClassFileRelativePath = outputClassFilePath;
+        return sourceJavaFiles.contains((File sourceJavaFile) ->
+        {
+            final Path sourceJavaFileRelativePath = sourceJavaFile.relativeTo(sourceFolder).withoutFileExtension();
+            return outputClassFileRelativePath.equals(sourceJavaFileRelativePath);
+        });
+    }
+
+    public static Iterable<File> getSourceClassFiles(Folder outputFolder, Iterable<File> outputClassFiles, Folder sourceFolder, Iterable<File> sourceJavaFiles)
+    {
+        return outputClassFiles
+            .where((File outputClassFile) ->
+            {
+                return QubTest.isSourceClassFile(outputFolder, outputClassFile, sourceFolder, sourceJavaFiles);
+            });
     }
 
     public static void main(String[] args)
