@@ -235,6 +235,47 @@ public class QubTest
             });
     }
 
+    /**
+     * Get the full class name of the provided class file.
+     * @param outputFolder The output folder that contains the class file.
+     * @param classFile The class file to get the full class name of.
+     * @return The full name of the class file.
+     */
+    public static String getFullClassName(Folder outputFolder, File classFile)
+    {
+        PreCondition.assertNotNull(outputFolder, "outputFolder");
+        PreCondition.assertNotNull(classFile, "classFile");
+
+        final Path classFileRelativePath = classFile.relativeTo(outputFolder);
+        final String result = QubTest.getFullClassName(classFileRelativePath);
+
+        PostCondition.assertNotNullAndNotEmpty(result, "result");
+
+        return result;
+    }
+
+    /**
+     * Get the full class name of the class file at the provided relative path.
+     * @param classFileRelativePath The path to the class file relative to the output folder.
+     * @return The full name of the class file.
+     */
+    public static String getFullClassName(Path classFileRelativePath)
+    {
+        PreCondition.assertNotNull(classFileRelativePath, "classFileRelativePath");
+        PreCondition.assertFalse(classFileRelativePath.isRooted(), "classFileRelativePath.isRooted()");
+        PreCondition.assertEqual(".class", classFileRelativePath.getFileExtension(), "classFileRelativePath.getFileExtension()");
+
+        final String result = classFileRelativePath
+            .withoutFileExtension()
+            .toString()
+            .replace('/', '.')
+            .replace('\\', '.');
+
+        PostCondition.assertNotNullAndNotEmpty(result, "result");
+
+        return result;
+    }
+
     public static void main(String[] args)
     {
         final QubTest qubTest = new QubTest();

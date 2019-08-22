@@ -44,6 +44,12 @@ public class RealJavaRunner extends JavaRunner
             processBuilder.addArgument("--" + profiler.getName() + "=" + profiler.getValue().await());
         }
 
+        final CommandLineParameterVerbose verbose = getVerbose();
+        if (verbose != null)
+        {
+            processBuilder.addArgument("--" + verbose.getName() + "=" + verbose.getValue().await());
+        }
+
         final CommandLineParameterBoolean testJson = getTestJson();
         if (testJson != null)
         {
