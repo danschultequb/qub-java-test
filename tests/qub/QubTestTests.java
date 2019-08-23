@@ -272,7 +272,7 @@ public interface QubTestTests
                             "VERBOSE: Writing build.json file...",
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
-                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs A",
+                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });
@@ -310,7 +310,7 @@ public interface QubTestTests
                             "VERBOSE: Writing build.json file...",
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
-                            "VERBOSE: java.exe -classpath /outputs;/foo/subfolder qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs A",
+                            "VERBOSE: java.exe -classpath /outputs;/foo/subfolder qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });
@@ -348,7 +348,7 @@ public interface QubTestTests
                             "VERBOSE: Writing build.json file...",
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
-                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs A",
+                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });
@@ -386,7 +386,7 @@ public interface QubTestTests
                             "VERBOSE: Writing build.json file...",
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
-                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs A",
+                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });
@@ -424,7 +424,7 @@ public interface QubTestTests
                             "VERBOSE: Writing build.json file...",
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
-                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=false --output-folder=/outputs A",
+                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=false --output-folder=/outputs --coverage=None A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });
@@ -496,7 +496,7 @@ public interface QubTestTests
                             "VERBOSE: Writing build.json file...",
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
-                            "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs A",
+                            "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=Sources A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });
@@ -540,7 +540,7 @@ public interface QubTestTests
                             "VERBOSE: Writing build.json file...",
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
-                            "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs A",
+                            "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=Sources A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });
@@ -592,7 +592,7 @@ public interface QubTestTests
                             "VERBOSE: Writing build.json file...",
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
-                            "VERBOSE: java.exe -classpath /outputs;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs A",
+                            "VERBOSE: java.exe -classpath /outputs;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });
@@ -656,7 +656,7 @@ public interface QubTestTests
                             "VERBOSE: Writing build.json file...",
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
-                            "VERBOSE: java.exe -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs A",
+                            "VERBOSE: java.exe -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });

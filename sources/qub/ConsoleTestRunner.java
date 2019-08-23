@@ -485,6 +485,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
                 ? null
                 : PathPattern.parse(argumentValue));
         });
+        final CommandLineParameter<Coverage> coverageParameter = parameters.addEnum("coverage", Coverage.None, Coverage.Sources);
         final CommandLineParameter<String> outputFolderParameter = parameters.addString("output-folder");
         final CommandLineParameterVerbose verbose = parameters.addVerbose(console);
         final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(console, ConsoleTestRunner.class);
@@ -546,7 +547,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         {
             boolean runTestClass;
 
-            if (!useTestJson)
+            if (!useTestJson || coverageParameter.getValue().await() != Coverage.None)
             {
                 runTestClass = true;
             }

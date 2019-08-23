@@ -65,7 +65,8 @@ public interface RealJavaRunnerTests
                             "-classpath",
                             "/outputs/",
                             "qub.ConsoleTestRunner",
-                            "--output-folder=/outputs"),
+                            "--output-folder=/outputs",
+                            "--coverage=None"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -84,7 +85,8 @@ public interface RealJavaRunnerTests
                             "-classpath",
                             "/outputs/",
                             "qub.ConsoleTestRunner",
-                            "--output-folder=/outputs"),
+                            "--output-folder=/outputs",
+                            "--coverage=None"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -105,7 +107,8 @@ public interface RealJavaRunnerTests
                             "-classpath",
                             "/outputs/",
                             "qub.ConsoleTestRunner",
-                            "--output-folder=/outputs"),
+                            "--output-folder=/outputs",
+                            "--coverage=None"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -130,7 +133,8 @@ public interface RealJavaRunnerTests
                             "/outputs/",
                             "qub.ConsoleTestRunner",
                             "--profiler=true",
-                            "--output-folder=/outputs"),
+                            "--output-folder=/outputs",
+                            "--coverage=None"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -155,7 +159,8 @@ public interface RealJavaRunnerTests
                             "/outputs/",
                             "qub.ConsoleTestRunner",
                             "--profiler=false",
-                            "--output-folder=/outputs"),
+                            "--output-folder=/outputs",
+                            "--coverage=None"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -180,7 +185,8 @@ public interface RealJavaRunnerTests
                             "/outputs/",
                             "qub.ConsoleTestRunner",
                             "--profiler=true",
-                            "--output-folder=/outputs"),
+                            "--output-folder=/outputs",
+                            "--coverage=None"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -205,7 +211,8 @@ public interface RealJavaRunnerTests
                             "/outputs/",
                             "qub.ConsoleTestRunner",
                             "--testjson=true",
-                            "--output-folder=/outputs"),
+                            "--output-folder=/outputs",
+                            "--coverage=None"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -230,7 +237,8 @@ public interface RealJavaRunnerTests
                             "/outputs/",
                             "qub.ConsoleTestRunner",
                             "--testjson=false",
-                            "--output-folder=/outputs"),
+                            "--output-folder=/outputs",
+                            "--coverage=None"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -255,7 +263,8 @@ public interface RealJavaRunnerTests
                             "/outputs/",
                             "qub.ConsoleTestRunner",
                             "--testjson=true",
-                            "--output-folder=/outputs"),
+                            "--output-folder=/outputs",
+                            "--coverage=None"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -275,7 +284,8 @@ public interface RealJavaRunnerTests
                             "-classpath",
                             "/outputs/",
                             "qub.ConsoleTestRunner",
-                            "--output-folder=/outputs"),
+                            "--output-folder=/outputs",
+                            "--coverage=None"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -296,7 +306,8 @@ public interface RealJavaRunnerTests
                             "/outputs/",
                             "qub.ConsoleTestRunner",
                             "--pattern=hello",
-                            "--output-folder=/outputs"),
+                            "--output-folder=/outputs",
+                            "--coverage=None"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -320,6 +331,7 @@ public interface RealJavaRunnerTests
                             "qub.ConsoleTestRunner",
                             "--pattern=hello",
                             "--output-folder=/outputs",
+                            "--coverage=None",
                             "qub.ClassToTest",
                             "other.folder.TestMe"),
                         javaProcessBuilder.getArguments());

@@ -58,6 +58,12 @@ public class FakeJavaRunner extends JavaRunner
                 command += " --output-folder=" + outputFolder;
             }
 
+            final Coverage coverage = getCoverage();
+            if (coverage != null)
+            {
+                command += " --coverage=" + coverage;
+            }
+
             for (final String fullClassName : getFullClassNames())
             {
                 command += " " + fullClassName;

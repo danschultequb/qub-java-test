@@ -68,6 +68,12 @@ public class RealJavaRunner extends JavaRunner
             processBuilder.addArgument("--output-folder=" + outputFolder);
         }
 
+        final Coverage coverage = getCoverage();
+        if (coverage != null)
+        {
+            processBuilder.addArgument("--coverage=" + coverage);
+        }
+
         processBuilder.addArguments(getFullClassNames());
     }
 
