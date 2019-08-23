@@ -5,6 +5,8 @@ package qub;
  */
 public class TestJSON
 {
+    private static final String classFilesPropertyName = "classFiles";
+
     private Iterable<TestJSONClassFile> classFiles;
 
     /**
@@ -27,6 +29,23 @@ public class TestJSON
     public Iterable<TestJSONClassFile> getClassFiles()
     {
         return this.classFiles;
+    }
+
+    @Override
+    public boolean equals(Object rhs)
+    {
+        return rhs instanceof TestJSON && equals((TestJSON)rhs);
+    }
+
+    /**
+     * Get whether or not this TestJSON object is equal to the provided TestJSON object.
+     * @param rhs The TestJSON object to compare against this TestJSON object.
+     * @return Whether or not this TestJSON object is equal to the provided TestJSON object.
+     */
+    public boolean equals(TestJSON rhs)
+    {
+        return rhs != null &&
+            Comparer.equal(classFiles, rhs.classFiles);
     }
 
     /**
@@ -72,7 +91,7 @@ public class TestJSON
 
         return writeStream.writeObject(root ->
         {
-            root.writeObjectProperty("classFiles", classFilesObject ->
+            root.writeObjectProperty(classFilesPropertyName, classFilesObject ->
             {
                 final Iterable<TestJSONClassFile> classFiles = this.getClassFiles();
                 if (!Iterable.isNullOrEmpty(classFiles))
@@ -83,6 +102,65 @@ public class TestJSON
                     }
                 }
             });
+        });
+    }
+
+    /**
+     * Parse a TestJSON object from the provided test.json file.
+     * @param testJsonFile The test.json file to parse.
+     * @return The parsed TestJSON object.
+     */
+    public static Result<TestJSON> parse(File testJsonFile)
+    {
+        PreCondition.assertNotNull(testJsonFile, "testJsonFile");
+
+        return Result.create(() ->
+        {
+            TestJSON result;
+            try (final ByteReadStream readStream = testJsonFile.getContentByteReadStream().await())
+            {
+                result = TestJSON.parse(readStream).await();
+            }
+            return result;
+        });
+    }
+
+    public static Result<TestJSON> parse(ByteReadStream readStream)
+    {
+        PreCondition.assertNotNull(readStream, "readStream");
+        PreCondition.assertNotDisposed(readStream, "readStream.isDisposed()");
+
+        return parse(readStream.asCharacterReadStream());
+    }
+
+    public static Result<TestJSON> parse(CharacterReadStream readStream)
+    {
+        PreCondition.assertNotNull(readStream, "readStream");
+        PreCondition.assertNotDisposed(readStream, "readStream.isDisposed()");
+
+        return Result.create(() ->
+        {
+            final JSONDocument jsonDocument = JSON.parse(readStream);
+            final JSONObject rootObject = jsonDocument.getRootObject().await();
+            final JSONObject classFilesObject = rootObject.getObjectPropertyValue(classFilesPropertyName)
+                .catchError()
+                .await();
+            final List<TestJSONClassFile> classFiles = List.create();
+            if (classFilesObject != null)
+            {
+                for (final JSONProperty property : classFilesObject.getProperties())
+                {
+                    final TestJSONClassFile classFile = TestJSONClassFile.parse(property)
+                        .catchError()
+                        .await();
+                    if (classFile != null)
+                    {
+                        classFiles.add(classFile);
+                    }
+                }
+            }
+            return new TestJSON()
+                .setClassFiles(classFiles);
         });
     }
 }

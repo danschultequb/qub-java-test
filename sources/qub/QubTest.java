@@ -91,7 +91,7 @@ public class QubTest
             .setValueName("<None|Sources|Tests|All>")
             .addAlias("c")
             .setDescription("Whether or not to collect code coverage information while running tests.");
-        final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson")
+        final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson", true)
             .setDescription("Whether or not to write the test results to a test.json file.");
         final CommandLineParameterVerbose verbose = parameters.addVerbose(console);
         final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(console, QubTest.class);
@@ -272,6 +272,19 @@ public class QubTest
             .replace('\\', '.');
 
         PostCondition.assertNotNullAndNotEmpty(result, "result");
+
+        return result;
+    }
+
+    public static File getClassFile(Folder outputFolder, String fullClassName)
+    {
+        PreCondition.assertNotNull(outputFolder, "outputFolder");
+        PreCondition.assertNotNullAndNotEmpty(fullClassName, "fullClassName");
+
+        final String testClassFileRelativePath = fullClassName.replace('.', '/') + ".class";
+        final File result = outputFolder.getFile(testClassFileRelativePath).await();
+
+        PostCondition.assertNotNull(result, "result");
 
         return result;
     }

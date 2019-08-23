@@ -64,7 +64,8 @@ public interface RealJavaRunnerTests
                         Iterable.create(
                             "-classpath",
                             "/outputs/",
-                            "qub.ConsoleTestRunner"),
+                            "qub.ConsoleTestRunner",
+                            "--output-folder=/outputs"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -82,7 +83,8 @@ public interface RealJavaRunnerTests
                         Iterable.create(
                             "-classpath",
                             "/outputs/",
-                            "qub.ConsoleTestRunner"),
+                            "qub.ConsoleTestRunner",
+                            "--output-folder=/outputs"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -102,7 +104,8 @@ public interface RealJavaRunnerTests
                             "-javaagent:/jacoco/jacocoagent.jar=destfile=/outputs/coverage.exec",
                             "-classpath",
                             "/outputs/",
-                            "qub.ConsoleTestRunner"),
+                            "qub.ConsoleTestRunner",
+                            "--output-folder=/outputs"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -126,7 +129,8 @@ public interface RealJavaRunnerTests
                             "-classpath",
                             "/outputs/",
                             "qub.ConsoleTestRunner",
-                            "--profiler=true"),
+                            "--profiler=true",
+                            "--output-folder=/outputs"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -150,7 +154,8 @@ public interface RealJavaRunnerTests
                             "-classpath",
                             "/outputs/",
                             "qub.ConsoleTestRunner",
-                            "--profiler=false"),
+                            "--profiler=false",
+                            "--output-folder=/outputs"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -174,7 +179,8 @@ public interface RealJavaRunnerTests
                             "-classpath",
                             "/outputs/",
                             "qub.ConsoleTestRunner",
-                            "--profiler=true"),
+                            "--profiler=true",
+                            "--output-folder=/outputs"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -198,7 +204,8 @@ public interface RealJavaRunnerTests
                             "-classpath",
                             "/outputs/",
                             "qub.ConsoleTestRunner",
-                            "--testjson=true"),
+                            "--testjson=true",
+                            "--output-folder=/outputs"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -222,7 +229,8 @@ public interface RealJavaRunnerTests
                             "-classpath",
                             "/outputs/",
                             "qub.ConsoleTestRunner",
-                            "--testjson=false"),
+                            "--testjson=false",
+                            "--output-folder=/outputs"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -246,7 +254,8 @@ public interface RealJavaRunnerTests
                             "-classpath",
                             "/outputs/",
                             "qub.ConsoleTestRunner",
-                            "--testjson=true"),
+                            "--testjson=true",
+                            "--output-folder=/outputs"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -265,7 +274,8 @@ public interface RealJavaRunnerTests
                         Iterable.create(
                             "-classpath",
                             "/outputs/",
-                            "qub.ConsoleTestRunner"),
+                            "qub.ConsoleTestRunner",
+                            "--output-folder=/outputs"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -285,7 +295,8 @@ public interface RealJavaRunnerTests
                             "-classpath",
                             "/outputs/",
                             "qub.ConsoleTestRunner",
-                            "--pattern=hello"),
+                            "--pattern=hello",
+                            "--output-folder=/outputs"),
                         javaProcessBuilder.getArguments());
                 });
 
@@ -308,6 +319,7 @@ public interface RealJavaRunnerTests
                             "/outputs/",
                             "qub.ConsoleTestRunner",
                             "--pattern=hello",
+                            "--output-folder=/outputs",
                             "qub.ClassToTest",
                             "other.folder.TestMe"),
                         javaProcessBuilder.getArguments());

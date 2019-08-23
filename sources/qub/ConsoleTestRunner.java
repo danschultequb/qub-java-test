@@ -10,6 +10,8 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     private final CharacterWriteStream consoleBackupWriteStream;
     private final Console console;
     private boolean isDisposed;
+    private int unmodifiedPassedTests;
+    private int unmodifiedSkippedTests;
 
     public ConsoleTestRunner(Console console, PathPattern pattern)
     {
@@ -22,32 +24,39 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         writeStream = new IndentedCharacterWriteStream(consoleBackupWriteStream);
         console.setOutputCharacterWriteStream(writeStream);
 
-        final List<TestGroup> testGroupsWrittenToConsole = new ArrayList<>();
+        final List<TestParent> testParentsWrittenToConsole = new ArrayList<>();
+        testRunner.afterTestClass((TestClass testClass) ->
+        {
+            if (testParentsWrittenToConsole.remove(testClass))
+            {
+                decreaseIndent();
+            }
+        });
         testRunner.afterTestGroup((TestGroup testGroup) ->
         {
-            if (testGroupsWrittenToConsole.remove(testGroup))
+            if (testParentsWrittenToConsole.remove(testGroup))
             {
                 decreaseIndent();
             }
         });
         testRunner.beforeTest((Test test) ->
         {
-            final Stack<TestGroup> testGroupsToWrite = Stack.create();
-            TestGroup currentTestGroup = test.getParentTestGroup();
-            while (currentTestGroup != null && !testGroupsWrittenToConsole.contains(currentTestGroup))
+            final Stack<TestParent> testParentsToWrite = Stack.create();
+            TestParent currentTestParent = test.getParent();
+            while (currentTestParent != null && !testParentsWrittenToConsole.contains(currentTestParent))
             {
-                testGroupsToWrite.push(currentTestGroup);
-                currentTestGroup = currentTestGroup.getParentTestGroup();
+                testParentsToWrite.push(currentTestParent);
+                currentTestParent = currentTestParent.getParent();
             }
 
-            while (testGroupsToWrite.any())
+            while (testParentsToWrite.any())
             {
-                final TestGroup testGroupToWrite = testGroupsToWrite.pop().await();
+                final TestParent testParentToWrite = testParentsToWrite.pop().await();
 
-                final String skipMessage = testGroupToWrite.getSkipMessage();
-                final String testGroupMessage = testGroupToWrite.getName() + (!testGroupToWrite.shouldSkip() ? "" : " - Skipped" + (Strings.isNullOrEmpty(skipMessage) ? "" : ": " + skipMessage));
+                final String skipMessage = testParentToWrite.getSkipMessage();
+                final String testGroupMessage = testParentToWrite.getName() + (!testParentToWrite.shouldSkip() ? "" : " - Skipped" + (Strings.isNullOrEmpty(skipMessage) ? "" : ": " + skipMessage));
                 writeStream.writeLine(testGroupMessage).await();
-                testGroupsWrittenToConsole.add(testGroupToWrite);
+                testParentsWrittenToConsole.add(testParentToWrite);
                 increaseIndent();
             }
 
@@ -98,6 +107,20 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     public boolean isDisposed()
     {
         return isDisposed;
+    }
+
+    private void addUnmodifiedPassedTests(int unmodifiedPassedTests)
+    {
+        PreCondition.assertGreaterThanOrEqualTo(unmodifiedPassedTests, 0, "unmodifiedPassedTests");
+
+        this.unmodifiedPassedTests += unmodifiedPassedTests;
+    }
+
+    private void addUnmodifiedSkippedTests(int unmodifiedSkippedTests)
+    {
+        PreCondition.assertGreaterThanOrEqualTo(unmodifiedSkippedTests, 0, "unmodifiedSkippedTests");
+
+        this.unmodifiedSkippedTests += unmodifiedSkippedTests;
     }
 
     /**
@@ -233,6 +256,18 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     }
 
     @Override
+    public Result<Void> testClass(String fullClassName)
+    {
+        return testRunner.testClass(fullClassName);
+    }
+
+    @Override
+    public Result<Void> testClass(Class<?> testClass)
+    {
+        return testRunner.testClass(testClass);
+    }
+
+    @Override
     public void testGroup(String testGroupName, Action0 testGroupAction)
     {
         testRunner.testGroup(testGroupName, testGroupAction);
@@ -272,6 +307,18 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     public void speedTest(String testName, Duration maximumDuration, Action1<Test> testAction)
     {
         testRunner.speedTest(testName, maximumDuration, testAction);
+    }
+
+    @Override
+    public void beforeTestClass(Action1<TestClass> beforeTestClassAction)
+    {
+        testRunner.beforeTestClass(beforeTestClassAction);
+    }
+
+    @Override
+    public void afterTestClass(Action1<TestClass> afterTestClassAction)
+    {
+        testRunner.afterTestClass(afterTestClassAction);
     }
 
     @Override
@@ -396,18 +443,34 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             decreaseIndent();
         }
 
-        writeStream.writeLine("Tests Run:      " + testRunner.getFinishedTestCount());
-        if (testRunner.getPassedTestCount() > 0)
+        if (unmodifiedPassedTests > 0 || unmodifiedSkippedTests > 0)
         {
-            writeStream.writeLine("Tests Passed:   " + testRunner.getPassedTestCount());
+            writeStream.writeLine("Unmodified Tests:         " + (unmodifiedPassedTests + unmodifiedSkippedTests)).await();
+            if (unmodifiedPassedTests > 0)
+            {
+                writeStream.writeLine("Unmodified Passed Tests:  " + unmodifiedPassedTests).await();
+            }
+            if (unmodifiedSkippedTests > 0)
+            {
+                writeStream.writeLine("Unmodified Skipped Tests: " + unmodifiedSkippedTests).await();
+            }
         }
-        if (testRunner.getFailedTestCount() > 0)
+
+        if (testRunner.getFinishedTestCount() > 0)
         {
-            writeStream.writeLine("Tests Failed:   " + testRunner.getFailedTestCount());
-        }
-        if (testRunner.getSkippedTestCount() > 0)
-        {
-            writeStream.writeLine("Tests Skipped:  " + testRunner.getSkippedTestCount());
+            writeStream.writeLine("Tests Run:                " + testRunner.getFinishedTestCount()).await();
+            if (testRunner.getPassedTestCount() > 0)
+            {
+                writeStream.writeLine("Tests Passed:             " + testRunner.getPassedTestCount()).await();
+            }
+            if (testRunner.getFailedTestCount() > 0)
+            {
+                writeStream.writeLine("Tests Failed:             " + testRunner.getFailedTestCount()).await();
+            }
+            if (testRunner.getSkippedTestCount() > 0)
+            {
+                writeStream.writeLine("Tests Skipped:            " + testRunner.getSkippedTestCount()).await();
+            }
         }
     }
 
@@ -422,12 +485,20 @@ public class ConsoleTestRunner implements TestRunner, Disposable
                 ? null
                 : PathPattern.parse(argumentValue));
         });
+        final CommandLineParameter<String> outputFolderParameter = parameters.addString("output-folder");
         final CommandLineParameterVerbose verbose = parameters.addVerbose(console);
         final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(console, ConsoleTestRunner.class);
-        final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson");
+        final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson", true);
         final CommandLineParameterList<String> testClassNamesParameter = parameters.addPositionStringList("test-class");
 
         final PathPattern pattern = patternParameter.getValue().await();
+
+        String outputFolderPath = outputFolderParameter.getValue().await();
+        if (Strings.isNullOrEmpty(outputFolderPath))
+        {
+            outputFolderPath = console.getCurrentFolderPath().concatenateSegment("outputs").toString();
+        }
+        final Folder outputFolder = console.getFileSystem().getFolder(outputFolderPath).await();
 
         profilerParameter.await();
 
@@ -440,35 +511,86 @@ public class ConsoleTestRunner implements TestRunner, Disposable
 
         final ConsoleTestRunner runner = new ConsoleTestRunner(console, pattern);
 
+        final List<TestJSONClassFile> testJSONClassFiles = List.create();
         final Iterable<String> testClassNames = testClassNamesParameter.getValues().await();
-        final List<String> invokedTestClassNames = List.create();
+
+        MutableMap<String,TestJSONClassFile> fullClassNameToTestJSONClassFileMap = Map.create();
+        if (useTestJson)
+        {
+            final TestJSON testJson = TestJSON.parse(outputFolder.getFile("test.json").await())
+                .catchError(FileNotFoundException.class)
+                .await();
+            if (testJson != null)
+            {
+                verbose.writeLine("Found and parsed test.json file.").await();
+                for (final TestJSONClassFile testJSONClassFile : testJson.getClassFiles())
+                {
+                    fullClassNameToTestJSONClassFileMap.set(testJSONClassFile.getFullClassName(), testJSONClassFile);
+                }
+            }
+
+            runner.afterTestClass((TestClass testClass) ->
+            {
+                verbose.writeLine("Updating test.json class file for " + testClass.getFullName() + "...").await();
+                final File testClassFile = QubTest.getClassFile(outputFolder, testClass.getFullName());
+                testJSONClassFiles.add(new TestJSONClassFile()
+                    .setRelativePath(testClassFile.relativeTo(outputFolder))
+                    .setLastModified(testClassFile.getLastModified().await())
+                    .setPassedTestCount(testClass.getPassedTestCount())
+                    .setSkippedTestCount(testClass.getSkippedTestCount())
+                    .setFailedTestCount(testClass.getFailedTestCount()));
+            });
+        }
+
         for (final String testClassName : testClassNames)
         {
-            verbose.writeLine("Looking for class " + Strings.escapeAndQuote(testClassName) + "...").await();
+            boolean runTestClass;
 
-            final Class<?> testClass = Types.getClass(testClassName)
-                .onValue(() -> verbose.writeLine("  Found!").await())
-                .catchError(NotFoundException.class, () -> verbose.writeLine("Couldn't find " + Strings.escapeAndQuote(testClassName) + ".").await())
-                .await();
-            if (testClass != null)
+            if (!useTestJson)
             {
-                verbose.writeLine("Looking for static " + Types.getMethodSignature(testClass, "test", TestRunner.class, Void.class) + "...").await();
-                final StaticMethod1<?,TestRunner,?> testMethod = Types.getStaticMethod1(testClass, "test", TestRunner.class)
-                    .onValue(() -> verbose.writeLine("Found!").await())
-                    .catchError(NotFoundException.class, () -> verbose.writeLine("Couldn't find.").await())
+                runTestClass = true;
+            }
+            else
+            {
+                final TestJSONClassFile testJSONClassFile = fullClassNameToTestJSONClassFileMap.get(testClassName)
+                    .catchError(NotFoundException.class)
                     .await();
-                if (testMethod != null)
+                if (testJSONClassFile == null)
                 {
-                    try
+                    verbose.writeLine("Found class that didn't exist in previous test run: " + testClassName);
+                    runTestClass = true;
+                }
+                else
+                {
+                    verbose.writeLine("Found class entry for " + testClassName + ". Checking timestamps...").await();
+                    final File testClassFile = outputFolder.getFile(testJSONClassFile.getRelativePath()).await();
+                    final DateTime testClassFileLastModified = testClassFile.getLastModified().await();
+                    if (!testClassFileLastModified.equals(testJSONClassFile.getLastModified()))
                     {
-                        testMethod.run(runner);
-                        invokedTestClassNames.add(testClassName);
+                        verbose.writeLine("Timestamp of " + testClassName + " from the previous run (" + testJSONClassFile.getLastModified() + ") was not the same as the current class file timestamp (" + testClassFileLastModified + "). Running test class tests.").await();
+                        runTestClass = true;
                     }
-                    catch (Throwable e)
+                    else if (testJSONClassFile.getFailedTestCount() > 0)
                     {
-                        e.printStackTrace();
+                        verbose.writeLine("Previous run of " + testClassName + " contained errors. Running test class tests...").await();
+                        runTestClass = true;
+                    }
+                    else
+                    {
+                        verbose.writeLine("Previous run of " + testClassName + " didn't contain errors and the test class hasn't changed since then. Skipping test class tests.").await();
+                        runner.addUnmodifiedPassedTests(testJSONClassFile.getPassedTestCount());
+                        runner.addUnmodifiedSkippedTests(testJSONClassFile.getSkippedTestCount());
+                        testJSONClassFiles.add(testJSONClassFile);
+                        runTestClass = false;
                     }
                 }
+            }
+
+            if (runTestClass)
+            {
+                runner.testClass(testClassName)
+                    .catchError((Throwable error) -> verbose.writeLine(error.getMessage()).await())
+                    .await();
             }
         }
 
@@ -477,18 +599,9 @@ public class ConsoleTestRunner implements TestRunner, Disposable
 
         if (useTestJson)
         {
-            final Folder outputFolder = console.getCurrentFolder().await()
-                .getFolder("outputs").await();
             final File testJsonFile = outputFolder.getFile("test.json").await();
-            final TestJSON testJson = new TestJSON();
-            testJson.setClassFiles(invokedTestClassNames.map((String testClassName) ->
-            {
-                final String testClassFileRelativePath = testClassName.replace('.', '/') + ".class";
-                final File testClassFile = outputFolder.getFile(testClassFileRelativePath).await();
-                return new TestJSONClassFile()
-                    .setRelativePath(testClassFileRelativePath)
-                    .setLastModified(testClassFile.getLastModified().await());
-            }));
+            final TestJSON testJson = new TestJSON()
+                .setClassFiles(testJSONClassFiles);
             testJson.write(testJsonFile).await();
         }
 

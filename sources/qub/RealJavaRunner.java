@@ -62,6 +62,12 @@ public class RealJavaRunner extends JavaRunner
             processBuilder.addArgument("--pattern=" + pattern);
         }
 
+        final Folder outputFolder = getOutputFolder();
+        if (outputFolder != null)
+        {
+            processBuilder.addArgument("--output-folder=" + outputFolder);
+        }
+
         processBuilder.addArguments(getFullClassNames());
     }
 

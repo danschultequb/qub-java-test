@@ -46,15 +46,21 @@ public class FakeJavaRunner extends JavaRunner
                 command += " --" + testJson.getName() + "=" + testJson.getValue().await();
             }
 
-            for (final String fullClassName : getFullClassNames())
-            {
-                command += " " + fullClassName;
-            }
-
             final String pattern = getPattern();
             if (!Strings.isNullOrEmpty(pattern))
             {
                 command += " --pattern=" + pattern;
+            }
+
+            final Folder outputFolder = getOutputFolder();
+            if (outputFolder != null)
+            {
+                command += " --output-folder=" + outputFolder;
+            }
+
+            for (final String fullClassName : getFullClassNames())
+            {
+                command += " " + fullClassName;
             }
 
             writeVerboseLine(command).await();
