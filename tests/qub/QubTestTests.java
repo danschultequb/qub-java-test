@@ -114,12 +114,13 @@ public interface QubTestTests
                     }
                     test.assertEqual(
                         Iterable.create(
-                            "Usage: qub-test [[--folder=]<folder-to-test>] [--pattern=<test-name-pattern>] [--coverage[=<None|Sources|Tests|All>]] [--testjson] [--verbose] [--profiler] [--help]",
+                            "Usage: qub-test [[--folder=]<folder-to-test>] [--pattern=<test-name-pattern>] [--coverage[=<None|Sources|Tests|All>]] [--testjson] [--jvm.classpath=<jvm.classpath-value>] [--verbose] [--profiler] [--help]",
                             "  Used to run tests in source code projects.",
                             "  --folder: The folder to run tests in. Defaults to the current folder.",
                             "  --pattern: The pattern to match against tests to determine if they will be run or not.",
                             "  --coverage(c): Whether or not to collect code coverage information while running tests.",
                             "  --testjson: Whether or not to write the test results to a test.json file.",
+                            "  --jvm.classpath: The classpath that was passed to the JVM when this application was started.",
                             "  --verbose(v): Whether or not to show verbose logs.",
                             "  --profiler: Whether or not this application should pause before it is run to allow a profiler to be attached.",
                             "  --help(?): Show the help message for this application."),
@@ -272,6 +273,44 @@ public interface QubTestTests
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs A",
+                            ""),
+                        Strings.getLines(output.getText().await()).skipLast());
+                });
+
+                runner.test("with one source file, verbose, and jvm.classpath=/foo/subfolder", (Test test) ->
+                {
+                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final Folder currentFolder = getInMemoryCurrentFolder(test);
+                    currentFolder.getFile("project.json").await()
+                        .setContentsAsString(JSON.object(projectJson ->
+                        {
+                            projectJson.objectProperty("java");
+                        }).toString()).await();
+                    currentFolder.getFile("sources/A.java").await()
+                        .setContentsAsString("A.java source").await();
+
+                    try (final Console console = createConsole(output, currentFolder, "-verbose", "--jvm.classpath=/foo/subfolder"))
+                    {
+                        main(console);
+                        test.assertEqual(0, console.getExitCode());
+                    }
+
+                    test.assertEqual(
+                        Iterable.create(
+                            "Compiling...",
+                            "VERBOSE: Parsing project.json...",
+                            "VERBOSE: Updating outputs/build.json...",
+                            "VERBOSE: Setting project.json...",
+                            "VERBOSE: Setting source files...",
+                            "VERBOSE: Detecting java source files to compile...",
+                            "VERBOSE: Compiling all source files.",
+                            "VERBOSE: Starting compilation...",
+                            "VERBOSE: Running javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
+                            "VERBOSE: Compilation finished.",
+                            "VERBOSE: Writing build.json file...",
+                            "VERBOSE: Done writing build.json file...",
+                            "Running tests...",
+                            "VERBOSE: java.exe -classpath /outputs;/foo/subfolder qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });

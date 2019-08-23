@@ -93,6 +93,8 @@ public class QubTest
             .setDescription("Whether or not to collect code coverage information while running tests.");
         final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson", true)
             .setDescription("Whether or not to write the test results to a test.json file.");
+        final CommandLineParameter<String> jvmClassPathParameter = parameters.addString("jvm.classpath")
+            .setDescription("The classpath that was passed to the JVM when this application was started.");
         final CommandLineParameterVerbose verbose = parameters.addVerbose(console);
         final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(console, QubTest.class);
         final CommandLineParameterBoolean help = parameters.addHelp();
@@ -132,6 +134,12 @@ public class QubTest
                     final Folder testFolder = folderToTest.getFolder("tests").await();
 
                     final List<String> classPaths = List.create(outputFolder.toString());
+
+                    final String jvmClassPath = jvmClassPathParameter.getValue().await();
+                    if (!Strings.isNullOrEmpty(jvmClassPath))
+                    {
+                        classPaths.add(jvmClassPath);
+                    }
 
                     final File projectJsonFile = folderToTest.getFile("project.json").await();
                     final ProjectJSON projectJson = ProjectJSON.parse(projectJsonFile).await();
