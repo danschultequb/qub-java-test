@@ -153,23 +153,18 @@ public class QubTest
                     if (!Strings.isNullOrEmpty(jvmClassPath))
                     {
                         final String[] jvmClassPaths = jvmClassPath.split(";");
-                        if (jvmClassPaths != null && jvmClassPaths.length > 0)
+                        for (final String jvmClassPathString : jvmClassPaths)
                         {
-                            for (final String jvmClassPathString : jvmClassPaths)
+                            final Path relativeJvmClassPath = Path.parse(jvmClassPathString).relativeTo(qubFolder);
+                            final Indexable<String> segments = relativeJvmClassPath.getSegments();
+                            final Dependency jvmDependency = new Dependency()
+                                .setPublisher(segments.get(0))
+                                .setProject(segments.get(1))
+                                .setVersion(segments.get(2));
+                            if (!QubTest.equal(jvmDependency, projectJson.getPublisher(), projectJson.getProject()) &&
+                                (Iterable.isNullOrEmpty(dependencies) || !dependencies.contains(dep -> QubTest.equalIgnoreVersion(dep, jvmDependency))))
                             {
-                                final Path relativeJvmClassPath = Path.parse(jvmClassPathString).relativeTo(qubFolder);
-                                final Indexable<String> segments = relativeJvmClassPath.getSegments();
-                                final Dependency dependency = new Dependency()
-                                    .setPublisher(segments.get(0))
-                                    .setProject(segments.get(1))
-                                    .setVersion(segments.get(2));
-                                if (Iterable.isNullOrEmpty(dependencies) ||
-                                    !dependencies.contains(dep ->
-                                        (Comparer.equal(dep.getPublisher(), dependency.getPublisher()) &&
-                                         Comparer.equal(dep.getProject(), dependency.getProject()))))
-                                {
-                                    classPaths.add(jvmClassPathString);
-                                }
+                                classPaths.add(jvmClassPathString);
                             }
                         }
                     }
@@ -205,6 +200,22 @@ public class QubTest
                 }
             }
         }
+    }
+
+    public static boolean equalIgnoreVersion(Dependency lhs, Dependency rhs)
+    {
+        PreCondition.assertNotNull(lhs, "lhs");
+        PreCondition.assertNotNull(rhs, "rhs");
+
+        return equal(lhs, rhs.getPublisher(), rhs.getProject());
+    }
+
+    public static boolean equal(Dependency dependency, String publisher, String project)
+    {
+        PreCondition.assertNotNull(dependency, "dependency");
+
+        return Comparer.equal(dependency.getPublisher(), publisher) &&
+            Comparer.equal(dependency.getProject(), project);
     }
 
     private static Folder getQubHomeFolder(Console console)

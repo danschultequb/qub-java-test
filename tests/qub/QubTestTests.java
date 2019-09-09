@@ -289,8 +289,13 @@ public interface QubTestTests
                     currentFolder.getFile("sources/A.java").await()
                         .setContentsAsString("A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose", "--jvm.classpath=/foo/subfolder"))
+                    try (final Console console = createConsole(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/5/a.jar"))
                     {
+                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        qubFolder.createFile("me/a/5/a.jar").await();
+                        console.setEnvironmentVariables(Map.<String,String>create()
+                            .set("QUB_HOME", "/qub/"));
+
                         main(console);
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -310,7 +315,7 @@ public interface QubTestTests
                             "VERBOSE: Writing build.json file...",
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
-                            "VERBOSE: java.exe -classpath /outputs;/foo/subfolder qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                            "VERBOSE: java.exe -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });
@@ -507,6 +512,52 @@ public interface QubTestTests
                             "VERBOSE: Done writing build.json file...",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                            ""),
+                        Strings.getLines(output.getText().await()).skipLast());
+                });
+
+                runner.test("with one source file, verbose, and jvm.classpath equal to current project", (Test test) ->
+                {
+                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final Folder currentFolder = getInMemoryCurrentFolder(test);
+                    ProjectJSON projectJSON = new ProjectJSON()
+                        .setPublisher("me")
+                        .setProject("stuff")
+                        .setVersion("7")
+                        .setJava(new ProjectJSONJava());
+                    currentFolder.getFile("project.json").await()
+                        .setContentsAsString(projectJSON.toString())
+                        .await();
+                    currentFolder.getFile("sources/A.java").await()
+                        .setContentsAsString("A.java source").await();
+
+                    try (final Console console = createConsole(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/stuff/7/stuff.jar"))
+                    {
+                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        qubFolder.createFile("me/stuff/7/stuff.jar").await();
+                        console.setEnvironmentVariables(Map.<String,String>create()
+                            .set("QUB_HOME", "/qub/"));
+
+                        main(console);
+                        test.assertEqual(0, console.getExitCode());
+                    }
+
+                    test.assertEqual(
+                        Iterable.create(
+                            "Compiling...",
+                            "VERBOSE: Parsing project.json...",
+                            "VERBOSE: Updating outputs/build.json...",
+                            "VERBOSE: Setting project.json...",
+                            "VERBOSE: Setting source files...",
+                            "VERBOSE: Detecting java source files to compile...",
+                            "VERBOSE: Compiling all source files.",
+                            "VERBOSE: Starting compilation...",
+                            "VERBOSE: Running javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
+                            "VERBOSE: Compilation finished.",
+                            "VERBOSE: Writing build.json file...",
+                            "VERBOSE: Done writing build.json file...",
+                            "Running tests...",
+                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
                         Strings.getLines(output.getText().await()).skipLast());
                 });

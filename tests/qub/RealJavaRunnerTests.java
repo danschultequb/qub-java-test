@@ -531,6 +531,7 @@ public interface RealJavaRunnerTests
                     javaRunner.setSourceFolder(sourceFolder);
                     javaRunner.setCoverage(Coverage.All);
                     final Process process = test.getProcess();
+                    process.setCurrentFolderPathString("/");
                     final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
                     javaRunner.addCoverageArguments(process, processBuilder);
                     test.assertEqual(
@@ -539,8 +540,8 @@ public interface RealJavaRunnerTests
                             "/jacoco/jacococli.jar",
                             "report",
                             "/outputs/coverage.exec",
-                            "--classfiles", "/outputs/qub/Test.class",
-                            "--classfiles", "/outputs/other/folder/Test2.class",
+                            "--classfiles", "outputs/qub/Test.class",
+                            "--classfiles", "outputs/other/folder/Test2.class",
                             "--sourcefiles", "/sources",
                             "--html",
                             "/outputs/coverage"),
@@ -650,6 +651,7 @@ public interface RealJavaRunnerTests
                     javaRunner.setTestFolder(testFolder);
                     javaRunner.setCoverage(Coverage.All);
                     final Process process = test.getProcess();
+                    process.setCurrentFolderPathString("/");
                     final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
                     javaRunner.addCoverageArguments(process, processBuilder);
                     test.assertEqual(
@@ -658,8 +660,8 @@ public interface RealJavaRunnerTests
                             "/jacoco/jacococli.jar",
                             "report",
                             "/outputs/coverage.exec",
-                            "--classfiles", "/outputs/qub/Test.class",
-                            "--classfiles", "/outputs/other/folder/Test2.class",
+                            "--classfiles", "outputs/qub/Test.class",
+                            "--classfiles", "outputs/other/folder/Test2.class",
                             "--sourcefiles", "/sources",
                             "--sourcefiles", "/tests",
                             "--html",
@@ -748,6 +750,7 @@ public interface RealJavaRunnerTests
                     javaRunner.setTestFolder(testFolder);
                     javaRunner.setCoverage(Coverage.Sources);
                     final Process process = test.getProcess();
+                    process.setCurrentFolderPathString("/");
                     final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
                     javaRunner.addCoverageArguments(process, processBuilder);
                     test.assertEqual(
@@ -756,7 +759,7 @@ public interface RealJavaRunnerTests
                             "/jacoco/jacococli.jar",
                             "report",
                             "/outputs/coverage.exec",
-                            "--classfiles", "/outputs/qub/Test.class",
+                            "--classfiles", "outputs/qub/Test.class",
                             "--sourcefiles", "/sources",
                             "--html",
                             "/outputs/coverage"),
@@ -782,6 +785,7 @@ public interface RealJavaRunnerTests
                     javaRunner.setTestFolder(testFolder);
                     javaRunner.setCoverage(Coverage.Tests);
                     final Process process = test.getProcess();
+                    process.setCurrentFolderPathString("/");
                     final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
                     javaRunner.addCoverageArguments(process, processBuilder);
                     test.assertEqual(
@@ -790,7 +794,7 @@ public interface RealJavaRunnerTests
                             "/jacoco/jacococli.jar",
                             "report",
                             "/outputs/coverage.exec",
-                            "--classfiles", "/outputs/other/folder/Test2.class",
+                            "--classfiles", "outputs/other/folder/Test2.class",
                             "--sourcefiles", "/tests",
                             "--html",
                             "/outputs/coverage"),
@@ -816,6 +820,7 @@ public interface RealJavaRunnerTests
                     javaRunner.setTestFolder(testFolder);
                     javaRunner.setCoverage(Coverage.All);
                     final Process process = test.getProcess();
+                    process.setCurrentFolderPathString("/");
                     final ProcessBuilder processBuilder = RealJavaRunner.getJavaProcessBuilder(process).await();
                     javaRunner.addCoverageArguments(process, processBuilder);
                     test.assertEqual(
@@ -824,8 +829,8 @@ public interface RealJavaRunnerTests
                             "/jacoco/jacococli.jar",
                             "report",
                             "/outputs/coverage.exec",
-                            "--classfiles", "/outputs/qub/Test.class",
-                            "--classfiles", "/outputs/other/folder/Test2.class",
+                            "--classfiles", "outputs/qub/Test.class",
+                            "--classfiles", "outputs/other/folder/Test2.class",
                             "--sourcefiles", "/sources",
                             "--sourcefiles", "/tests",
                             "--html",
