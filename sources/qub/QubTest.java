@@ -135,19 +135,13 @@ public class QubTest
 
                     final List<String> classPaths = List.create(outputFolder.toString());
 
-                    final String jvmClassPath = jvmClassPathParameter.getValue().await();
-                    if (!Strings.isNullOrEmpty(jvmClassPath))
-                    {
-                        classPaths.add(jvmClassPath);
-                    }
-
                     final File projectJsonFile = folderToTest.getFile("project.json").await();
                     final ProjectJSON projectJson = ProjectJSON.parse(projectJsonFile).await();
 
+                    final Folder qubFolder = getQubHomeFolder(console);
                     Iterable<Dependency> dependencies = projectJson.getJava().getDependencies();
                     if (!Iterable.isNullOrEmpty(dependencies))
                     {
-                        final Folder qubFolder = getQubHomeFolder(console);
                         dependencies = QubBuild.getAllDependencies(qubFolder, dependencies).getKeys();
                         classPaths.addAll(dependencies.map((Dependency dependency) ->
                         {
@@ -155,10 +149,34 @@ public class QubTest
                         }));
                     }
 
+                    final String jvmClassPath = jvmClassPathParameter.getValue().await();
+                    if (!Strings.isNullOrEmpty(jvmClassPath))
+                    {
+                        final String[] jvmClassPaths = jvmClassPath.split(";");
+                        if (jvmClassPaths != null && jvmClassPaths.length > 0)
+                        {
+                            for (final String jvmClassPathString : jvmClassPaths)
+                            {
+                                final Path relativeJvmClassPath = Path.parse(jvmClassPathString).relativeTo(qubFolder);
+                                final Indexable<String> segments = relativeJvmClassPath.getSegments();
+                                final Dependency dependency = new Dependency()
+                                    .setPublisher(segments.get(0))
+                                    .setProject(segments.get(1))
+                                    .setVersion(segments.get(2));
+                                if (Iterable.isNullOrEmpty(dependencies) ||
+                                    !dependencies.contains(dep ->
+                                        (Comparer.equal(dep.getPublisher(), dependency.getPublisher()) &&
+                                         Comparer.equal(dep.getProject(), dependency.getProject()))))
+                                {
+                                    classPaths.add(jvmClassPathString);
+                                }
+                            }
+                        }
+                    }
+
                     Folder jacocoFolder = null;
                     if (coverage != Coverage.None)
                     {
-                        final Folder qubFolder = getQubHomeFolder(console);
                         jacocoFolder = qubFolder.getFolder("jacoco/jacococli").await()
                             .getFolders().await()
                             .maximum((Folder lhs, Folder rhs) -> VersionNumber.parse(lhs.getName()).compareTo(VersionNumber.parse(rhs.getName())));
