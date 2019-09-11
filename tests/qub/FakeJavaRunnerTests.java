@@ -116,7 +116,7 @@ public interface FakeJavaRunnerTests
                         test.assertEqual(0, console.getExitCode());
                         test.assertEqual(
                             Iterable.create(
-                                "VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --output-folder=/outputs --coverage=None",
+                                "VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --output-folder=/outputs/ --coverage=None",
                                 ""),
                             Strings.getLines(outputStream.getText().await()));
                     }
@@ -145,7 +145,7 @@ public interface FakeJavaRunnerTests
                         test.assertNull(javaRunner.run(console).await());
 
                         test.assertEqual(0, console.getExitCode());
-                        test.assertEqual("VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --output-folder=/outputs --coverage=None\n\n", outputStream.getText().await());
+                        test.assertEqual("VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --output-folder=/outputs/ --coverage=None\n\n", outputStream.getText().await());
                     }
                 });
 
@@ -176,7 +176,7 @@ public interface FakeJavaRunnerTests
                         test.assertNull(javaRunner.run(console).await());
 
                         test.assertEqual(0, console.getExitCode());
-                        test.assertEqual("VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --profiler=true --output-folder=/outputs --coverage=None\n\n", outputStream.getText().await());
+                        test.assertEqual("VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --profiler=true --output-folder=/outputs/ --coverage=None\n\n", outputStream.getText().await());
                     }
                 });
 
@@ -207,7 +207,7 @@ public interface FakeJavaRunnerTests
                         test.assertNull(javaRunner.run(console).await());
 
                         test.assertEqual(0, console.getExitCode());
-                        test.assertEqual("VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --testjson=true --output-folder=/outputs --coverage=None\n\n", outputStream.getText().await());
+                        test.assertEqual("VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --testjson=true --output-folder=/outputs/ --coverage=None\n\n", outputStream.getText().await());
                     }
                 });
 
@@ -237,7 +237,7 @@ public interface FakeJavaRunnerTests
                         test.assertNull(javaRunner.run(console).await());
 
                         test.assertEqual(0, console.getExitCode());
-                        test.assertEqual("VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --pattern=foo --output-folder=/outputs --coverage=None\n\n", outputStream.getText().await());
+                        test.assertEqual("VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --pattern=foo --output-folder=/outputs/ --coverage=None\n\n", outputStream.getText().await());
                     }
                 });
 
@@ -268,7 +268,7 @@ public interface FakeJavaRunnerTests
                         test.assertNull(javaRunner.run(console).await());
 
                         test.assertEqual(0, console.getExitCode());
-                        test.assertEqual("VERBOSE: java.exe -javaagent:/jacoco/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath a;b qub.ConsoleTestRunner --output-folder=/outputs --coverage=None\n\n", outputStream.getText().await());
+                        test.assertEqual("VERBOSE: java.exe -javaagent:/jacoco/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath a;b qub.ConsoleTestRunner --output-folder=/outputs/ --coverage=None\n\n", outputStream.getText().await());
                     }
                 });
 
@@ -298,7 +298,7 @@ public interface FakeJavaRunnerTests
                         test.assertNull(javaRunner.run(console).await());
 
                         test.assertEqual(0, console.getExitCode());
-                        test.assertEqual("VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --output-folder=/outputs --coverage=None C d.E\n\n", outputStream.getText().await());
+                        test.assertEqual("VERBOSE: java.exe -classpath a;b qub.ConsoleTestRunner --output-folder=/outputs/ --coverage=None C d.E\n\n", outputStream.getText().await());
                     }
                 });
             });

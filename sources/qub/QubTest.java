@@ -80,7 +80,7 @@ public class QubTest
         PreCondition.assertNotNull(console, "console");
 
         final CommandLineParameters parameters = console.createCommandLineParameters();
-        final CommandLineParameter<Folder> folderToTestParameter = parameters.addPositionalFolder("folder", console)
+        final CommandLineParameter<Folder> folderToTestParameter = parameters.addFolder("folder", console)
             .setValueName("<folder-to-test>")
             .setDescription("The folder to run tests in. Defaults to the current folder.");
         final CommandLineParameter<String> patternParameter = parameters.addString("pattern")
