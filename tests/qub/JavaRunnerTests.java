@@ -498,7 +498,7 @@ public interface JavaRunnerTests
                     final JavaRunner javaRunner = creator.run();
 
                     final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
-                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, true);
                     test.assertSame(javaRunner, javaRunner.setVerbose(verbose));
                     test.assertSame(verbose, javaRunner.getVerbose());
                 });
@@ -524,7 +524,7 @@ public interface JavaRunnerTests
                     final JavaRunner javaRunner = creator.run();
 
                     final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
-                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, true);
                     javaRunner.setVerbose(verbose);
 
                     test.assertThrows(() -> javaRunner.isVerbose(),
@@ -536,7 +536,7 @@ public interface JavaRunnerTests
                     final JavaRunner javaRunner = creator.run();
 
                     final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
-                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, false);
                     javaRunner.setVerbose(verbose);
 
                     final CommandLineArguments arguments = CommandLineArguments.create();
@@ -550,7 +550,7 @@ public interface JavaRunnerTests
                     final JavaRunner javaRunner = creator.run();
 
                     final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
-                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, true);
                     javaRunner.setVerbose(verbose);
 
                     final CommandLineArguments arguments = CommandLineArguments.create("--verbose");
@@ -564,7 +564,7 @@ public interface JavaRunnerTests
                     final JavaRunner javaRunner = creator.run();
 
                     final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
-                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, true);
                     javaRunner.setVerbose(verbose);
 
                     final CommandLineArguments arguments = CommandLineArguments.create("--verbose=false");
@@ -578,7 +578,7 @@ public interface JavaRunnerTests
                     final JavaRunner javaRunner = creator.run();
 
                     final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
-                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, true);
                     javaRunner.setVerbose(verbose);
 
                     final CommandLineArguments arguments = CommandLineArguments.create("--verbose=true");
@@ -608,7 +608,7 @@ public interface JavaRunnerTests
                     final JavaRunner javaRunner = creator.run();
 
                     final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
-                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, true);
                     javaRunner.setVerbose(verbose);
 
                     test.assertThrows(() -> javaRunner.writeVerboseLine("abc").await(),
@@ -621,7 +621,7 @@ public interface JavaRunnerTests
                     final JavaRunner javaRunner = creator.run();
 
                     final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
-                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, false);
                     javaRunner.setVerbose(verbose);
 
                     final CommandLineArguments arguments = CommandLineArguments.create();
@@ -636,7 +636,7 @@ public interface JavaRunnerTests
                     final JavaRunner javaRunner = creator.run();
 
                     final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
-                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, true);
                     javaRunner.setVerbose(verbose);
 
                     final CommandLineArguments arguments = CommandLineArguments.create("--verbose");
@@ -651,7 +651,7 @@ public interface JavaRunnerTests
                     final JavaRunner javaRunner = creator.run();
 
                     final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
-                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, true);
                     javaRunner.setVerbose(verbose);
 
                     final CommandLineArguments arguments = CommandLineArguments.create("--verbose=false");
@@ -666,7 +666,7 @@ public interface JavaRunnerTests
                     final JavaRunner javaRunner = creator.run();
 
                     final InMemoryCharacterStream verboseOutputStream = new InMemoryCharacterStream();
-                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, test.getClock());
+                    final CommandLineParameterVerbose verbose = new CommandLineParameterVerbose(verboseOutputStream, true);
                     javaRunner.setVerbose(verbose);
 
                     final CommandLineArguments arguments = CommandLineArguments.create("--verbose=true");

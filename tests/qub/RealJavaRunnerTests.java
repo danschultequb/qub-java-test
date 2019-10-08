@@ -20,7 +20,7 @@ public interface RealJavaRunnerTests
                 {
                     final ProcessBuilder javaProcessBuilder = RealJavaRunner.getJavaProcessBuilder(test.getProcess()).await();
                     test.assertNotNull(javaProcessBuilder);
-                    test.assertEqual("java", javaProcessBuilder.getExecutableFile().getNameWithoutFileExtension());
+                    test.assertEqual("java", javaProcessBuilder.getExecutablePath().withoutFileExtension().getSegments().last());
                 });
             });
 

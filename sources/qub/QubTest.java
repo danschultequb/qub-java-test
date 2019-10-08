@@ -2,38 +2,8 @@ package qub;
 
 public class QubTest
 {
-    private QubBuild qubBuild;
     private JavaRunner javaRunner;
     private Boolean showTotalDuration;
-
-    /**
-     * Set the QubBuild object that will be used to build the source code.
-     * @param qubBuild The QubBuild object that will be used to build the source code.
-     * @return This object for method chaining.
-     */
-    public QubTest setQubBuild(QubBuild qubBuild)
-    {
-        this.qubBuild = qubBuild;
-        return this;
-    }
-
-    /**
-     * Get the Build object that will be used to qubBuild the source code. If no Build object has been
-     * set, a default one will be created and returned.
-     * @return The Build object that will be used to qubBuild the source code.
-     */
-    public QubBuild getQubBuild()
-    {
-        if (qubBuild == null)
-        {
-            qubBuild = new QubBuild();
-        }
-        final QubBuild result = qubBuild;
-
-        PostCondition.assertNotNull(result, "result");
-
-        return result;
-    }
 
     /**
      * Set the JavaRunner that will be used to run tests.
@@ -117,9 +87,7 @@ public class QubTest
             }
             try
             {
-                final QubBuild qubBuild = getQubBuild();
-                qubBuild.setShowTotalDuration(false);
-                qubBuild.main(console);
+                console.setExitCode(QubBuild.run(QubBuild.getParameters(console)));
 
                 if (console.getExitCode() == 0)
                 {
@@ -220,9 +188,9 @@ public class QubTest
 
     private static Folder getQubHomeFolder(Console console)
     {
-        PreCondition.assertNotNullAndNotEmpty(console.getEnvironmentVariable("QUB_HOME"), "console.getEnvironmentVariable(\"QUB_HOME\")");
+        PreCondition.assertNotNullAndNotEmpty(console.getEnvironmentVariable("QUB_HOME").await(), "console.getEnvironmentVariable(\"QUB_HOME\").await()");
 
-        final String qubHome = console.getEnvironmentVariable("QUB_HOME");
+        final String qubHome = console.getEnvironmentVariable("QUB_HOME").await();
         final Folder result = console.getFileSystem().getFolder(qubHome).await();
 
         PostCondition.assertNotNull(result, "result");
