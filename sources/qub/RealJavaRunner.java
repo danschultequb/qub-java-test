@@ -18,7 +18,6 @@ public class RealJavaRunner extends JavaRunner
             {
                 javaProcessBuilder.redirectOutput(process.getOutputByteWriteStream());
                 javaProcessBuilder.redirectError(process.getErrorByteWriteStream());
-                javaProcessBuilder.redirectInput(process.getInputByteReadStream());
             }
             return javaProcessBuilder;
         });

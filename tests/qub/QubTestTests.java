@@ -187,12 +187,15 @@ public interface QubTestTests
                     try (final Console console = createConsole(output, currentFolder))
                     {
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                            .add(new FakeProcessRun("javac")
-                                .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs", "sources/A.java")
-                                .setFunction(() ->
-                                {
-                                    currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                })));
+                            .add(new FakeJavacProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addXlintUnchecked()
+                                .addXlintDeprecation()
+                                .addClasspath("/outputs")
+                                .addSourceFile("sources/A.java")
+                                .setFunctionAutomatically()));
+
                         main(console);
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -217,12 +220,15 @@ public interface QubTestTests
                     try (final Console console = createConsole(output, currentFolder, "-verbose"))
                     {
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                            .add(new FakeProcessRun("javac")
-                                .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs", "sources/A.java")
-                                .setFunction(() ->
-                                {
-                                    currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                })));
+                            .add(new FakeJavacProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addXlintUnchecked()
+                                .addXlintDeprecation()
+                                .addClasspath("/outputs")
+                                .addSourceFile("sources/A.java")
+                                .setFunctionAutomatically()));
+
                         main(console);
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -236,10 +242,10 @@ public interface QubTestTests
                             "VERBOSE: Detecting java source files to compile...",
                             "VERBOSE: Compiling all source files.",
                             "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
+                            "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
                             "VERBOSE: Compilation finished.",
                             "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
+                            "VERBOSE: Done writing build.json file.",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
@@ -262,12 +268,14 @@ public interface QubTestTests
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                            .add(new FakeProcessRun("javac")
-                                .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs", "sources/A.java")
-                                .setFunction(() ->
-                                {
-                                    currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                })));
+                            .add(new FakeJavacProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addXlintUnchecked()
+                                .addXlintDeprecation()
+                                .addClasspath("/outputs")
+                                .addSourceFile("sources/A.java")
+                                .setFunctionAutomatically()));
                         main(console);
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -281,10 +289,10 @@ public interface QubTestTests
                             "VERBOSE: Detecting java source files to compile...",
                             "VERBOSE: Compiling all source files.",
                             "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
+                            "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
                             "VERBOSE: Compilation finished.",
                             "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
+                            "VERBOSE: Done writing build.json file.",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs;/foo/subfolder qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
@@ -316,12 +324,15 @@ public interface QubTestTests
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                            .add(new FakeProcessRun("javac")
-                                .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs;/qub/me/a/5/a.jar", "sources/A.java")
-                                .setFunction(() ->
-                                {
-                                    currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                })));
+                            .add(new FakeJavacProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addXlintUnchecked()
+                                .addXlintDeprecation()
+                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
+                                .addSourceFile("sources/A.java")
+                                .setFunctionAutomatically()));
+
                         main(console);
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -335,10 +346,10 @@ public interface QubTestTests
                             "VERBOSE: Detecting java source files to compile...",
                             "VERBOSE: Compiling all source files.",
                             "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
+                            "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
                             "VERBOSE: Compilation finished.",
                             "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
+                            "VERBOSE: Done writing build.json file.",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs;/qub/me/a/5/a.jar;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
@@ -370,12 +381,15 @@ public interface QubTestTests
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                            .add(new FakeProcessRun("javac")
-                                .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs;/qub/me/a/5/a.jar", "sources/A.java")
-                                .setFunction(() ->
-                                {
-                                    currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                })));
+                            .add(new FakeJavacProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addXlintUnchecked()
+                                .addXlintDeprecation()
+                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
+                                .addSourceFile("sources/A.java")
+                                .setFunctionAutomatically()));
+
                         main(console);
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -389,10 +403,10 @@ public interface QubTestTests
                             "VERBOSE: Detecting java source files to compile...",
                             "VERBOSE: Compiling all source files.",
                             "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
+                            "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
                             "VERBOSE: Compilation finished.",
                             "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
+                            "VERBOSE: Done writing build.json file.",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
@@ -424,12 +438,15 @@ public interface QubTestTests
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                            .add(new FakeProcessRun("javac")
-                                .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs;/qub/me/a/5/a.jar", "sources/A.java")
-                                .setFunction(() ->
-                                {
-                                    currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                })));
+                            .add(new FakeJavacProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addXlintUnchecked()
+                                .addXlintDeprecation()
+                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
+                                .addSourceFile("sources/A.java")
+                                .setFunctionAutomatically()));
+
                         main(console);
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -443,10 +460,10 @@ public interface QubTestTests
                             "VERBOSE: Detecting java source files to compile...",
                             "VERBOSE: Compiling all source files.",
                             "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
+                            "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
                             "VERBOSE: Compilation finished.",
                             "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
+                            "VERBOSE: Done writing build.json file.",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
@@ -478,12 +495,14 @@ public interface QubTestTests
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                            .add(new FakeProcessRun("javac")
-                                .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs;/qub/me/a/5/a.jar", "sources/A.java")
-                                .setFunction(() ->
-                                {
-                                    currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                })));
+                            .add(new FakeJavacProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addXlintUnchecked()
+                                .addXlintDeprecation()
+                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
+                                .addSourceFile("sources/A.java")
+                                .setFunctionAutomatically()));
 
                         main(console);
                         test.assertEqual(0, console.getExitCode());
@@ -498,10 +517,10 @@ public interface QubTestTests
                             "VERBOSE: Detecting java source files to compile...",
                             "VERBOSE: Compiling all source files.",
                             "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
+                            "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
                             "VERBOSE: Compilation finished.",
                             "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
+                            "VERBOSE: Done writing build.json file.",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
@@ -530,12 +549,14 @@ public interface QubTestTests
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", qubFolder.toString()));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                            .add(new FakeProcessRun("javac")
-                                .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs", "sources/A.java")
-                                .setFunction(() ->
-                                {
-                                    currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                })));
+                            .add(new FakeJavacProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addXlintUnchecked()
+                                .addXlintDeprecation()
+                                .addClasspath("/outputs")
+                                .addSourceFile("sources/A.java")
+                                .setFunctionAutomatically()));
 
                         main(console);
                         test.assertEqual(0, console.getExitCode());
@@ -550,10 +571,10 @@ public interface QubTestTests
                             "VERBOSE: Detecting java source files to compile...",
                             "VERBOSE: Compiling all source files.",
                             "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
+                            "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
                             "VERBOSE: Compilation finished.",
                             "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
+                            "VERBOSE: Done writing build.json file.",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
@@ -572,12 +593,14 @@ public interface QubTestTests
                     try (final Console console = createConsole(output, currentFolder, "--testjson", "--verbose"))
                     {
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                            .add(new FakeProcessRun("javac")
-                                .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs", "sources/A.java")
-                                .setFunction(() ->
-                                {
-                                    currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                })));
+                            .add(new FakeJavacProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addXlintUnchecked()
+                                .addXlintDeprecation()
+                                .addClasspath("/outputs")
+                                .addSourceFile("sources/A.java")
+                                .setFunctionAutomatically()));
                         main(console);
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -591,10 +614,10 @@ public interface QubTestTests
                             "VERBOSE: Detecting java source files to compile...",
                             "VERBOSE: Compiling all source files.",
                             "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
+                            "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
                             "VERBOSE: Compilation finished.",
                             "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
+                            "VERBOSE: Done writing build.json file.",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
@@ -613,34 +636,37 @@ public interface QubTestTests
                     try (final Console console = createConsole(output, currentFolder, "--testjson=true", "--verbose"))
                     {
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                            .add(new FakeProcessRun("javac")
-                                .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs", "sources/A.java")
-                                .setFunction(() ->
-                                {
-                                    currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                })));
+                            .add(new FakeJavacProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addXlintUnchecked()
+                                .addXlintDeprecation()
+                                .addClasspath("/outputs")
+                                .addSourceFile("sources/A.java")
+                                .setFunctionAutomatically()));
 
                         main(console);
+
+                        test.assertEqual(
+                            Iterable.create(
+                                "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Updating outputs/build.json...",
+                                "VERBOSE: Setting project.json...",
+                                "VERBOSE: Setting source files...",
+                                "VERBOSE: Detecting java source files to compile...",
+                                "VERBOSE: Compiling all source files.",
+                                "Compiling 1 file...",
+                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
+                                "VERBOSE: Compilation finished.",
+                                "VERBOSE: Writing build.json file...",
+                                "VERBOSE: Done writing build.json file.",
+                                "Running tests...",
+                                "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                ""),
+                            Strings.getLines(output.getText().await()).skipLast());
+
                         test.assertEqual(0, console.getExitCode());
                     }
-
-                    test.assertEqual(
-                        Iterable.create(
-                            "VERBOSE: Parsing project.json...",
-                            "VERBOSE: Updating outputs/build.json...",
-                            "VERBOSE: Setting project.json...",
-                            "VERBOSE: Setting source files...",
-                            "VERBOSE: Detecting java source files to compile...",
-                            "VERBOSE: Compiling all source files.",
-                            "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
-                            "VERBOSE: Compilation finished.",
-                            "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
-                            "Running tests...",
-                            "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
-                            ""),
-                        Strings.getLines(output.getText().await()).skipLast());
                 });
 
                 runner.test("with one source file and --testjson=false and --verbose", (Test test) ->
@@ -655,12 +681,14 @@ public interface QubTestTests
                     try (final Console console = createConsole(output, currentFolder, "--testjson=false", "--verbose"))
                     {
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                            .add(new FakeProcessRun("javac")
-                                .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs", "sources/A.java")
-                                .setFunction(() ->
-                                {
-                                    currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                })));
+                            .add(new FakeJavacProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addXlintUnchecked()
+                                .addXlintDeprecation()
+                                .addClasspath("/outputs")
+                                .addSourceFile("sources/A.java")
+                                .setFunctionAutomatically()));
                         main(console);
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -674,10 +702,10 @@ public interface QubTestTests
                             "VERBOSE: Detecting java source files to compile...",
                             "VERBOSE: Compiling all source files.",
                             "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
+                            "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
                             "VERBOSE: Compilation finished.",
                             "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
+                            "VERBOSE: Done writing build.json file.",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=false --output-folder=/outputs --coverage=None A",
                             ""),
@@ -704,22 +732,26 @@ public interface QubTestTests
                             .setEnvironmentVariables(new EnvironmentVariables()
                                 .set("QUB_HOME", "/qub/"))
                             .setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                                .add(new FakeProcessRun("javac")
-                                    .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs", "sources/A.java")
-                                    .setFunction(() ->
-                                    {
-                                        currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                    })));
+                                .add(new FakeJavacProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                    .addXlintUnchecked()
+                                    .addXlintDeprecation()
+                                    .addClasspath("/outputs")
+                                    .addSourceFile("sources/A.java")
+                                    .setFunctionAutomatically()));
+
                         main(console);
+
+                        test.assertEqual(
+                            Iterable.create(
+                                "Compiling 1 file...",
+                                "Running tests...",
+                                ""),
+                            Strings.getLines(output.getText().await()).skipLast());
+
                         test.assertEqual(0, console.getExitCode());
                     }
-
-                    test.assertEqual(
-                        Iterable.create(
-                            "Compiling 1 file...",
-                            "Running tests...",
-                            ""),
-                        Strings.getLines(output.getText().await()).skipLast());
                 });
 
                 runner.test("with one source file, verbose, and coverage", (Test test) ->
@@ -739,33 +771,37 @@ public interface QubTestTests
                             .setEnvironmentVariables(new EnvironmentVariables()
                                 .set("QUB_HOME", "/qub/"))
                             .setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                                .add(new FakeProcessRun("javac")
-                                    .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs", "sources/A.java")
-                                    .setFunction(() ->
-                                    {
-                                        currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                    })));
+                                .add(new FakeJavacProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                    .addXlintUnchecked()
+                                    .addXlintDeprecation()
+                                    .addClasspath("/outputs")
+                                    .addSourceFile("sources/A.java")
+                                    .setFunctionAutomatically()));
+
                         main(console);
+
+                        test.assertEqual(
+                            Iterable.create(
+                                "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Updating outputs/build.json...",
+                                "VERBOSE: Setting project.json...",
+                                "VERBOSE: Setting source files...",
+                                "VERBOSE: Detecting java source files to compile...",
+                                "VERBOSE: Compiling all source files.",
+                                "Compiling 1 file...",
+                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
+                                "VERBOSE: Compilation finished.",
+                                "VERBOSE: Writing build.json file...",
+                                "VERBOSE: Done writing build.json file.",
+                                "Running tests...",
+                                "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=Sources A",
+                                ""),
+                            Strings.getLines(output.getText().await()).skipLast());
+
                         test.assertEqual(0, console.getExitCode());
                     }
-
-                    test.assertEqual(
-                        Iterable.create(
-                            "VERBOSE: Parsing project.json...",
-                            "VERBOSE: Updating outputs/build.json...",
-                            "VERBOSE: Setting project.json...",
-                            "VERBOSE: Setting source files...",
-                            "VERBOSE: Detecting java source files to compile...",
-                            "VERBOSE: Compiling all source files.",
-                            "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
-                            "VERBOSE: Compilation finished.",
-                            "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
-                            "Running tests...",
-                            "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=Sources A",
-                            ""),
-                        Strings.getLines(output.getText().await()).skipLast());
                 });
 
                 runner.test("with one source file, verbose, coverage, and multiple jacoco installations", (Test test) ->
@@ -790,33 +826,37 @@ public interface QubTestTests
                             .setEnvironmentVariables(new EnvironmentVariables()
                                 .set("QUB_HOME", "/qub/"))
                             .setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                                .add(new FakeProcessRun("javac")
-                                    .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs", "sources/A.java")
-                                    .setFunction(() ->
-                                    {
-                                        currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                    })));
+                                .add(new FakeJavacProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                    .addXlintUnchecked()
+                                    .addXlintDeprecation()
+                                    .addClasspath("/outputs")
+                                    .addSourceFile("sources/A.java")
+                                    .setFunctionAutomatically()));
+
                         main(console);
+
+                        test.assertEqual(
+                            Iterable.create(
+                                "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Updating outputs/build.json...",
+                                "VERBOSE: Setting project.json...",
+                                "VERBOSE: Setting source files...",
+                                "VERBOSE: Detecting java source files to compile...",
+                                "VERBOSE: Compiling all source files.",
+                                "Compiling 1 file...",
+                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
+                                "VERBOSE: Compilation finished.",
+                                "VERBOSE: Writing build.json file...",
+                                "VERBOSE: Done writing build.json file.",
+                                "Running tests...",
+                                "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=Sources A",
+                                ""),
+                            Strings.getLines(output.getText().await()).skipLast());
+
                         test.assertEqual(0, console.getExitCode());
                     }
-
-                    test.assertEqual(
-                        Iterable.create(
-                            "VERBOSE: Parsing project.json...",
-                            "VERBOSE: Updating outputs/build.json...",
-                            "VERBOSE: Setting project.json...",
-                            "VERBOSE: Setting source files...",
-                            "VERBOSE: Detecting java source files to compile...",
-                            "VERBOSE: Compiling all source files.",
-                            "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs sources/A.java...",
-                            "VERBOSE: Compilation finished.",
-                            "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
-                            "Running tests...",
-                            "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=Sources A",
-                            ""),
-                        Strings.getLines(output.getText().await()).skipLast());
                 });
 
                 runner.test("with one source file, one dependency, and verbose", (Test test) ->
@@ -839,6 +879,7 @@ public interface QubTestTests
                         .setVersion("2");
                     currentFolder.setFileContentsAsString("project.json", JSON.object(aProjectJSON::write).toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
+                    final Folder outputsFolder = currentFolder.getFolder("outputs").await();
                     try (final Console console = createConsole(output, currentFolder, "-verbose"))
                     {
                         final Folder qubFolder = console.getFileSystem().getFolder("/qub/").await();
@@ -849,12 +890,14 @@ public interface QubTestTests
                             .setEnvironmentVariables(new EnvironmentVariables()
                                 .set("QUB_HOME", qubFolder.toString()))
                             .setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                                .add(new FakeProcessRun("javac")
-                                    .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs;/qub/me/b/2/b.jar", "sources/A.java")
-                                    .setFunction(() ->
-                                    {
-                                        currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                    })));
+                                .add(new FakeJavacProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addOutputFolder(outputsFolder)
+                                    .addXlintUnchecked()
+                                    .addXlintDeprecation()
+                                    .addClasspath(Iterable.create("/outputs", "/qub/me/b/2/b.jar"))
+                                    .addSourceFile("sources/A.java")
+                                    .setFunctionAutomatically()));
 
                         main(console);
                         test.assertEqual(0, console.getExitCode());
@@ -869,10 +912,10 @@ public interface QubTestTests
                             "VERBOSE: Detecting java source files to compile...",
                             "VERBOSE: Compiling all source files.",
                             "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/b/2/b.jar sources/A.java...",
+                            "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/b/2/b.jar sources/A.java...",
                             "VERBOSE: Compilation finished.",
                             "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
+                            "VERBOSE: Done writing build.json file.",
                             "Running tests...",
                             "VERBOSE: java.exe -classpath /outputs;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
                             ""),
@@ -909,6 +952,7 @@ public interface QubTestTests
                         .setVersion("3");
                     currentFolder.setFileContentsAsString("project.json", JSON.object(aProjectJSON::write).toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
+                    final Folder outputsFolder = currentFolder.getFolder("outputs").await();
                     try (final Console console = createConsole(output, currentFolder, "-verbose"))
                     {
                         final Folder qubFolder = console.getFileSystem().getFolder("/qub/").await();
@@ -921,34 +965,37 @@ public interface QubTestTests
                             .setEnvironmentVariables(new EnvironmentVariables()
                                 .set("QUB_HOME", "/qub/"))
                             .setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
-                                .add(new FakeProcessRun("javac")
-                                    .addArguments("-d", "/outputs", "-Xlint:unchecked", "-Xlint:deprecation", "-classpath", "/outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar", "sources/A.java")
-                                    .setFunction(() ->
-                                    {
-                                        currentFolder.setFileContentsAsString("outputs/A.class", "A.java bytecode").await();
-                                    })));
+                                .add(new FakeJavacProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addOutputFolder(outputsFolder)
+                                    .addXlintUnchecked()
+                                    .addXlintDeprecation()
+                                    .addClasspath(Iterable.create("/outputs", "/qub/me/b/2/b.jar", "/qub/me/c/3/c.jar"))
+                                    .addSourceFile("sources/A.java")
+                                    .setFunctionAutomatically()));
 
                         main(console);
+
+                        test.assertEqual(
+                            Iterable.create(
+                                "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Updating outputs/build.json...",
+                                "VERBOSE: Setting project.json...",
+                                "VERBOSE: Setting source files...",
+                                "VERBOSE: Detecting java source files to compile...",
+                                "VERBOSE: Compiling all source files.",
+                                "Compiling 1 file...",
+                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar sources/A.java...",
+                                "VERBOSE: Compilation finished.",
+                                "VERBOSE: Writing build.json file...",
+                                "VERBOSE: Done writing build.json file.",
+                                "Running tests...",
+                                "VERBOSE: java.exe -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                ""),
+                            Strings.getLines(output.getText().await()).skipLast());
+
                         test.assertEqual(0, console.getExitCode());
                     }
-
-                    test.assertEqual(
-                        Iterable.create(
-                            "VERBOSE: Parsing project.json...",
-                            "VERBOSE: Updating outputs/build.json...",
-                            "VERBOSE: Setting project.json...",
-                            "VERBOSE: Setting source files...",
-                            "VERBOSE: Detecting java source files to compile...",
-                            "VERBOSE: Compiling all source files.",
-                            "Compiling 1 file...",
-                            "VERBOSE: Running /: javac -d /outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar sources/A.java...",
-                            "VERBOSE: Compilation finished.",
-                            "VERBOSE: Writing build.json file...",
-                            "VERBOSE: Done writing build.json file...",
-                            "Running tests...",
-                            "VERBOSE: java.exe -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
-                            ""),
-                        Strings.getLines(output.getText().await()).skipLast());
                 });
             });
         });
