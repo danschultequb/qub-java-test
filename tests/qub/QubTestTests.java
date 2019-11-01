@@ -11,28 +11,28 @@ public interface QubTestTests
                 runner.test("with no JavaRunner set", (Test test) ->
                 {
                     final QubTest qubTest = new QubTest();
-                    final JavaRunner javaRunner = qubTest.getJavaRunner();
+                    final DefaultApplicationLauncher javaRunner = qubTest.getDefaultApplicationLauncher();
                     test.assertNotNull(javaRunner);
-                    test.assertTrue(javaRunner instanceof RealJavaRunner);
-                    test.assertSame(javaRunner, qubTest.getJavaRunner());
+                    test.assertTrue(javaRunner instanceof RealDefaultApplicationLauncher);
+                    test.assertSame(javaRunner, qubTest.getDefaultApplicationLauncher());
                 });
 
                 runner.test("with null JavaRunner set", (Test test) ->
                 {
                     final QubTest qubTest = new QubTest();
-                    test.assertSame(qubTest, qubTest.setJavaRunner(null));
-                    final JavaRunner javaRunner = qubTest.getJavaRunner();
+                    test.assertSame(qubTest, qubTest.setDefaultApplicationLauncher(null));
+                    final DefaultApplicationLauncher javaRunner = qubTest.getDefaultApplicationLauncher();
                     test.assertNotNull(javaRunner);
-                    test.assertTrue(javaRunner instanceof RealJavaRunner);
-                    test.assertSame(javaRunner, qubTest.getJavaRunner());
+                    test.assertTrue(javaRunner instanceof RealDefaultApplicationLauncher);
+                    test.assertSame(javaRunner, qubTest.getDefaultApplicationLauncher());
                 });
 
                 runner.test("with non-null JavaRunner set", (Test test) ->
                 {
                     final QubTest qubTest = new QubTest();
-                    final FakeJavaRunner javaRunner = new FakeJavaRunner();
-                    test.assertSame(qubTest, qubTest.setJavaRunner(javaRunner));
-                    test.assertSame(javaRunner, qubTest.getJavaRunner());
+                    final FakeDefaultApplicationLauncher javaRunner = new FakeDefaultApplicationLauncher();
+                    test.assertSame(qubTest, qubTest.setDefaultApplicationLauncher(javaRunner));
+                    test.assertSame(javaRunner, qubTest.getDefaultApplicationLauncher());
                 });
             });
 
@@ -197,7 +197,16 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath("/outputs")
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addTestJson(true)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
 
                         main(console);
 
@@ -232,7 +241,17 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath("/outputs")
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(true)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
 
                         main(console);
 
@@ -250,7 +269,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -282,7 +301,18 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath("/outputs")
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs;/foo/subfolder")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(true)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
+
                         main(console);
 
                         test.assertEqual(
@@ -299,7 +329,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs;/foo/subfolder qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/foo/subfolder qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -337,7 +367,17 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs;/qub/me/a/5/a.jar;/qub/me/b/2/b.jar")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(true)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
 
                         main(console);
 
@@ -355,7 +395,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs;/qub/me/a/5/a.jar;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -393,7 +433,17 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs;/qub/me/a/5/a.jar")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(true)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
 
                         main(console);
 
@@ -411,7 +461,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -449,7 +499,17 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs;/qub/me/a/5/a.jar")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(true)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
 
                         main(console);
 
@@ -467,7 +527,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -505,7 +565,17 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs;/qub/me/a/5/a.jar")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(true)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
 
                         main(console);
 
@@ -523,7 +593,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -558,7 +628,17 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath("/outputs")
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(true)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
 
                         main(console);
 
@@ -576,7 +656,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -604,7 +684,18 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath("/outputs")
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(true)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
+
                         main(console);
 
                         test.assertEqual(
@@ -621,7 +712,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -649,7 +740,17 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath("/outputs")
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(true)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
 
                         main(console);
 
@@ -667,7 +768,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -695,7 +796,18 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath("/outputs")
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(false)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
+
                         main(console);
 
                         test.assertEqual(
@@ -712,7 +824,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=false --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=false --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -745,7 +857,25 @@ public interface QubTestTests
                                     .addXlintDeprecation()
                                     .addClasspath("/outputs")
                                     .addSourceFile("sources/A.java")
-                                    .setFunctionAutomatically()));
+                                    .setFunctionAutomatically())
+                                .add(new FakeConsoleTestRunnerProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addJavaAgent("/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec")
+                                    .addClasspath("/outputs")
+                                    .addConsoleTestRunnerFullClassName()
+                                    .addProfiler(false)
+                                    .addTestJson(true)
+                                    .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                    .addCoverage(Coverage.Sources)
+                                    .addFullClassNamesToTest(Iterable.create("A")))
+                                .add(new FakeJacocoCliProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addJacocoCliJar("/qub/jacoco/jacococli/0.8.1/jacococli.jar")
+                                    .addReport()
+                                    .addCoverageExec("/outputs/coverage.exec")
+                                    .addClassFile(currentFolder.getFile("outputs/A.class").await())
+                                    .addSourceFiles(currentFolder.getFolder("sources").await())
+                                    .addHtml(currentFolder.getFolder("outputs/coverage").await())));
 
                         main(console);
 
@@ -753,7 +883,9 @@ public interface QubTestTests
                             Iterable.create(
                                 "Compiling 1 file...",
                                 "Running tests...",
-                                ""),
+                                "",
+                                "",
+                                "Analyzing coverage..."),
                             Strings.getLines(output.getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
@@ -785,7 +917,26 @@ public interface QubTestTests
                                     .addXlintDeprecation()
                                     .addClasspath("/outputs")
                                     .addSourceFile("sources/A.java")
-                                    .setFunctionAutomatically()));
+                                    .setFunctionAutomatically())
+                                .add(new FakeConsoleTestRunnerProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addJavaAgent("/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec")
+                                    .addClasspath("/outputs")
+                                    .addConsoleTestRunnerFullClassName()
+                                    .addProfiler(false)
+                                    .addVerbose(true)
+                                    .addTestJson(true)
+                                    .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                    .addCoverage(Coverage.Sources)
+                                    .addFullClassNamesToTest(Iterable.create("A")))
+                                .add(new FakeJacocoCliProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addJacocoCliJar("/qub/jacoco/jacococli/0.8.1/jacococli.jar")
+                                    .addReport()
+                                    .addCoverageExec("/outputs/coverage.exec")
+                                    .addClassFile(currentFolder.getFile("outputs/A.class").await())
+                                    .addSourceFiles(currentFolder.getFolder("sources").await())
+                                    .addHtml(currentFolder.getFolder("outputs/coverage").await())));
 
                         main(console);
 
@@ -803,8 +954,11 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=Sources A",
-                                ""),
+                                "VERBOSE: Running /: java -javaagent:/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=Sources A",
+                                "",
+                                "",
+                                "Analyzing coverage...",
+                                "VERBOSE: Running /: java -jar /qub/jacoco/jacococli/0.8.1/jacococli.jar report /outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /sources --html /outputs/coverage"),
                             Strings.getLines(output.getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
@@ -837,7 +991,26 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath("/outputs")
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addJavaAgent("/qub/jacoco/jacococli/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec")
+                                .addClasspath("/outputs")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(true)
+                                .addOutputFolder(currentFolder.getFolder("outputs").await())
+                                .addCoverage(Coverage.Sources)
+                                .addFullClassNamesToTest(Iterable.create("A")))
+                            .add(new FakeJacocoCliProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addJacocoCliJar("/qub/jacoco/jacococli/0.9.2/jacococli.jar")
+                                .addReport()
+                                .addCoverageExec("/outputs/coverage.exec")
+                                .addClassFile(currentFolder.getFile("outputs/A.class").await())
+                                .addSourceFiles(currentFolder.getFolder("sources").await())
+                                .addHtml(currentFolder.getFolder("outputs/coverage").await())));
 
                         main(console);
 
@@ -855,8 +1028,11 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -javaagent:/qub/jacoco/jacococli/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=Sources A",
-                                ""),
+                                "VERBOSE: Running /: java -javaagent:/qub/jacoco/jacococli/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=Sources A",
+                                "",
+                                "",
+                                "Analyzing coverage...",
+                                "VERBOSE: Running /: java -jar /qub/jacoco/jacococli/0.9.2/jacococli.jar report /outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /sources --html /outputs/coverage"),
                             Strings.getLines(output.getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
@@ -902,7 +1078,17 @@ public interface QubTestTests
                                 .addXlintDeprecation()
                                 .addClasspath(Iterable.create("/outputs", "/qub/me/b/2/b.jar"))
                                 .addSourceFile("sources/A.java")
-                                .setFunctionAutomatically()));
+                                .setFunctionAutomatically())
+                            .add(new FakeConsoleTestRunnerProcessRun()
+                                .setWorkingFolder(currentFolder)
+                                .addClasspath("/outputs;/qub/me/b/2/b.jar")
+                                .addConsoleTestRunnerFullClassName()
+                                .addProfiler(false)
+                                .addVerbose(true)
+                                .addTestJson(true)
+                                .addOutputFolder(outputsFolder)
+                                .addCoverage(Coverage.None)
+                                .addFullClassNamesToTest(Iterable.create("A"))));
 
                         main(console);
 
@@ -920,7 +1106,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -980,7 +1166,17 @@ public interface QubTestTests
                                     .addXlintDeprecation()
                                     .addClasspath(Iterable.create("/outputs", "/qub/me/b/2/b.jar", "/qub/me/c/3/c.jar"))
                                     .addSourceFile("sources/A.java")
-                                    .setFunctionAutomatically()));
+                                    .setFunctionAutomatically())
+                                .add(new FakeConsoleTestRunnerProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addClasspath("/outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar")
+                                    .addConsoleTestRunnerFullClassName()
+                                    .addProfiler(false)
+                                    .addVerbose(true)
+                                    .addTestJson(true)
+                                    .addOutputFolder(outputsFolder)
+                                    .addCoverage(Coverage.None)
+                                    .addFullClassNamesToTest(Iterable.create("A"))));
 
                         main(console);
 
@@ -998,7 +1194,7 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: java.exe -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar qub.ConsoleTestRunner --profiler=false --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()).skipLast());
 
@@ -1068,7 +1264,7 @@ public interface QubTestTests
         PreCondition.assertNotNull(console, "console");
 
         final QubTest test = new QubTest();
-        test.setJavaRunner(new FakeJavaRunner());
+        test.setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher());
         test.setShowTotalDuration(showTotalDuration);
 
         test.main(console);

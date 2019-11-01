@@ -5,6 +5,171 @@ package qub;
  */
 public class ConsoleTestRunner implements TestRunner, Disposable
 {
+    public static void main(String[] args)
+    {
+        Console.run(args, ConsoleTestRunner::main);
+    }
+
+    public static void main(Console console)
+    {
+        PreCondition.assertNotNull(console, "console");
+
+        ConsoleTestRunnerParameters parameters = ConsoleTestRunner.getParameters(console);
+        if (parameters != null)
+        {
+            final Stopwatch stopwatch = console.getStopwatch();
+            stopwatch.start();
+            try
+            {
+                console.setExitCode(ConsoleTestRunner.run(parameters));
+            }
+            finally
+            {
+                final Duration totalTestsDuration = stopwatch.stop();
+                console.writeLine("Tests Duration: " + totalTestsDuration.toSeconds().toString("0.0")).await();
+            }
+        }
+    }
+
+    public static ConsoleTestRunnerParameters getParameters(Console console)
+    {
+        PreCondition.assertNotNull(console, "console");
+
+        final CommandLineParameters parameters = console.createCommandLineParameters();
+        final CommandLineParameter<PathPattern> patternParameter = parameters.add("pattern", (String argumentValue) ->
+        {
+            return Result.success(Strings.isNullOrEmpty(argumentValue)
+                ? null
+                : PathPattern.parse(argumentValue));
+        });
+        final CommandLineParameter<Coverage> coverageParameter = parameters.addEnum("coverage", Coverage.None, Coverage.Sources);
+        final CommandLineParameter<Folder> outputFolderParameter = parameters.addFolder("output-folder", console);
+        final CommandLineParameterVerbose verboseParameter = parameters.addVerbose(console);
+        final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(console, ConsoleTestRunner.class);
+        final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson", true);
+        final CommandLineParameterList<String> testClassNamesParameter = parameters.addPositionStringList("test-class");
+
+        profilerParameter.await();
+
+        final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
+        final Folder outputFolder = outputFolderParameter.getValue().await();
+        final Iterable<String> testClassNames = testClassNamesParameter.getValues().await();
+        return new ConsoleTestRunnerParameters(console, verbose, outputFolder, testClassNames)
+            .setPattern(patternParameter.getValue().await())
+            .setCoverage(coverageParameter.getValue().await())
+            .setTestJson(testJsonParameter.getValue().await());
+    }
+
+    public static int run(ConsoleTestRunnerParameters parameters)
+    {
+        PreCondition.assertNotNull(parameters, "parameters");
+
+        final Console console = parameters.getConsole();
+        final VerboseCharacterWriteStream verbose = parameters.getVerbose();
+        final PathPattern pattern = parameters.getPattern();
+        final Folder outputFolder = parameters.getOutputFolder();
+        final Iterable<String> testClassNames = parameters.getTestClassNames();
+        final Boolean useTestJson = parameters.getTestJson();
+        final Coverage coverage = parameters.getCoverage();
+
+        final ConsoleTestRunner runner = new ConsoleTestRunner(console, pattern);
+
+        final List<TestJSONClassFile> testJSONClassFiles = List.create();
+
+        MutableMap<String,TestJSONClassFile> fullClassNameToTestJSONClassFileMap = Map.create();
+        if (useTestJson)
+        {
+            final TestJSON testJson = TestJSON.parse(outputFolder.getFile("test.json").await())
+                .catchError(FileNotFoundException.class)
+                .await();
+            if (testJson != null)
+            {
+                verbose.writeLine("Found and parsed test.json file.").await();
+                for (final TestJSONClassFile testJSONClassFile : testJson.getClassFiles())
+                {
+                    fullClassNameToTestJSONClassFileMap.set(testJSONClassFile.getFullClassName(), testJSONClassFile);
+                }
+            }
+
+            runner.afterTestClass((TestClass testClass) ->
+            {
+                verbose.writeLine("Updating test.json class file for " + testClass.getFullName() + "...").await();
+                final File testClassFile = QubTest.getClassFile(outputFolder, testClass.getFullName());
+                testJSONClassFiles.add(new TestJSONClassFile()
+                    .setRelativePath(testClassFile.relativeTo(outputFolder))
+                    .setLastModified(testClassFile.getLastModified().await())
+                    .setPassedTestCount(testClass.getPassedTestCount())
+                    .setSkippedTestCount(testClass.getSkippedTestCount())
+                    .setFailedTestCount(testClass.getFailedTestCount()));
+            });
+        }
+
+        for (final String testClassName : testClassNames)
+        {
+            boolean runTestClass;
+
+            if (!useTestJson || coverage != Coverage.None)
+            {
+                runTestClass = true;
+            }
+            else
+            {
+                final TestJSONClassFile testJSONClassFile = fullClassNameToTestJSONClassFileMap.get(testClassName)
+                    .catchError(NotFoundException.class)
+                    .await();
+                if (testJSONClassFile == null)
+                {
+                    verbose.writeLine("Found class that didn't exist in previous test run: " + testClassName);
+                    runTestClass = true;
+                }
+                else
+                {
+                    verbose.writeLine("Found class entry for " + testClassName + ". Checking timestamps...").await();
+                    final File testClassFile = outputFolder.getFile(testJSONClassFile.getRelativePath()).await();
+                    final DateTime testClassFileLastModified = testClassFile.getLastModified().await();
+                    if (!testClassFileLastModified.equals(testJSONClassFile.getLastModified()))
+                    {
+                        verbose.writeLine("Timestamp of " + testClassName + " from the previous run (" + testJSONClassFile.getLastModified() + ") was not the same as the current class file timestamp (" + testClassFileLastModified + "). Running test class tests.").await();
+                        runTestClass = true;
+                    }
+                    else if (testJSONClassFile.getFailedTestCount() > 0)
+                    {
+                        verbose.writeLine("Previous run of " + testClassName + " contained errors. Running test class tests...").await();
+                        runTestClass = true;
+                    }
+                    else
+                    {
+                        verbose.writeLine("Previous run of " + testClassName + " didn't contain errors and the test class hasn't changed since then. Skipping test class tests.").await();
+                        runner.addUnmodifiedPassedTests(testJSONClassFile.getPassedTestCount());
+                        runner.addUnmodifiedSkippedTests(testJSONClassFile.getSkippedTestCount());
+                        testJSONClassFiles.add(testJSONClassFile);
+                        runTestClass = false;
+                    }
+                }
+            }
+
+            if (runTestClass)
+            {
+                runner.testClass(testClassName)
+                    .catchError((Throwable error) -> verbose.writeLine(error.getMessage()).await())
+                    .await();
+            }
+        }
+
+        console.writeLine().await();
+        runner.writeSummary();
+
+        if (useTestJson)
+        {
+            final File testJsonFile = outputFolder.getFile("test.json").await();
+            final TestJSON testJson = new TestJSON()
+                .setClassFiles(testJSONClassFiles);
+            testJson.write(testJsonFile).await();
+        }
+
+        return runner.getFailedTestCount();
+    }
+
     private final BasicTestRunner testRunner;
     private final IndentedCharacterWriteStream writeStream;
     private final CharacterWriteStream consoleBackupWriteStream;
@@ -472,148 +637,5 @@ public class ConsoleTestRunner implements TestRunner, Disposable
                 writeStream.writeLine("Tests Skipped:            " + testRunner.getSkippedTestCount()).await();
             }
         }
-    }
-
-    public static void run(Console console)
-    {
-        PreCondition.assertNotNull(console, "console");
-
-        final CommandLineParameters parameters = console.createCommandLineParameters();
-        final CommandLineParameter<PathPattern> patternParameter = parameters.add("pattern", (String argumentValue) ->
-        {
-            return Result.success(Strings.isNullOrEmpty(argumentValue)
-                ? null
-                : PathPattern.parse(argumentValue));
-        });
-        final CommandLineParameter<Coverage> coverageParameter = parameters.addEnum("coverage", Coverage.None, Coverage.Sources);
-        final CommandLineParameter<String> outputFolderParameter = parameters.addString("output-folder");
-        final CommandLineParameterVerbose verbose = parameters.addVerbose(console);
-        final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(console, ConsoleTestRunner.class);
-        final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson", true);
-        final CommandLineParameterList<String> testClassNamesParameter = parameters.addPositionStringList("test-class");
-
-        final PathPattern pattern = patternParameter.getValue().await();
-
-        String outputFolderPath = outputFolderParameter.getValue().await();
-        if (Strings.isNullOrEmpty(outputFolderPath))
-        {
-            outputFolderPath = console.getCurrentFolderPath().concatenateSegment("outputs").toString();
-        }
-        final Folder outputFolder = console.getFileSystem().getFolder(outputFolderPath).await();
-
-        profilerParameter.await();
-
-        verbose.writeLine("TestPattern: " + Strings.escapeAndQuote(pattern)).await();
-
-        final Stopwatch stopwatch = console.getStopwatch();
-        stopwatch.start();
-
-        final boolean useTestJson = testJsonParameter.getValue().await();
-
-        final ConsoleTestRunner runner = new ConsoleTestRunner(console, pattern);
-
-        final List<TestJSONClassFile> testJSONClassFiles = List.create();
-        final Iterable<String> testClassNames = testClassNamesParameter.getValues().await();
-
-        MutableMap<String,TestJSONClassFile> fullClassNameToTestJSONClassFileMap = Map.create();
-        if (useTestJson)
-        {
-            final TestJSON testJson = TestJSON.parse(outputFolder.getFile("test.json").await())
-                .catchError(FileNotFoundException.class)
-                .await();
-            if (testJson != null)
-            {
-                verbose.writeLine("Found and parsed test.json file.").await();
-                for (final TestJSONClassFile testJSONClassFile : testJson.getClassFiles())
-                {
-                    fullClassNameToTestJSONClassFileMap.set(testJSONClassFile.getFullClassName(), testJSONClassFile);
-                }
-            }
-
-            runner.afterTestClass((TestClass testClass) ->
-            {
-                verbose.writeLine("Updating test.json class file for " + testClass.getFullName() + "...").await();
-                final File testClassFile = QubTest.getClassFile(outputFolder, testClass.getFullName());
-                testJSONClassFiles.add(new TestJSONClassFile()
-                    .setRelativePath(testClassFile.relativeTo(outputFolder))
-                    .setLastModified(testClassFile.getLastModified().await())
-                    .setPassedTestCount(testClass.getPassedTestCount())
-                    .setSkippedTestCount(testClass.getSkippedTestCount())
-                    .setFailedTestCount(testClass.getFailedTestCount()));
-            });
-        }
-
-        for (final String testClassName : testClassNames)
-        {
-            boolean runTestClass;
-
-            if (!useTestJson || coverageParameter.getValue().await() != Coverage.None)
-            {
-                runTestClass = true;
-            }
-            else
-            {
-                final TestJSONClassFile testJSONClassFile = fullClassNameToTestJSONClassFileMap.get(testClassName)
-                    .catchError(NotFoundException.class)
-                    .await();
-                if (testJSONClassFile == null)
-                {
-                    verbose.writeLine("Found class that didn't exist in previous test run: " + testClassName);
-                    runTestClass = true;
-                }
-                else
-                {
-                    verbose.writeLine("Found class entry for " + testClassName + ". Checking timestamps...").await();
-                    final File testClassFile = outputFolder.getFile(testJSONClassFile.getRelativePath()).await();
-                    final DateTime testClassFileLastModified = testClassFile.getLastModified().await();
-                    if (!testClassFileLastModified.equals(testJSONClassFile.getLastModified()))
-                    {
-                        verbose.writeLine("Timestamp of " + testClassName + " from the previous run (" + testJSONClassFile.getLastModified() + ") was not the same as the current class file timestamp (" + testClassFileLastModified + "). Running test class tests.").await();
-                        runTestClass = true;
-                    }
-                    else if (testJSONClassFile.getFailedTestCount() > 0)
-                    {
-                        verbose.writeLine("Previous run of " + testClassName + " contained errors. Running test class tests...").await();
-                        runTestClass = true;
-                    }
-                    else
-                    {
-                        verbose.writeLine("Previous run of " + testClassName + " didn't contain errors and the test class hasn't changed since then. Skipping test class tests.").await();
-                        runner.addUnmodifiedPassedTests(testJSONClassFile.getPassedTestCount());
-                        runner.addUnmodifiedSkippedTests(testJSONClassFile.getSkippedTestCount());
-                        testJSONClassFiles.add(testJSONClassFile);
-                        runTestClass = false;
-                    }
-                }
-            }
-
-            if (runTestClass)
-            {
-                runner.testClass(testClassName)
-                    .catchError((Throwable error) -> verbose.writeLine(error.getMessage()).await())
-                    .await();
-            }
-        }
-
-        console.writeLine().await();
-        runner.writeSummary();
-
-        if (useTestJson)
-        {
-            final File testJsonFile = outputFolder.getFile("test.json").await();
-            final TestJSON testJson = new TestJSON()
-                .setClassFiles(testJSONClassFiles);
-            testJson.write(testJsonFile).await();
-        }
-
-        final Duration totalTestsDuration = stopwatch.stop();
-        console.writeLine("Tests Duration: " + totalTestsDuration.toSeconds().toString("0.0")).await();
-
-        console.setExitCode(runner.getFailedTestCount());
-    }
-
-    public static void main(String[] args)
-    {
-        Console.run(args, ConsoleTestRunner::run);
     }
 }
