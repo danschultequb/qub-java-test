@@ -1,54 +1,24 @@
 package qub;
 
-public class QubTest
+public interface QubTest
 {
-    public static void main(String[] args)
+    static void main(String[] args)
     {
-        final QubTest qubTest = new QubTest();
-        Console.run(args, qubTest::main);
+        Console.run(args, QubBuild::main);
     }
 
-    private DefaultApplicationLauncher defaultApplicationLauncher;
-    private Boolean showTotalDuration;
-
-    /**
-     * Set the JavaRunner that will be used to run tests.
-     * @param javaRunner The JavaRunner that will be used to run tests.
-     * @return This object for method chaining.
-     */
-    public QubTest setDefaultApplicationLauncher(DefaultApplicationLauncher javaRunner)
+    static void main(Console console)
     {
-        this.defaultApplicationLauncher = javaRunner;
+        PreCondition.assertNotNull(console, "console");
 
-        return this;
-    }
-
-    public DefaultApplicationLauncher getDefaultApplicationLauncher()
-    {
-        if (defaultApplicationLauncher == null)
+        final QubTestParameters parameters = QubTest.getParameters(console);
+        if (parameters != null)
         {
-            defaultApplicationLauncher = new RealDefaultApplicationLauncher();
+            console.showDuration(() ->
+            {
+                console.setExitCode(QubTest.run(parameters));
+            });
         }
-        final DefaultApplicationLauncher result = defaultApplicationLauncher;
-
-        PostCondition.assertNotNull(result, "result");
-
-        return result;
-    }
-
-    public QubTest setShowTotalDuration(boolean showTotalDuration)
-    {
-        this.showTotalDuration = showTotalDuration;
-        return this;
-    }
-
-    public boolean getShowTotalDuration()
-    {
-        if (showTotalDuration == null)
-        {
-            showTotalDuration = true;
-        }
-        return showTotalDuration;
     }
 
     /**
@@ -56,25 +26,25 @@ public class QubTest
      * @param process The Process that is running.
      * @return The parameters for QubTest.run(), or null if QubTest.run() should not be run.
      */
-    public static QubTestParameters getParameters(Process process)
+    static QubTestParameters getParameters(Process process)
     {
         PreCondition.assertNotNull(process, "process");
 
         final CommandLineParameters parameters = process.createCommandLineParameters()
             .setApplicationName("qub-test")
             .setApplicationDescription("Used to run tests in source code projects.");
-        final CommandLineParameter<Folder> folderToTestParameter = parameters.addFolder("folder", process)
+        final CommandLineParameter<Folder> folderToTestParameter = parameters.addPositionalFolder("folder", process)
             .setValueName("<folder-to-test>")
             .setDescription("The folder to run tests in. Defaults to the current folder.");
         final CommandLineParameter<String> patternParameter = parameters.addString("pattern")
             .setValueName("<test-name-pattern>")
             .setDescription("The pattern to match against tests to determine if they will be run or not.");
-        final CommandLineParameter<Coverage> coverageParameter = parameters.addEnum("coverage", Coverage.None, Coverage.Sources)
+        final CommandLineParameter<Coverage> coverageParameter = parameters.addEnum("coverage", QubTestParameters.getCoverageDefault(), Coverage.Sources)
             .setValueRequired(false)
             .setValueName("<None|Sources|Tests|All>")
             .addAlias("c")
             .setDescription("Whether or not to collect code coverage information while running tests.");
-        final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson", true)
+        final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson", QubTestParameters.getTestJsonDefault())
             .setDescription("Whether or not to write the test results to a test.json file.");
         final CommandLineParameter<String> jvmClassPathParameter = parameters.addString("jvm.classpath")
             .setDescription("The classpath that was passed to the JVM when this application was started.");
@@ -88,191 +58,177 @@ public class QubTest
             profilerParameter.await();
             profilerParameter.removeValue().await();
 
-            final CharacterWriteStream output = process.getOutputCharacterWriteStream();
+            final ByteWriteStream output = process.getOutputByteWriteStream();
+            final ByteWriteStream error = process.getErrorByteWriteStream();
+            final DefaultApplicationLauncher defaultApplicationLauncher = process.getDefaultApplicationLauncher();
             final Folder folderToTest = folderToTestParameter.getValue().await();
             final EnvironmentVariables environmentVariables = process.getEnvironmentVariables();
             final ProcessFactory processFactory = process.getProcessFactory();
             final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
 
-            result = new QubTestParameters(output, folderToTest, environmentVariables, processFactory, verbose)
-                .setPattern(patternParameter.getValue().await())
-                .setCoverage(coverageParameter.getValue().await())
-                .setTestJson(testJsonParameter.getValue().await())
-                .setJvmClassPath(jvmClassPathParameter.getValue().await())
-                .setProfiler(profilerParameter.getValue().await());
+            result = new QubTestParameters(output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher)
+                .setPattern(patternParameter.removeValue().await())
+                .setCoverage(coverageParameter.removeValue().await())
+                .setTestJson(testJsonParameter.removeValue().await())
+                .setJvmClassPath(jvmClassPathParameter.removeValue().await())
+                .setVerbose(verbose);
         }
 
         return result;
     }
 
-    public void main(Console console)
+    static int run(QubTestParameters parameters)
     {
-        PreCondition.assertNotNull(console, "console");
+        PreCondition.assertNotNull(parameters, "parameters");
 
-        final QubTestParameters parameters = QubTest.getParameters(console);
-        if (parameters != null)
+        final Folder folderToTest = parameters.getFolderToTest();
+        final String pattern = parameters.getPattern();
+        final Coverage coverage = parameters.getCoverage();
+        final VerboseCharacterWriteStream verbose = parameters.getVerbose();
+        final ByteWriteStream outputByteWriteStream = parameters.getOutputByteWriteStream();
+        final ByteWriteStream errorByteWriteStream = parameters.getErrorByteWriteStream();
+        final DefaultApplicationLauncher defaultApplicationLauncher = parameters.getDefaultApplicationLauncher();
+        final CharacterWriteStream output = parameters.getOutputCharacterWriteStream();
+        final EnvironmentVariables environmentVariables = parameters.getEnvironmentVariables();
+        final ProcessFactory processFactory = parameters.getProcessFactory();
+        final boolean profiler = parameters.getProfiler();
+        final boolean testJson = parameters.getTestJson();
+
+        int result = QubBuild.run(parameters);
+        if (result == 0)
         {
-            final boolean showTotalDuration = getShowTotalDuration();
-            final Stopwatch stopwatch = console.getStopwatch();
-            if (showTotalDuration)
-            {
-                stopwatch.start();
-            }
-            try
-            {
-                console.setExitCode(QubBuild.run(QubBuild.getParameters(console)));
+            output.writeLine("Running tests...").await();
 
-                if (console.getExitCode() == 0)
+            final Folder outputFolder = folderToTest.getFolder("outputs").await();
+            final Folder sourceFolder = folderToTest.getFolder("sources").await();
+            final Folder testFolder = folderToTest.getFolder("tests").await();
+
+            final Folder coverageFolder = outputFolder.getFolder("coverage").await();
+
+            final List<String> classPaths = List.create(outputFolder.toString());
+
+            final File projectJsonFile = folderToTest.getFile("project.json").await();
+            final ProjectJSON projectJson = ProjectJSON.parse(projectJsonFile).await();
+
+            final String qubHome = environmentVariables.get("QUB_HOME").await();
+            final Folder qubFolder = folderToTest.getFileSystem().getFolder(qubHome).await();
+            Iterable<Dependency> dependencies = projectJson.getJava().getDependencies();
+            if (!Iterable.isNullOrEmpty(dependencies))
+            {
+                dependencies = QubBuild.getAllDependencies(qubFolder, dependencies).getKeys();
+                classPaths.addAll(dependencies.map((Dependency dependency) ->
                 {
-                    console.writeLine("Running tests...").await();
+                    return QubBuild.resolveDependencyReference(qubFolder, dependency).toString();
+                }));
+            }
 
-                    final Folder folderToTest = parameters.getFolderToTest();
-                    final String pattern = parameters.getPattern();
-                    final Coverage coverage = parameters.getCoverage();
-                    final VerboseCharacterWriteStream verbose = parameters.getVerbose();
-
-                    final Folder outputFolder = folderToTest.getFolder("outputs").await();
-                    final Folder sourceFolder = folderToTest.getFolder("sources").await();
-                    final Folder testFolder = folderToTest.getFolder("tests").await();
-
-                    final Folder coverageFolder = outputFolder.getFolder("coverage").await();
-
-                    final List<String> classPaths = List.create(outputFolder.toString());
-
-                    final File projectJsonFile = folderToTest.getFile("project.json").await();
-                    final ProjectJSON projectJson = ProjectJSON.parse(projectJsonFile).await();
-
-                    final String qubHome = console.getEnvironmentVariable("QUB_HOME").await();
-                    final Folder qubFolder = console.getFileSystem().getFolder(qubHome).await();
-                    Iterable<Dependency> dependencies = projectJson.getJava().getDependencies();
-                    if (!Iterable.isNullOrEmpty(dependencies))
+            final String jvmClassPath = parameters.getJvmClassPath();
+            if (!Strings.isNullOrEmpty(jvmClassPath))
+            {
+                final String[] jvmClassPaths = jvmClassPath.split(";");
+                for (final String jvmClassPathString : jvmClassPaths)
+                {
+                    final Path relativeJvmClassPath = Path.parse(jvmClassPathString).relativeTo(qubFolder);
+                    final Indexable<String> segments = relativeJvmClassPath.getSegments();
+                    final Dependency jvmDependency = new Dependency()
+                        .setPublisher(segments.get(0))
+                        .setProject(segments.get(1))
+                        .setVersion(segments.get(2));
+                    if (!QubTest.equal(jvmDependency, projectJson.getPublisher(), projectJson.getProject()) &&
+                        (Iterable.isNullOrEmpty(dependencies) || !dependencies.contains(dep -> QubTest.equalIgnoreVersion(dep, jvmDependency))))
                     {
-                        dependencies = QubBuild.getAllDependencies(qubFolder, dependencies).getKeys();
-                        classPaths.addAll(dependencies.map((Dependency dependency) ->
-                        {
-                            return QubBuild.resolveDependencyReference(qubFolder, dependency).toString();
-                        }));
-                    }
-
-                    final String jvmClassPath = parameters.getJvmClassPath();
-                    if (!Strings.isNullOrEmpty(jvmClassPath))
-                    {
-                        final String[] jvmClassPaths = jvmClassPath.split(";");
-                        for (final String jvmClassPathString : jvmClassPaths)
-                        {
-                            final Path relativeJvmClassPath = Path.parse(jvmClassPathString).relativeTo(qubFolder);
-                            final Indexable<String> segments = relativeJvmClassPath.getSegments();
-                            final Dependency jvmDependency = new Dependency()
-                                .setPublisher(segments.get(0))
-                                .setProject(segments.get(1))
-                                .setVersion(segments.get(2));
-                            if (!QubTest.equal(jvmDependency, projectJson.getPublisher(), projectJson.getProject()) &&
-                                (Iterable.isNullOrEmpty(dependencies) || !dependencies.contains(dep -> QubTest.equalIgnoreVersion(dep, jvmDependency))))
-                            {
-                                classPaths.add(jvmClassPathString);
-                            }
-                        }
-                    }
-
-                    Folder jacocoFolder = null;
-                    if (coverage != Coverage.None)
-                    {
-                        jacocoFolder = qubFolder.getFolder("jacoco/jacococli").await()
-                            .getFolders().await()
-                            .maximum((Folder lhs, Folder rhs) -> VersionNumber.parse(lhs.getName()).compareTo(VersionNumber.parse(rhs.getName())));
-                    }
-
-                    final ConsoleTestRunnerProcessBuilder consoleTestRunner = ConsoleTestRunnerProcessBuilder.get(console).await()
-                        .redirectOutput(console.getOutputByteWriteStream())
-                        .redirectError(console.getErrorByteWriteStream());
-
-                    if (jacocoFolder != null)
-                    {
-                        final File jacocoAgentJarFile = jacocoFolder.getFile("jacocoagent.jar").await();
-                        final File coverageExecFile = outputFolder.getFile("coverage.exec").await();
-                        consoleTestRunner.addJavaAgent(jacocoAgentJarFile + "=destfile=" + coverageExecFile);
-                    }
-
-                    consoleTestRunner.addClasspath(classPaths);
-                    consoleTestRunner.addConsoleTestRunnerFullClassName();
-                    consoleTestRunner.addProfiler(parameters.getProfiler());
-                    if (verbose.isVerbose())
-                    {
-                        consoleTestRunner.addVerbose(true);
-                    }
-                    consoleTestRunner.addTestJson(parameters.getTestJson());
-
-                    if (!Strings.isNullOrEmpty(pattern))
-                    {
-                        consoleTestRunner.addPattern(pattern);
-                    }
-
-                    consoleTestRunner.addOutputFolder(outputFolder);
-
-                    if (coverage != null)
-                    {
-                        consoleTestRunner.addArgument("--coverage=" + coverage);
-                    }
-
-                    consoleTestRunner.addArguments(outputFolder.getFilesRecursively()
-                        .catchError(FolderNotFoundException.class, () -> Iterable.create())
-                        .await()
-                        .where((File file) -> Comparer.equal(file.getFileExtension(), ".class"))
-                        .map((File classFile) -> QubTest.getFullClassName(outputFolder, classFile)));
-
-                    verbose.writeLine("Running " + consoleTestRunner.getCommand()).await();
-
-                    console.writeLine().await();
-
-                    console.setExitCode(consoleTestRunner.run().await());
-
-                    if (jacocoFolder != null)
-                    {
-                        console.writeLine().await();
-                        console.writeLine("Analyzing coverage...").await();
-
-                        final JacocoCliProcessBuilder jacococli = JacocoCliProcessBuilder.get(console).await()
-                            .addJacocoCliJar(jacocoFolder.getFile("jacococli.jar").await())
-                            .addReport()
-                            .addCoverageExec(outputFolder.getFile("coverage.exec").await())
-                            .addClassFiles(QubTest.getClassFilesForCoverage(coverage, outputFolder, sourceFolder, testFolder))
-                            .addSourceFiles(coverage, sourceFolder, testFolder)
-                            .addHtml(coverageFolder);
-
-                        if (verbose.isVerbose())
-                        {
-                            jacococli.redirectOutput(console.getOutputByteWriteStream());
-                            jacococli.redirectError(console.getErrorByteWriteStream());
-
-                            verbose.writeLine("Running " + jacococli.getCommand()).await();
-                        }
-
-                        final int coverageExitCode = jacococli.run().await();
-                        if (console.getExitCode() == 0)
-                        {
-                            console.setExitCode(coverageExitCode);
-                        }
-                    }
-
-                    if (jacocoFolder != null)
-                    {
-                        final DefaultApplicationLauncher defaultApplicationLauncher = this.getDefaultApplicationLauncher();
-                        defaultApplicationLauncher.open(coverageFolder.getFile("index.html").await()).await();
+                        classPaths.add(jvmClassPathString);
                     }
                 }
             }
-            finally
+
+            Folder jacocoFolder = null;
+            if (coverage != Coverage.None)
             {
-                if (showTotalDuration)
+                jacocoFolder = qubFolder.getFolder("jacoco/jacococli").await()
+                    .getFolders().await()
+                    .maximum((Folder lhs, Folder rhs) -> VersionNumber.parse(lhs.getName()).compareTo(VersionNumber.parse(rhs.getName())));
+            }
+
+            final ConsoleTestRunnerProcessBuilder consoleTestRunner = ConsoleTestRunnerProcessBuilder.get(processFactory).await()
+                .redirectOutput(outputByteWriteStream)
+                .redirectError(errorByteWriteStream);
+
+            if (jacocoFolder != null)
+            {
+                final File jacocoAgentJarFile = jacocoFolder.getFile("jacocoagent.jar").await();
+                final File coverageExecFile = outputFolder.getFile("coverage.exec").await();
+                consoleTestRunner.addJavaAgent(jacocoAgentJarFile + "=destfile=" + coverageExecFile);
+            }
+
+            consoleTestRunner.addClasspath(classPaths);
+            consoleTestRunner.addConsoleTestRunnerFullClassName();
+            consoleTestRunner.addProfiler(profiler);
+            consoleTestRunner.addVerbose(verbose.isVerbose());
+            consoleTestRunner.addTestJson(testJson);
+
+            if (!Strings.isNullOrEmpty(pattern))
+            {
+                consoleTestRunner.addPattern(pattern);
+            }
+
+            consoleTestRunner.addOutputFolder(outputFolder);
+
+            if (coverage != null)
+            {
+                consoleTestRunner.addArgument("--coverage=" + coverage);
+            }
+
+            consoleTestRunner.addArguments(outputFolder.getFilesRecursively()
+                .catchError(FolderNotFoundException.class, () -> Iterable.create())
+                .await()
+                .where((File file) -> Comparer.equal(file.getFileExtension(), ".class"))
+                .map((File classFile) -> QubTest.getFullClassName(outputFolder, classFile)));
+
+            verbose.writeLine("Running " + consoleTestRunner.getCommand()).await();
+
+            output.writeLine().await();
+
+            result = consoleTestRunner.run().await();
+
+            if (jacocoFolder != null)
+            {
+                output.writeLine().await();
+                output.writeLine("Analyzing coverage...").await();
+
+                final JacocoCliProcessBuilder jacococli = JacocoCliProcessBuilder.get(processFactory).await()
+                    .addJacocoCliJar(jacocoFolder.getFile("jacococli.jar").await())
+                    .addReport()
+                    .addCoverageExec(outputFolder.getFile("coverage.exec").await())
+                    .addClassFiles(QubTest.getClassFilesForCoverage(coverage, outputFolder, sourceFolder, testFolder))
+                    .addSourceFiles(coverage, sourceFolder, testFolder)
+                    .addHtml(coverageFolder);
+
+                if (verbose.isVerbose())
                 {
-                    final Duration compilationDuration = stopwatch.stop().toSeconds();
-                    console.writeLine("Done (" + compilationDuration.toString("0.0") + ")").await();
+                    jacococli.redirectOutput(outputByteWriteStream);
+                    jacococli.redirectError(errorByteWriteStream);
+
+                    verbose.writeLine("Running " + jacococli.getCommand()).await();
                 }
+
+                final int coverageExitCode = jacococli.run().await();
+                if (result == 0)
+                {
+                    result = coverageExitCode;
+                }
+            }
+
+            if (jacocoFolder != null)
+            {
+                defaultApplicationLauncher.openFileWithDefaultApplication(coverageFolder.getFile("index.html").await()).await();
             }
         }
+
+        return result;
     }
 
-    public static boolean equalIgnoreVersion(Dependency lhs, Dependency rhs)
+    static boolean equalIgnoreVersion(Dependency lhs, Dependency rhs)
     {
         PreCondition.assertNotNull(lhs, "lhs");
         PreCondition.assertNotNull(rhs, "rhs");
@@ -280,7 +236,7 @@ public class QubTest
         return equal(lhs, rhs.getPublisher(), rhs.getProject());
     }
 
-    public static boolean equal(Dependency dependency, String publisher, String project)
+    static boolean equal(Dependency dependency, String publisher, String project)
     {
         PreCondition.assertNotNull(dependency, "dependency");
 
@@ -298,7 +254,7 @@ public class QubTest
      * @return Whether or not the provided outputClassFile was created from one of the provided java
      * files.
      */
-    public static boolean isSourceClassFile(Folder outputFolder, File outputClassFile, Folder sourceFolder, Iterable<File> sourceJavaFiles)
+    static boolean isSourceClassFile(Folder outputFolder, File outputClassFile, Folder sourceFolder, Iterable<File> sourceJavaFiles)
     {
         PreCondition.assertNotNull(outputFolder, "outputFolder");
         PreCondition.assertNotNull(outputClassFile, "outputClassFile");
@@ -321,7 +277,7 @@ public class QubTest
         });
     }
 
-    public static Iterable<File> getSourceClassFiles(Folder outputFolder, Iterable<File> outputClassFiles, Folder sourceFolder, Iterable<File> sourceJavaFiles)
+    static Iterable<File> getSourceClassFiles(Folder outputFolder, Iterable<File> outputClassFiles, Folder sourceFolder, Iterable<File> sourceJavaFiles)
     {
         return outputClassFiles
             .where((File outputClassFile) ->
@@ -336,7 +292,7 @@ public class QubTest
      * @param classFile The class file to get the full class name of.
      * @return The full name of the class file.
      */
-    public static String getFullClassName(Folder outputFolder, File classFile)
+    static String getFullClassName(Folder outputFolder, File classFile)
     {
         PreCondition.assertNotNull(outputFolder, "outputFolder");
         PreCondition.assertNotNull(classFile, "classFile");
@@ -354,7 +310,7 @@ public class QubTest
      * @param classFileRelativePath The path to the class file relative to the output folder.
      * @return The full name of the class file.
      */
-    public static String getFullClassName(Path classFileRelativePath)
+    static String getFullClassName(Path classFileRelativePath)
     {
         PreCondition.assertNotNull(classFileRelativePath, "classFileRelativePath");
         PreCondition.assertFalse(classFileRelativePath.isRooted(), "classFileRelativePath.isRooted()");
@@ -371,7 +327,7 @@ public class QubTest
         return result;
     }
 
-    public static File getClassFile(Folder outputFolder, String fullClassName)
+    static File getClassFile(Folder outputFolder, String fullClassName)
     {
         PreCondition.assertNotNull(outputFolder, "outputFolder");
         PreCondition.assertNotNullAndNotEmpty(fullClassName, "fullClassName");
@@ -384,7 +340,7 @@ public class QubTest
         return result;
     }
 
-    private static Result<Iterable<File>> getAllClassFiles(Folder outputFolder)
+    static Result<Iterable<File>> getAllClassFiles(Folder outputFolder)
     {
         PreCondition.assertNotNull(outputFolder, "outputFolder");
 
@@ -397,7 +353,7 @@ public class QubTest
         });
     }
 
-    private static Iterable<File> getClassFilesForCoverage(Coverage coverage, Folder outputFolder, Folder sourceFolder, Folder testFolder)
+    static Iterable<File> getClassFilesForCoverage(Coverage coverage, Folder outputFolder, Folder sourceFolder, Folder testFolder)
     {
         PreCondition.assertNotNull(coverage, "coverage");
         PreCondition.assertNotNull(outputFolder, "outputFolder");

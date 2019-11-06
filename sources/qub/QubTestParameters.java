@@ -3,14 +3,11 @@ package qub;
 /**
  * Parameters that are passed to QubTest.run().
  */
-public class QubTestParameters
+public class QubTestParameters extends QubBuildParameters
 {
-    private final CharacterWriteStream output;
-    private final Folder folderToTest;
-    private final EnvironmentVariables environmentVariables;
-    private final ProcessFactory processFactory;
-    private final VerboseCharacterWriteStream verbose;
-
+    private final ByteWriteStream outputByteWriteStream;
+    private final ByteWriteStream errorByteWriteStream;
+    private final DefaultApplicationLauncher defaultApplicationLauncher;
     private String pattern;
     private Coverage coverage;
     private boolean testJson;
@@ -19,34 +16,55 @@ public class QubTestParameters
 
     /**
      * Create a new QubTestParameters object.
-     * @param output The CharacterWriteStream that output lines should be written to.
+     * @param outputByteWriteStream The ByteWriteStream that output should be written to.
+     * @param errorByteWriteStream The ByteWriteStream that errors should be written to.
      * @param folderToTest The folder that should have its tests run.
      * @param environmentVariables The environment variables of the running process.
      * @param processFactory The factory that will be used to create new processes.
-     * @param verbose The CharacterWriteStream that verbose lines should be written to.
      */
-    public QubTestParameters(CharacterWriteStream output, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, VerboseCharacterWriteStream verbose)
+    public QubTestParameters(ByteWriteStream outputByteWriteStream, ByteWriteStream errorByteWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher)
     {
-        PreCondition.assertNotNull(output, "output");
+        super(outputByteWriteStream == null ? null : outputByteWriteStream.asCharacterWriteStream(), folderToTest, environmentVariables, processFactory);
+
+        PreCondition.assertNotNull(outputByteWriteStream, "outputByteWriteStream");
+        PreCondition.assertNotNull(errorByteWriteStream, "errorByteWriteStream");
         PreCondition.assertNotNull(folderToTest, "folderToTest");
         PreCondition.assertNotNull(environmentVariables, "environmentVariables");
         PreCondition.assertNotNull(processFactory, "processFactory");
-        PreCondition.assertNotNull(verbose, "verbose");
+        PreCondition.assertNotNull(defaultApplicationLauncher, "defaultApplicationLauncher");
 
-        this.output = output;
-        this.folderToTest = folderToTest;
-        this.environmentVariables = environmentVariables;
-        this.processFactory = processFactory;
-        this.verbose = verbose;
+        this.outputByteWriteStream = outputByteWriteStream;
+        this.errorByteWriteStream = errorByteWriteStream;
+        this.defaultApplicationLauncher = defaultApplicationLauncher;
+        this.coverage = QubTestParameters.getCoverageDefault();
+        this.testJson = QubTestParameters.getTestJsonDefault();
     }
 
     /**
-     * Get the CharacterWriteStream that output lines should be written to.
-     * @return The CharacterWriteStream that output lines should be written to.
+     * Get the ByteWriteStream that output should be written to.
+     * @return The ByteWriteStream that output should be written to.
      */
-    public CharacterWriteStream getOutput()
+    public ByteWriteStream getOutputByteWriteStream()
     {
-        return this.output;
+        return this.outputByteWriteStream;
+    }
+
+    /**
+     * Get the ByteWriteStream that errors should be written to.
+     * @return The ByteWriteStream that errors should be written to.
+     */
+    public ByteWriteStream getErrorByteWriteStream()
+    {
+        return this.errorByteWriteStream;
+    }
+
+    /**
+     * Get the DefaultApplicationLauncher.
+     * @return The DefaultApplicationLauncher.
+     */
+    public DefaultApplicationLauncher getDefaultApplicationLauncher()
+    {
+        return this.defaultApplicationLauncher;
     }
 
     /**
@@ -55,34 +73,16 @@ public class QubTestParameters
      */
     public Folder getFolderToTest()
     {
-        return this.folderToTest;
+        return this.getFolderToBuild();
     }
 
     /**
-     * Get the environment variables of the running process.
-     * @return The environment variables of the running process.
+     * Get the pattern that will be used to determine whether or not a test should run.
+     * @return The pattern that will be used to determine whether or not a test should run.
      */
-    public EnvironmentVariables getEnvironmentVariables()
+    public String getPattern()
     {
-        return this.environmentVariables;
-    }
-
-    /**
-     * Get the factory that will be used to create new processes.
-     * @return The factory that will be used to create new processes.
-     */
-    public ProcessFactory getProcessFactory()
-    {
-        return this.processFactory;
-    }
-
-    /**
-     * Get the CharacterWriteStream that verbose lines should be written to.
-     * @return The CharacterWriteStream that verbose lines should be written to.
-     */
-    public VerboseCharacterWriteStream getVerbose()
-    {
-        return this.verbose;
+        return this.pattern;
     }
 
     /**
@@ -97,12 +97,12 @@ public class QubTestParameters
     }
 
     /**
-     * Get the pattern that will be used to determine whether or not a test should run.
-     * @return The pattern that will be used to determine whether or not a test should run.
+     * Get which group of source files code coverage information should be collected for.
+     * @return Which group of source files code coverage information should be collected for.
      */
-    public String getPattern()
+    public Coverage getCoverage()
     {
-        return this.pattern;
+        return this.coverage;
     }
 
     /**
@@ -113,29 +113,19 @@ public class QubTestParameters
      */
     public QubTestParameters setCoverage(Coverage coverage)
     {
+        PreCondition.assertNotNull(coverage, "coverage");
+
         this.coverage = coverage;
         return this;
     }
 
     /**
-     * Get which group of source files code coverage information should be collected for.
-     * @return Which group of source files code coverage information should be collected for.
+     * Get whether or not a test.json file should be written after the tests are done.
+     * @return Whether or not a test.json file should be written after the tests are done.
      */
-    public Coverage getCoverage()
+    public boolean getTestJson()
     {
-        return this.coverage;
-    }
-
-    /**
-     * Set whether or not a test.json file should be written after the tests are done.
-     * @param testJson Whether or not a test.json file should be written after the tests are done.
-     * @return This object for method chaining.
-     */
-    public QubTestParameters setTestJson(Boolean testJson)
-    {
-        PreCondition.assertNotNull(testJson, "testJson");
-
-        return this.setTestJson(testJson.booleanValue());
+        return this.testJson;
     }
 
     /**
@@ -150,12 +140,12 @@ public class QubTestParameters
     }
 
     /**
-     * Get whether or not a test.json file should be written after the tests are done.
-     * @return Whether or not a test.json file should be written after the tests are done.
+     * Get the classpath that was passed to this application's JVM.
+     * @return The classpath that was passed to this application's JVM.
      */
-    public boolean getTestJson()
+    public String getJvmClassPath()
     {
-        return this.testJson;
+        return this.jvmClassPath;
     }
 
     /**
@@ -169,32 +159,50 @@ public class QubTestParameters
         return this;
     }
 
-    /**
-     * Get the classpath that was passed to this application's JVM.
-     * @return The classpath that was passed to this application's JVM.
-     */
-    public String getJvmClassPath()
+    public boolean getProfiler()
     {
-        return this.jvmClassPath;
+        return this.profiler;
     }
 
-    /**
-     * Set whether or not this application should be profiled.
-     * @param profiler Whether or not this application should be profiled.
-     * @return This object for method chaining.
-     */
-    public QubTestParameters setProfiler(Boolean profiler)
+    public QubTestParameters setProfiler(boolean profiler)
     {
         this.profiler = profiler;
         return this;
     }
 
-    /**
-     * Get whether or not this application should be profiled.
-     * @return Whether or not this application should be profiled.
-     */
-    public boolean getProfiler()
+    @Override
+    public QubTestParameters setWarnings(Warnings warnings)
     {
-        return this.profiler;
+        return (QubTestParameters)super.setWarnings(warnings);
+    }
+
+    @Override
+    public QubTestParameters setBuildJson(boolean buildJson)
+    {
+        return (QubTestParameters)super.setBuildJson(buildJson);
+    }
+
+    @Override
+    public QubTestParameters setVerbose(VerboseCharacterWriteStream verbose)
+    {
+        return (QubTestParameters)super.setVerbose(verbose);
+    }
+
+    /**
+     * Get the default value for the --testjson parameter.
+     * @return The default value for the --testjson parameter.
+     */
+    static boolean getTestJsonDefault()
+    {
+        return true;
+    }
+
+    /**
+     * Get the default value for the --coverage parameter.
+     * @return The default value for the --coverage parameter.
+     */
+    static Coverage getCoverageDefault()
+    {
+        return Coverage.None;
     }
 }

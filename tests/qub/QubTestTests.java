@@ -6,64 +6,12 @@ public interface QubTestTests
     {
         runner.testGroup(QubTest.class, () ->
         {
-            runner.testGroup("getJavaRunner()", () ->
-            {
-                runner.test("with no JavaRunner set", (Test test) ->
-                {
-                    final QubTest qubTest = new QubTest();
-                    final DefaultApplicationLauncher javaRunner = qubTest.getDefaultApplicationLauncher();
-                    test.assertNotNull(javaRunner);
-                    test.assertTrue(javaRunner instanceof RealDefaultApplicationLauncher);
-                    test.assertSame(javaRunner, qubTest.getDefaultApplicationLauncher());
-                });
-
-                runner.test("with null JavaRunner set", (Test test) ->
-                {
-                    final QubTest qubTest = new QubTest();
-                    test.assertSame(qubTest, qubTest.setDefaultApplicationLauncher(null));
-                    final DefaultApplicationLauncher javaRunner = qubTest.getDefaultApplicationLauncher();
-                    test.assertNotNull(javaRunner);
-                    test.assertTrue(javaRunner instanceof RealDefaultApplicationLauncher);
-                    test.assertSame(javaRunner, qubTest.getDefaultApplicationLauncher());
-                });
-
-                runner.test("with non-null JavaRunner set", (Test test) ->
-                {
-                    final QubTest qubTest = new QubTest();
-                    final FakeDefaultApplicationLauncher javaRunner = new FakeDefaultApplicationLauncher();
-                    test.assertSame(qubTest, qubTest.setDefaultApplicationLauncher(javaRunner));
-                    test.assertSame(javaRunner, qubTest.getDefaultApplicationLauncher());
-                });
-            });
-
-            runner.testGroup("getShowTotalDuration()", () ->
-            {
-                runner.test("with no value set", (Test test) ->
-                {
-                    final QubTest qubTest = new QubTest();
-                    test.assertTrue(qubTest.getShowTotalDuration());
-                });
-
-                runner.test("with false set", (Test test) ->
-                {
-                    final QubTest qubTest = new QubTest();
-                    test.assertSame(qubTest, qubTest.setShowTotalDuration(false));
-                    test.assertFalse(qubTest.getShowTotalDuration());
-                });
-
-                runner.test("with true set", (Test test) ->
-                {
-                    final QubTest qubTest = new QubTest();
-                    test.assertSame(qubTest, qubTest.setShowTotalDuration(true));
-                    test.assertTrue(qubTest.getShowTotalDuration());
-                });
-            });
-
             runner.testGroup("main(String[])", () ->
             {
                 runner.test("with null", (Test test) ->
                 {
-                    test.assertThrows(() -> QubTest.main((String[])null), new PreConditionFailure("args cannot be null."));
+                    test.assertThrows(() -> QubTest.main((String[])null),
+                        new PreConditionFailure("args cannot be null."));
                 });
             });
 
@@ -71,20 +19,21 @@ public interface QubTestTests
             {
                 runner.test("with null", (Test test) ->
                 {
-                    test.assertThrows(() -> main((Console)null), new PreConditionFailure("console cannot be null."));
+                    test.assertThrows(() -> QubTest.main((Console)null),
+                        new PreConditionFailure("console cannot be null."));
                 });
 
                 runner.test("with -? command line argument", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     try (final Console console = createConsole(output, "-?"))
                     {
-                        main(console);
+                        QubTest.main(console);
                         test.assertEqual(-1, console.getExitCode());
                     }
                     test.assertEqual(
                         Iterable.create(
-                            "Usage: qub-test [--folder=<folder-to-test>] [--pattern=<test-name-pattern>] [--coverage[=<None|Sources|Tests|All>]] [--testjson] [--jvm.classpath=<jvm.classpath-value>] [--verbose] [--profiler] [--help]",
+                            "Usage: qub-test [[--folder=]<folder-to-test>] [--pattern=<test-name-pattern>] [--coverage[=<None|Sources|Tests|All>]] [--testjson] [--jvm.classpath=<jvm.classpath-value>] [--verbose] [--profiler] [--help]",
                             "  Used to run tests in source code projects.",
                             "  --folder: The folder to run tests in. Defaults to the current folder.",
                             "  --pattern: The pattern to match against tests to determine if they will be run or not.",
@@ -94,72 +43,72 @@ public interface QubTestTests
                             "  --verbose(v): Whether or not to show verbose logs.",
                             "  --profiler: Whether or not this application should pause before it is run to allow a profiler to be attached.",
                             "  --help(?): Show the help message for this application."),
-                        Strings.getLines(output.getText().await()));
+                        Strings.getLines(output.asCharacterReadStream().getText().await()));
                 });
 
                 runner.test("with unnamed folder argument to rooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final Console console = createConsole(output, currentFolder, "/i/dont/exist"))
                     {
-                        main(console);
+                        QubTest.main(console);
                         test.assertEqual(
                             Iterable.create(
                                 "ERROR: The file at \"/i/dont/exist/project.json\" doesn't exist."),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
                         test.assertEqual(1, console.getExitCode());
                     }
                 });
 
                 runner.test("with unnamed folder argument to unrooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final Console console = createConsole(output, currentFolder, "i/dont/exist"))
                     {
-                        main(console);
+                        QubTest.main(console);
                         test.assertEqual(
                             Iterable.create(
                                 "ERROR: The file at \"/i/dont/exist/project.json\" doesn't exist."),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
                         test.assertEqual(1, console.getExitCode());
                     }
                 });
 
                 runner.test("with named folder argument to rooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final Console console = createConsole(output, currentFolder, "-folder=/i/dont/exist"))
                     {
-                        main(console);
+                        QubTest.main(console);
                         test.assertEqual(
                             Iterable.create(
                                 "ERROR: The file at \"/i/dont/exist/project.json\" doesn't exist."),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
                         test.assertEqual(1, console.getExitCode());
                     }
                 });
 
                 runner.test("with named folder argument to unrooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final Console console = createConsole(output, currentFolder, "-folder=i/dont/exist"))
                     {
-                        main(console);
+                        QubTest.main(console);
                         test.assertEqual(
                             Iterable.create(
                                 "ERROR: The file at \"/i/dont/exist/project.json\" doesn't exist."),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
                         test.assertEqual(1, console.getExitCode());
                     }
                 });
 
                 runner.test("with no source files", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -168,18 +117,19 @@ public interface QubTestTests
 
                     try (final Console console = createConsole(output, currentFolder))
                     {
-                        main(console, false);
+                        QubTest.main(console);
+
                         test.assertEqual(
                             Iterable.create(
                                 "ERROR: No java source files found in /."),
-                            Strings.getLines(output.getText().await()));
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
                         test.assertEqual(1, console.getExitCode());
                     }
                 });
 
                 runner.test("with one source file", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -203,19 +153,20 @@ public interface QubTestTests
                                 .addClasspath("/outputs")
                                 .addConsoleTestRunnerFullClassName()
                                 .addProfiler(false)
+                                .addVerbose(false)
                                 .addTestJson(true)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
                                 "Compiling 1 file...",
                                 "Running tests...",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -223,7 +174,7 @@ public interface QubTestTests
 
                 runner.test("with one source file and verbose", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -253,7 +204,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -271,7 +222,7 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -279,7 +230,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, and jvm.classpath=/foo/subfolder", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -313,7 +264,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -331,7 +282,7 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs;/foo/subfolder qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -339,7 +290,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, 1 dependency, and jvm.classpath with different dependency", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -379,7 +330,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -397,7 +348,7 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -405,7 +356,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, 1 dependency, and jvm.classpath with same dependency", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -445,7 +396,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -463,7 +414,7 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -471,7 +422,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, 1 dependency, and jvm.classpath with same dependency with newer version", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -511,7 +462,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -529,7 +480,7 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -537,7 +488,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, 1 dependency, and jvm.classpath with same dependency with older version", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -577,7 +528,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -595,7 +546,7 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -603,7 +554,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, and jvm.classpath equal to current project", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -640,7 +591,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -658,7 +609,7 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -666,7 +617,7 @@ public interface QubTestTests
 
                 runner.test("with one source file and --testjson and --verbose", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -696,7 +647,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -714,7 +665,7 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -722,7 +673,7 @@ public interface QubTestTests
 
                 runner.test("with one source file and --testjson=true and --verbose", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -752,7 +703,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -770,7 +721,7 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -778,7 +729,7 @@ public interface QubTestTests
 
                 runner.test("with one source file and --testjson=false and --verbose", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -808,7 +759,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -826,7 +777,7 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=false --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -834,7 +785,7 @@ public interface QubTestTests
 
                 runner.test("with one source file and coverage", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -847,6 +798,7 @@ public interface QubTestTests
                         final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
                         console
+                            .setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher())
                             .setEnvironmentVariables(new EnvironmentVariables()
                                 .set("QUB_HOME", "/qub/"))
                             .setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
@@ -864,6 +816,7 @@ public interface QubTestTests
                                     .addClasspath("/outputs")
                                     .addConsoleTestRunnerFullClassName()
                                     .addProfiler(false)
+                                    .addVerbose(false)
                                     .addTestJson(true)
                                     .addOutputFolder(currentFolder.getFolder("outputs").await())
                                     .addCoverage(Coverage.Sources)
@@ -877,7 +830,7 @@ public interface QubTestTests
                                     .addSourceFiles(currentFolder.getFolder("sources").await())
                                     .addHtml(currentFolder.getFolder("outputs/coverage").await())));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -886,7 +839,7 @@ public interface QubTestTests
                                 "",
                                 "",
                                 "Analyzing coverage..."),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -894,7 +847,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, and coverage", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -907,6 +860,7 @@ public interface QubTestTests
                         final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
                         console
+                            .setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher())
                             .setEnvironmentVariables(new EnvironmentVariables()
                                 .set("QUB_HOME", "/qub/"))
                             .setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
@@ -938,7 +892,7 @@ public interface QubTestTests
                                     .addSourceFiles(currentFolder.getFolder("sources").await())
                                     .addHtml(currentFolder.getFolder("outputs/coverage").await())));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -959,7 +913,7 @@ public interface QubTestTests
                                 "",
                                 "Analyzing coverage...",
                                 "VERBOSE: Running /: java -jar /qub/jacoco/jacococli/0.8.1/jacococli.jar report /outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /sources --html /outputs/coverage"),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -967,7 +921,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, coverage, and multiple jacoco installations", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -983,6 +937,7 @@ public interface QubTestTests
                         qubFolder.createFile("jacoco/jacococli/0.9.2/jacocoagent.jar").await();
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
+                        console.setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher());
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
@@ -1012,7 +967,7 @@ public interface QubTestTests
                                 .addSourceFiles(currentFolder.getFolder("sources").await())
                                 .addHtml(currentFolder.getFolder("outputs/coverage").await())));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -1033,7 +988,7 @@ public interface QubTestTests
                                 "",
                                 "Analyzing coverage...",
                                 "VERBOSE: Running /: java -jar /qub/jacoco/jacococli/0.9.2/jacococli.jar report /outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /sources --html /outputs/coverage"),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -1041,7 +996,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, one dependency, and verbose", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -1090,7 +1045,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -1108,7 +1063,7 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
@@ -1116,7 +1071,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, one transitive dependency, and verbose", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         new ProjectJSON()
@@ -1178,7 +1133,7 @@ public interface QubTestTests
                                     .addCoverage(Coverage.None)
                                     .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        main(console);
+                        QubTest.main(console);
 
                         test.assertEqual(
                             Iterable.create(
@@ -1196,18 +1151,13 @@ public interface QubTestTests
                                 "Running tests...",
                                 "VERBOSE: Running /: java -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
-                            Strings.getLines(output.getText().await()).skipLast());
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, console.getExitCode());
                     }
                 });
             });
         });
-    }
-
-    static InMemoryCharacterStream getInMemoryCharacterStream(Test test)
-    {
-        return new InMemoryCharacterStream();
     }
 
     static InMemoryFileSystem getInMemoryFileSystem(Test test)
@@ -1227,19 +1177,19 @@ public interface QubTestTests
         return getInMemoryFileSystem(test).getFolder("/").await();
     }
 
-    static Console createConsole(CharacterWriteStream output, String... commandLineArguments)
+    static Console createConsole(ByteWriteStream output, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(commandLineArguments, "commandLineArguments");
 
         final Console result = new Console(CommandLineArguments.create(commandLineArguments));
         result.setLineSeparator("\n");
-        result.setOutputCharacterWriteStream(output);
+        result.setOutputByteWriteStream(output);
 
         return result;
     }
 
-    static Console createConsole(CharacterWriteStream output, Folder currentFolder, String... commandLineArguments)
+    static Console createConsole(ByteWriteStream output, Folder currentFolder, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(currentFolder, "currentFolder");
@@ -1252,21 +1202,5 @@ public interface QubTestTests
         PostCondition.assertNotNull(result, "result");
 
         return result;
-    }
-
-    static void main(Console console)
-    {
-        main(console, true);
-    }
-
-    static void main(Console console, boolean showTotalDuration)
-    {
-        PreCondition.assertNotNull(console, "console");
-
-        final QubTest test = new QubTest();
-        test.setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher());
-        test.setShowTotalDuration(showTotalDuration);
-
-        test.main(console);
     }
 }
