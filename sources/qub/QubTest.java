@@ -4,7 +4,7 @@ public interface QubTest
 {
     static void main(String[] args)
     {
-        Console.run(args, QubBuild::main);
+        Console.run(args, QubTest::main);
     }
 
     static void main(Console console)
