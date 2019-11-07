@@ -71,6 +71,30 @@ public interface ConsoleTestRunnerArguments<T>
 
     /**
      * Add an output-folder argument to this process builder.
+     * @param outputFolderPath The value of the output-folder argument to add.
+     * @return This object for method chaining.
+     */
+    default T addOutputFolder(String outputFolderPath)
+    {
+        PreCondition.assertNotNullAndNotEmpty(outputFolderPath, "outputFolderPath");
+
+        return this.addOutputFolder(Path.parse(outputFolderPath));
+    }
+
+    /**
+     * Add an output-folder argument to this process builder.
+     * @param outputFolderPath The value of the output-folder argument to add.
+     * @return This object for method chaining.
+     */
+    default T addOutputFolder(Path outputFolderPath)
+    {
+        PreCondition.assertNotNull(outputFolderPath, "outputFolderPath");
+
+        return this.addArguments("--output-folder=" + outputFolderPath.toString());
+    }
+
+    /**
+     * Add an output-folder argument to this process builder.
      * @param outputFolder The value of the output-folder argument to add.
      * @return This object for method chaining.
      */
@@ -78,7 +102,7 @@ public interface ConsoleTestRunnerArguments<T>
     {
         PreCondition.assertNotNull(outputFolder, "outputFolder");
 
-        return this.addArguments("--output-folder=" + outputFolder);
+        return this.addOutputFolder(outputFolder.getPath());
     }
 
     /**
