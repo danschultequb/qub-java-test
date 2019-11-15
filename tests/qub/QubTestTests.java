@@ -33,13 +33,12 @@ public interface QubTestTests
                     }
                     test.assertEqual(
                         Iterable.create(
-                            "Usage: qub-test [[--folder=]<folder-to-test>] [--pattern=<test-name-pattern>] [--coverage[=<None|Sources|Tests|All>]] [--testjson] [--jvm.classpath=<jvm.classpath-value>] [--verbose] [--profiler] [--help]",
+                            "Usage: qub-test [[--folder=]<folder-to-test>] [--pattern=<test-name-pattern>] [--coverage[=<None|Sources|Tests|All>]] [--testjson] [--verbose] [--profiler] [--help]",
                             "  Used to run tests in source code projects.",
                             "  --folder: The folder to run tests in. Defaults to the current folder.",
                             "  --pattern: The pattern to match against tests to determine if they will be run or not.",
                             "  --coverage(c): Whether or not to collect code coverage information while running tests.",
                             "  --testjson: Whether or not to write the test results to a test.json file.",
-                            "  --jvm.classpath: The classpath that was passed to the JVM when this application was started.",
                             "  --verbose(v): Whether or not to show verbose logs.",
                             "  --profiler: Whether or not this application should pause before it is run to allow a profiler to be attached.",
                             "  --help(?): Show the help message for this application."),
@@ -139,6 +138,7 @@ public interface QubTestTests
 
                     try (final Console console = createConsole(output, currentFolder))
                     {
+                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
@@ -184,6 +184,7 @@ public interface QubTestTests
 
                     try (final Console console = createConsole(output, currentFolder, "-verbose"))
                     {
+                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
@@ -238,10 +239,11 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose", "--jvm.classpath=/foo/subfolder"))
+                    try (final Console console = createConsole(output, currentFolder, "-verbose"))
                     {
                         final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/a/5/a.jar").await();
+                        console.setJVMClasspath("/outputs;/foo/subfolder");
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
@@ -303,11 +305,12 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/b/2/b.jar"))
+                    try (final Console console = createConsole(output, currentFolder, "-verbose"))
                     {
                         final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/a/5/a.jar").await();
                         qubFolder.createFile("me/b/2/b.jar").await();
+                        console.setJVMClasspath("/outputs;/qub/me/b/2/b.jar");
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
@@ -374,6 +377,7 @@ public interface QubTestTests
                         final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/a/5/a.jar").await();
                         qubFolder.createFile("me/b/2/b.jar").await();
+                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
@@ -440,6 +444,7 @@ public interface QubTestTests
                         final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/a/5/a.jar").await();
                         qubFolder.createFile("me/a/6/a.jar").await();
+                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
@@ -506,6 +511,7 @@ public interface QubTestTests
                         final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/a/4/a.jar").await();
                         qubFolder.createFile("me/a/5/a.jar").await();
+                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
@@ -569,6 +575,7 @@ public interface QubTestTests
                     {
                         final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/stuff/7/stuff.jar").await();
+                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", qubFolder.toString()));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
@@ -627,6 +634,7 @@ public interface QubTestTests
 
                     try (final Console console = createConsole(output, currentFolder, "--testjson", "--verbose"))
                     {
+                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
@@ -683,6 +691,7 @@ public interface QubTestTests
 
                     try (final Console console = createConsole(output, currentFolder, "--testjson=true", "--verbose"))
                     {
+                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
@@ -739,6 +748,7 @@ public interface QubTestTests
 
                     try (final Console console = createConsole(output, currentFolder, "--testjson=false", "--verbose"))
                     {
+                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
@@ -798,6 +808,7 @@ public interface QubTestTests
                         final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
                         console
+                            .setJVMClasspath(currentFolder.getFolder("outputs").await().toString())
                             .setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher())
                             .setEnvironmentVariables(new EnvironmentVariables()
                                 .set("QUB_HOME", "/qub/"))
@@ -860,6 +871,7 @@ public interface QubTestTests
                         final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
                         console
+                            .setJVMClasspath(currentFolder.getFolder("outputs").await().toString())
                             .setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher())
                             .setEnvironmentVariables(new EnvironmentVariables()
                                 .set("QUB_HOME", "/qub/"))
@@ -935,6 +947,7 @@ public interface QubTestTests
                         qubFolder.createFile("jacoco/jacococli/0.5.0/jacocoagent.jar").await();
                         qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
                         qubFolder.createFile("jacoco/jacococli/0.9.2/jacocoagent.jar").await();
+                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher());
@@ -1023,6 +1036,7 @@ public interface QubTestTests
                                 .toString()).await();
                         qubFolder.createFile("me/b/2/b.jar").await();
 
+                        console.setJVMClasspath(outputsFolder.toString());
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", qubFolder.toString()));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
@@ -1111,6 +1125,7 @@ public interface QubTestTests
                                 .toString()).await();
                         qubFolder.createFile("me/c/3/c.jar").await();
 
+                        console.setJVMClasspath(outputsFolder.toString());
                         console.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)

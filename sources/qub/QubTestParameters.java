@@ -8,10 +8,10 @@ public class QubTestParameters extends QubBuildParameters
     private final ByteWriteStream outputByteWriteStream;
     private final ByteWriteStream errorByteWriteStream;
     private final DefaultApplicationLauncher defaultApplicationLauncher;
+    private String jvmClassPath;
     private String pattern;
     private Coverage coverage;
     private boolean testJson;
-    private String jvmClassPath;
     private boolean profiler;
 
     /**
@@ -22,7 +22,7 @@ public class QubTestParameters extends QubBuildParameters
      * @param environmentVariables The environment variables of the running process.
      * @param processFactory The factory that will be used to create new processes.
      */
-    public QubTestParameters(ByteWriteStream outputByteWriteStream, ByteWriteStream errorByteWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher)
+    public QubTestParameters(ByteWriteStream outputByteWriteStream, ByteWriteStream errorByteWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath)
     {
         super(outputByteWriteStream == null ? null : outputByteWriteStream.asCharacterWriteStream(), folderToTest, environmentVariables, processFactory);
 
@@ -32,10 +32,12 @@ public class QubTestParameters extends QubBuildParameters
         PreCondition.assertNotNull(environmentVariables, "environmentVariables");
         PreCondition.assertNotNull(processFactory, "processFactory");
         PreCondition.assertNotNull(defaultApplicationLauncher, "defaultApplicationLauncher");
+        PreCondition.assertNotNullAndNotEmpty(jvmClassPath, "jvmClassPath");
 
         this.outputByteWriteStream = outputByteWriteStream;
         this.errorByteWriteStream = errorByteWriteStream;
         this.defaultApplicationLauncher = defaultApplicationLauncher;
+        this.jvmClassPath = jvmClassPath;
         this.coverage = QubTestParameters.getCoverageDefault();
         this.testJson = QubTestParameters.getTestJsonDefault();
     }

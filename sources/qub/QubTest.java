@@ -59,14 +59,6 @@ public interface QubTest
             .setDescription("Whether or not to write the test results to a test.json file.");
     }
 
-    static CommandLineParameter<String> addJvmClassPathParameter(CommandLineParameters parameters)
-    {
-        PreCondition.assertNotNull(parameters, "parameters");
-
-        return parameters.addString("jvm.classpath")
-            .setDescription("The classpath that was passed to the JVM when this application was started.");
-    }
-
     /**
      * Get the parameters for QubTest.run().
      * @param process The Process that is running.
@@ -83,7 +75,6 @@ public interface QubTest
         final CommandLineParameter<String> patternParameter = QubTest.addPatternParameter(parameters);
         final CommandLineParameter<Coverage> coverageParameter = QubTest.addCoverageParameter(parameters);
         final CommandLineParameterBoolean testJsonParameter = QubTest.addTestJsonParameter(parameters);
-        final CommandLineParameter<String> jvmClassPathParameter = QubTest.addJvmClassPathParameter(parameters);
         final CommandLineParameterVerbose verboseParameter = parameters.addVerbose(process);
         final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(process, QubTest.class);
         final CommandLineParameterHelp helpParameter = parameters.addHelp();
@@ -101,12 +92,12 @@ public interface QubTest
             final EnvironmentVariables environmentVariables = process.getEnvironmentVariables();
             final ProcessFactory processFactory = process.getProcessFactory();
             final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
+            final String jvmClassPath = process.getJVMClasspath().await();
 
-            result = new QubTestParameters(output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher)
+            result = new QubTestParameters(output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath)
                 .setPattern(patternParameter.removeValue().await())
                 .setCoverage(coverageParameter.removeValue().await())
                 .setTestJson(testJsonParameter.removeValue().await())
-                .setJvmClassPath(jvmClassPathParameter.removeValue().await())
                 .setVerbose(verbose);
         }
 
@@ -164,14 +155,24 @@ public interface QubTest
                 final String[] jvmClassPaths = jvmClassPath.split(";");
                 for (final String jvmClassPathString : jvmClassPaths)
                 {
-                    final Path relativeJvmClassPath = Path.parse(jvmClassPathString).relativeTo(qubFolder);
-                    final Indexable<String> segments = relativeJvmClassPath.getSegments();
-                    final Dependency jvmDependency = new Dependency()
-                        .setPublisher(segments.get(0))
-                        .setProject(segments.get(1))
-                        .setVersion(segments.get(2));
-                    if (!QubTest.equal(jvmDependency, projectJson.getPublisher(), projectJson.getProject()) &&
-                        (Iterable.isNullOrEmpty(dependencies) || !dependencies.contains(dep -> QubTest.equalIgnoreVersion(dep, jvmDependency))))
+                    boolean addJvmClassPathString;
+                    if (!qubFolder.isAncestorOf(jvmClassPathString).await())
+                    {
+                        addJvmClassPathString = !classPaths.contains(jvmClassPathString);
+                    }
+                    else
+                    {
+                        final Path relativeJvmClassPath = Path.parse(jvmClassPathString).relativeTo(qubFolder);
+                        final Indexable<String> segments = relativeJvmClassPath.getSegments();
+                        final Dependency jvmDependency = new Dependency()
+                            .setPublisher(segments.get(0))
+                            .setProject(segments.get(1))
+                            .setVersion(segments.get(2));
+                        addJvmClassPathString = !QubTest.equal(jvmDependency, projectJson.getPublisher(), projectJson.getProject()) &&
+                            (Iterable.isNullOrEmpty(dependencies) || !dependencies.contains(dep -> QubTest.equalIgnoreVersion(dep, jvmDependency)));
+                    }
+
+                    if (addJvmClassPathString)
                     {
                         classPaths.add(jvmClassPathString);
                     }
