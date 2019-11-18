@@ -159,7 +159,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         console.writeLine().await();
         runner.writeSummary();
 
-        if (useTestJson)
+        if (useTestJson && pattern == null)
         {
             final File testJsonFile = outputFolder.getFile("test.json").await();
             final TestJSON testJson = new TestJSON()
