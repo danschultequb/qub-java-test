@@ -5,7 +5,7 @@ package qub;
  */
 public class TestJSONClassFile
 {
-    private static final String lastModifiedPropertyName = "lastModified";
+    private static final String lastModifiedPropertyName = "lastModifiedNanoseconds";
     private static final String passedTestCountPropertyName = "passedTestCount";
     private static final String skippedTestCountPropertyName = "skippedTestCount";
     private static final String failedTestCountPropertyName = "failedTestCount";
@@ -143,7 +143,7 @@ public class TestJSONClassFile
         {
             writeStream.writeObjectProperty(getRelativePath().toString(), classFileObject ->
             {
-                classFileObject.writeNumberProperty(lastModifiedPropertyName, lastModified.getMillisecondsSinceEpoch());
+                classFileObject.writeNumberProperty(lastModifiedPropertyName, (long)lastModified.getDurationSinceEpoch().toNanoseconds().getValue());
                 classFileObject.writeNumberProperty(passedTestCountPropertyName, passedTestCount);
                 classFileObject.writeNumberProperty(skippedTestCountPropertyName, skippedTestCount);
                 classFileObject.writeNumberProperty(failedTestCountPropertyName, failedTestCount);
@@ -161,9 +161,9 @@ public class TestJSONClassFile
             final TestJSONClassFile classFile = new TestJSONClassFile()
                 .setRelativePath(property.getName());
             propertyValue.getNumberPropertyValue(lastModifiedPropertyName)
-                .then((Double lastModifiedMillisecondsSinceEpoch) ->
+                .then((Double lastModifiedNanosecondsSinceEpoch) ->
                 {
-                    classFile.setLastModified(DateTime.local(lastModifiedMillisecondsSinceEpoch.longValue()));
+                    classFile.setLastModified(DateTime.createFromDurationSinceEpoch(Duration.nanoseconds(lastModifiedNanosecondsSinceEpoch)));
                 })
                 .catchError()
                 .await();
