@@ -421,6 +421,12 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     }
 
     @Override
+    public Skip skipIfNoNetworkConnection()
+    {
+        return testRunner.skipIfNoNetworkConnection();
+    }
+
+    @Override
     public Result<Void> testClass(String fullClassName)
     {
         return testRunner.testClass(fullClassName);
@@ -538,12 +544,6 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     public void afterTest(Action1<Test> afterTestAction)
     {
         testRunner.afterTest(afterTestAction);
-    }
-
-    @Override
-    public Result<Boolean> hasNetworkConnection()
-    {
-        return testRunner.hasNetworkConnection();
     }
 
     /**
