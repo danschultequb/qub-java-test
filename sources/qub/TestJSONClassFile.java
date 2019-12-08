@@ -5,7 +5,7 @@ package qub;
  */
 public class TestJSONClassFile
 {
-    private static final String lastModifiedPropertyName = "lastModifiedNanoseconds";
+    private static final String lastModifiedPropertyName = "lastModified";
     private static final String passedTestCountPropertyName = "passedTestCount";
     private static final String skippedTestCountPropertyName = "skippedTestCount";
     private static final String failedTestCountPropertyName = "failedTestCount";
@@ -129,25 +129,27 @@ public class TestJSONClassFile
         return failedTestCount;
     }
 
-    /**
-     * Write the contents of this TestJSONClassFile object to the provided writeStream.
-     * @param writeStream The write stream to write this object to.
-     * @return The result of writing this object to the provided write stream.
-     */
-    public Result<?> write(JSONObjectWriteStream writeStream)
+    @Override
+    public String toString()
     {
-        PreCondition.assertNotNull(writeStream, "writeStream");
-        PreCondition.assertNotNull(getLastModified(), "getLastModified()");
+        return this.toJson().toString();
+    }
 
-        return Result.create(() ->
+    public JSONObject toJson()
+    {
+        return JSON.object(this::toJson);
+    }
+
+    public void toJson(JSONObjectBuilder testJson)
+    {
+        PreCondition.assertNotNull(testJson, "testJson");
+
+        testJson.objectProperty(Objects.toString(this.getRelativePath()), classFileJson ->
         {
-            writeStream.writeObjectProperty(getRelativePath().toString(), classFileObject ->
-            {
-                classFileObject.writeNumberProperty(lastModifiedPropertyName, (long)lastModified.getDurationSinceEpoch().toNanoseconds().getValue());
-                classFileObject.writeNumberProperty(passedTestCountPropertyName, passedTestCount);
-                classFileObject.writeNumberProperty(skippedTestCountPropertyName, skippedTestCount);
-                classFileObject.writeNumberProperty(failedTestCountPropertyName, failedTestCount);
-            });
+            classFileJson.stringOrNullProperty(TestJSONClassFile.lastModifiedPropertyName, this.lastModified == null ? null : this.lastModified.toString());
+            classFileJson.numberProperty(TestJSONClassFile.passedTestCountPropertyName, this.passedTestCount);
+            classFileJson.numberProperty(TestJSONClassFile.skippedTestCountPropertyName, this.skippedTestCount);
+            classFileJson.numberProperty(TestJSONClassFile.failedTestCountPropertyName, this.failedTestCount);
         });
     }
 
@@ -160,11 +162,9 @@ public class TestJSONClassFile
             final JSONObject propertyValue = property.getObjectValue().await();
             final TestJSONClassFile classFile = new TestJSONClassFile()
                 .setRelativePath(property.getName());
-            propertyValue.getNumberPropertyValue(lastModifiedPropertyName)
-                .then((Double lastModifiedNanosecondsSinceEpoch) ->
-                {
-                    classFile.setLastModified(DateTime.createFromDurationSinceEpoch(Duration.nanoseconds(lastModifiedNanosecondsSinceEpoch)));
-                })
+            propertyValue.getStringPropertyValue(lastModifiedPropertyName)
+                .then((String lastModified) -> DateTime.parse(lastModified).await())
+                .then(classFile::setLastModified)
                 .catchError()
                 .await();
             propertyValue.getNumberPropertyValue(passedTestCountPropertyName)

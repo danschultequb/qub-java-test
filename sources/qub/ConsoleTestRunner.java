@@ -127,7 +127,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
                     verbose.writeLine("Found class entry for " + testClassName + ". Checking timestamps...").await();
                     final File testClassFile = outputFolder.getFile(testJSONClassFile.getRelativePath()).await();
                     final DateTime testClassFileLastModified = testClassFile.getLastModified().await();
-                    if (!testClassFileLastModified.equals(testJSONClassFile.getLastModified(), Duration.milliseconds(1)))
+                    if (!testClassFileLastModified.equals(testJSONClassFile.getLastModified()))
                     {
                         verbose.writeLine("Timestamp of " + testClassName + " from the previous run (" + testJSONClassFile.getLastModified() + ") was not the same as the current class file timestamp (" + testClassFileLastModified + "). Running test class tests.").await();
                         runTestClass = true;
@@ -164,7 +164,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             final File testJsonFile = outputFolder.getFile("test.json").await();
             final TestJSON testJson = new TestJSON()
                 .setClassFiles(testJSONClassFiles);
-            testJson.write(testJsonFile).await();
+            testJsonFile.setContentsAsString(testJson.toString()).await();
         }
 
         return runner.getFailedTestCount();

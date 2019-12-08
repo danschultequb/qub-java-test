@@ -48,60 +48,30 @@ public class TestJSON
             Comparer.equal(classFiles, rhs.classFiles);
     }
 
-    /**
-     * Write the contents of this TestJSON object to the provided File.
-     * @param file The File to write this object to.
-     * @return The result of writing this object to the provided File.
-     */
-    public Result<Void> write(File file)
+    @Override
+    public String toString()
     {
-        PreCondition.assertNotNull(file, "file");
-
-        return Result.create(() ->
-        {
-            try (final CharacterWriteStream writeStream = new BufferedByteWriteStream(file.getContentByteWriteStream().await()).asCharacterWriteStream())
-            {
-                this.write(writeStream).await();
-            }
-        });
+        return this.toJson().toString();
     }
 
-    /**
-     * Write the contents of this TestJSON object to the provided writeStream.
-     * @param writeStream The write stream to write this object to.
-     * @return The result of writing this object to the provided write stream.
-     */
-    public Result<?> write(CharacterWriteStream writeStream)
+    public JSONObject toJson()
     {
-        PreCondition.assertNotNull(writeStream, "writeStream");
-        PreCondition.assertNotDisposed(writeStream, "writeStream.isDisposed()");
-
-        return write(new JSONWriteStream(writeStream));
+        return JSON.object(this::toJson);
     }
 
-    /**
-     * Write the contents of this TestJSON object to the provided writeStream.
-     * @param writeStream The write stream to write this object to.
-     * @return The result of writing this object to the provided write stream.
-     */
-    public Result<?> write(JSONWriteStream writeStream)
+    public void toJson(JSONObjectBuilder json)
     {
-        PreCondition.assertNotNull(writeStream, "writeStream");
-        PreCondition.assertNotDisposed(writeStream, "writeStream.isDisposed()");
+        PreCondition.assertNotNull(json, "json");
 
-        return writeStream.writeObject(root ->
+        json.objectProperty(TestJSON.classFilesPropertyName, classFilesJson ->
         {
-            root.writeObjectProperty(classFilesPropertyName, classFilesObject ->
+            if (!Iterable.isNullOrEmpty(this.classFiles))
             {
-                final Iterable<TestJSONClassFile> classFiles = this.getClassFiles();
-                if (!Iterable.isNullOrEmpty(classFiles))
+                for (final TestJSONClassFile classFile : this.classFiles)
                 {
-                    for (final TestJSONClassFile classFile : classFiles)
-                    {
-                        classFile.write(classFilesObject).await();
-                    }
+                    classFile.toJson(json);
                 }
-            });
+            }
         });
     }
 
