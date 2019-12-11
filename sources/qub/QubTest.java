@@ -138,14 +138,17 @@ public interface QubTest
             final ProjectJSON projectJson = ProjectJSON.parse(projectJsonFile).await();
 
             final String qubHome = environmentVariables.get("QUB_HOME").await();
-            final Folder qubFolder = folderToTest.getFileSystem().getFolder(qubHome).await();
+            final QubFolder qubFolder = new QubFolder(folderToTest.getFileSystem().getFolder(qubHome).await());
             Iterable<Dependency> dependencies = projectJson.getJava().getDependencies();
             if (!Iterable.isNullOrEmpty(dependencies))
             {
                 dependencies = QubBuild.getAllDependencies(qubFolder, dependencies).getKeys();
                 classPaths.addAll(dependencies.map((Dependency dependency) ->
                 {
-                    return QubBuild.resolveDependencyReference(qubFolder, dependency).toString();
+                    return qubFolder.getCompiledSourcesFile(
+                        dependency.getPublisher(),
+                        dependency.getProject(),
+                        dependency.getVersion()).await().toString();
                 }));
             }
 
