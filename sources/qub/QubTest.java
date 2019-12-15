@@ -139,11 +139,11 @@ public interface QubTest
 
             final String qubHome = environmentVariables.get("QUB_HOME").await();
             final QubFolder qubFolder = new QubFolder(folderToTest.getFileSystem().getFolder(qubHome).await());
-            Iterable<Dependency> dependencies = projectJson.getJava().getDependencies();
+            Iterable<ProjectSignature> dependencies = projectJson.getJava().getDependencies();
             if (!Iterable.isNullOrEmpty(dependencies))
             {
                 dependencies = QubBuild.getAllDependencies(qubFolder, dependencies).getKeys();
-                classPaths.addAll(dependencies.map((Dependency dependency) ->
+                classPaths.addAll(dependencies.map((ProjectSignature dependency) ->
                 {
                     return qubFolder.getCompiledSourcesFile(
                         dependency.getPublisher(),
@@ -167,12 +167,9 @@ public interface QubTest
                     {
                         final Path relativeJvmClassPath = Path.parse(jvmClassPathString).relativeTo(qubFolder);
                         final Indexable<String> segments = relativeJvmClassPath.getSegments();
-                        final Dependency jvmDependency = new Dependency()
-                            .setPublisher(segments.get(0))
-                            .setProject(segments.get(1))
-                            .setVersion(segments.get(2));
-                        addJvmClassPathString = !QubTest.equal(jvmDependency, projectJson.getPublisher(), projectJson.getProject()) &&
-                            (Iterable.isNullOrEmpty(dependencies) || !dependencies.contains(dep -> QubTest.equalIgnoreVersion(dep, jvmDependency)));
+                        final ProjectSignature jvmProjectSignature = new ProjectSignature(segments.get(0), segments.get(1), segments.get(2));
+                        addJvmClassPathString = !QubTest.equal(jvmProjectSignature, projectJson.getPublisher(), projectJson.getProject()) &&
+                            (Iterable.isNullOrEmpty(dependencies) || !dependencies.contains(jvmProjectSignature::equalsIgnoreVersion));
                     }
 
                     if (addJvmClassPathString)
@@ -268,15 +265,7 @@ public interface QubTest
         return result;
     }
 
-    static boolean equalIgnoreVersion(Dependency lhs, Dependency rhs)
-    {
-        PreCondition.assertNotNull(lhs, "lhs");
-        PreCondition.assertNotNull(rhs, "rhs");
-
-        return equal(lhs, rhs.getPublisher(), rhs.getProject());
-    }
-
-    static boolean equal(Dependency dependency, String publisher, String project)
+    static boolean equal(ProjectSignature dependency, String publisher, String project)
     {
         PreCondition.assertNotNull(dependency, "dependency");
 

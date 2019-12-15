@@ -298,10 +298,7 @@ public interface QubTestTests
                         new ProjectJSON()
                             .setJava(new ProjectJSONJava()
                                 .setDependencies(Iterable.create(
-                                    new Dependency()
-                                        .setPublisher("me")
-                                        .setProject("a")
-                                        .setVersion("5"))))
+                                    new ProjectSignature("me", "a", "5"))))
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -365,10 +362,7 @@ public interface QubTestTests
                         new ProjectJSON()
                             .setJava(new ProjectJSONJava()
                                 .setDependencies(Iterable.create(
-                                    new Dependency()
-                                        .setPublisher("me")
-                                        .setProject("a")
-                                        .setVersion("5"))))
+                                    new ProjectSignature("me", "a", "5"))))
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -432,10 +426,7 @@ public interface QubTestTests
                         new ProjectJSON()
                             .setJava(new ProjectJSONJava()
                                 .setDependencies(Iterable.create(
-                                    new Dependency()
-                                        .setPublisher("me")
-                                        .setProject("a")
-                                        .setVersion("5"))))
+                                    new ProjectSignature("me", "a", "5"))))
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -499,10 +490,7 @@ public interface QubTestTests
                         new ProjectJSON()
                             .setJava(new ProjectJSONJava()
                                 .setDependencies(Iterable.create(
-                                    new Dependency()
-                                        .setPublisher("me")
-                                        .setProject("a")
-                                        .setVersion("5"))))
+                                    new ProjectSignature("me", "a", "5"))))
                         .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -1018,10 +1006,7 @@ public interface QubTestTests
                             .setVersion("1")
                             .setJava(new ProjectJSONJava()
                                 .setDependencies(Iterable.create(
-                                    new Dependency()
-                                        .setPublisher("me")
-                                        .setProject("b")
-                                        .setVersion("2"))))
+                                    new ProjectSignature("me", "b", "2"))))
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
                     final Folder outputsFolder = currentFolder.getFolder("outputs").await();
@@ -1094,10 +1079,7 @@ public interface QubTestTests
                             .setVersion("1")
                             .setJava(new ProjectJSONJava()
                                 .setDependencies(Iterable.create(
-                                    new Dependency()
-                                        .setPublisher("me")
-                                        .setProject("b")
-                                        .setVersion("2"))))
+                                    new ProjectSignature("me", "b", "2"))))
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
                     final Folder outputsFolder = currentFolder.getFolder("outputs").await();
@@ -1111,10 +1093,7 @@ public interface QubTestTests
                                 .setVersion("2")
                                 .setJava(new ProjectJSONJava()
                                     .setDependencies(Iterable.create(
-                                        new Dependency()
-                                            .setPublisher("me")
-                                            .setProject("c")
-                                            .setVersion("3"))))
+                                        new ProjectSignature("me", "c", "3"))))
                                 .toString()).await();
                         qubFolder.createFile("me/b/2/b.jar").await();
                         qubFolder.setFileContentsAsString("me/c/3/project.json",
