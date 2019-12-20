@@ -4,19 +4,19 @@ public interface QubTest
 {
     static void main(String[] args)
     {
-        Console.run(args, QubTest::main);
+        Process.run(args, QubTest::main);
     }
 
-    static void main(Console console)
+    static void main(Process process)
     {
-        PreCondition.assertNotNull(console, "console");
+        PreCondition.assertNotNull(process, "process");
 
-        final QubTestParameters parameters = QubTest.getParameters(console);
+        final QubTestParameters parameters = QubTest.getParameters(process);
         if (parameters != null)
         {
-            console.showDuration(() ->
+            process.showDuration(() ->
             {
-                console.setExitCode(QubTest.run(parameters));
+                process.setExitCode(QubTest.run(parameters));
             });
         }
     }

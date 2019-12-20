@@ -15,12 +15,12 @@ public interface QubTestTests
                 });
             });
 
-            runner.testGroup("main(Console)", () ->
+            runner.testGroup("main(Process)", () ->
             {
                 runner.test("with null", (Test test) ->
                 {
-                    test.assertThrows(() -> QubTest.main((Console)null),
-                        new PreConditionFailure("console cannot be null."));
+                    test.assertThrows(() -> QubTest.main((Process)null),
+                        new PreConditionFailure("process cannot be null."));
                 });
 
                 runner.test("with -? command line argument", (Test test) ->
@@ -1176,7 +1176,7 @@ public interface QubTestTests
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(commandLineArguments, "commandLineArguments");
 
-        final Console result = new Console(CommandLineArguments.create(commandLineArguments));
+        final Console result = Console.create(commandLineArguments);
         result.setLineSeparator("\n");
         result.setOutputByteWriteStream(output);
 

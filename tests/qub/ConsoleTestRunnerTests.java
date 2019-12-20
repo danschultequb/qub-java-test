@@ -16,7 +16,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with null pattern", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
                         test.assertEqual(0, testRunner.getFailedTestCount());
@@ -30,7 +30,7 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
                     final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         console.setOutputCharacterWriteStream(outputStream);
                         console.setErrorCharacterWriteStream(errorStream);
@@ -47,7 +47,7 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
                     final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         console.setOutputCharacterWriteStream(outputStream);
                         console.setErrorCharacterWriteStream(errorStream);
@@ -88,7 +88,7 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
                     final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         console.setOutputCharacterWriteStream(outputStream);
                         console.setErrorCharacterWriteStream(errorStream);
@@ -157,7 +157,7 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
                     final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         console.setOutputCharacterWriteStream(outputStream);
                         console.setErrorCharacterWriteStream(errorStream);
@@ -174,7 +174,7 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
                     final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         console.setOutputCharacterWriteStream(outputStream);
                         console.setErrorCharacterWriteStream(errorStream);
@@ -190,7 +190,7 @@ public interface ConsoleTestRunnerTests
 
             runner.test("skip()", (Test test) ->
             {
-                try (final Console console = new Console())
+                try (final Console console = Console.create())
                 {
                     final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -206,7 +206,7 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with false", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -216,7 +216,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with true", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -234,7 +234,7 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with false and null message", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -245,7 +245,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with false and empty message", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -256,7 +256,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with false and non-empty message", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -266,7 +266,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with true and non-empty message", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -285,7 +285,7 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with null message", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -296,7 +296,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with empty message", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -307,7 +307,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with non-empty message", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -326,7 +326,7 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with null testGroupName", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -337,7 +337,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with empty testGroupName", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
@@ -348,7 +348,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with null testGroupAction", (Test test) ->
                 {
-                    try (final Console console = new Console())
+                    try (final Console console = Console.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
 
