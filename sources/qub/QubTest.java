@@ -135,7 +135,7 @@ public interface QubTest
             final List<String> classPaths = List.create(outputFolder.toString());
 
             final File projectJsonFile = folderToTest.getFile("project.json").await();
-            final ProjectJSON projectJson = ProjectJSON.parse(projectJsonFile).await();
+            final ProjectJSON projectJson = QubBuild.parseProjectJSONFile(projectJsonFile).await();
 
             final String qubHome = environmentVariables.get("QUB_HOME").await();
             final QubFolder qubFolder = new QubFolder(folderToTest.getFileSystem().getFolder(qubHome).await());
