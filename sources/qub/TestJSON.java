@@ -51,28 +51,21 @@ public class TestJSON
     @Override
     public String toString()
     {
-        return this.toJson().toString();
+        return this.toString(JSONFormat.consise);
+    }
+
+    public String toString(JSONFormat format)
+    {
+        PreCondition.assertNotNull(format, "format");
+
+        return this.toJson().toString(format);
     }
 
     public JSONObject toJson()
     {
-        return JSON.object(this::toJson);
-    }
-
-    public void toJson(JSONObjectBuilder json)
-    {
-        PreCondition.assertNotNull(json, "json");
-
-        json.objectProperty(TestJSON.classFilesPropertyName, classFilesJson ->
-        {
-            if (!Iterable.isNullOrEmpty(this.classFiles))
-            {
-                for (final TestJSONClassFile classFile : this.classFiles)
-                {
-                    classFile.toJson(json);
-                }
-            }
-        });
+        return JSONObject.create()
+            .set(TestJSON.classFilesPropertyName, JSONObject.create()
+                .setAll(this.classFiles.map(TestJSONClassFile::toJsonProperty)));
     }
 
     /**
@@ -110,9 +103,8 @@ public class TestJSON
 
         return Result.create(() ->
         {
-            final JSONDocument jsonDocument = JSON.parse(readStream);
-            final JSONObject rootObject = jsonDocument.getRootObject().await();
-            final JSONObject classFilesObject = rootObject.getObjectPropertyValue(classFilesPropertyName)
+            final JSONObject rootObject = JSON.parseObject(readStream).await();
+            final JSONObject classFilesObject = rootObject.getObject(classFilesPropertyName)
                 .catchError()
                 .await();
             final List<TestJSONClassFile> classFiles = List.create();

@@ -11,7 +11,7 @@ public interface QubTestTests
                 runner.test("with null", (Test test) ->
                 {
                     test.assertThrows(() -> QubTest.main((String[])null),
-                        new PreConditionFailure("args cannot be null."));
+                        new PreConditionFailure("arguments cannot be null."));
                 });
             });
 

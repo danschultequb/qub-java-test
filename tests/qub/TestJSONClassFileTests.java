@@ -201,7 +201,7 @@ public interface TestJSONClassFileTests
                 runner.test("with no properties set", (Test test) ->
                 {
                     final TestJSONClassFile classFile = new TestJSONClassFile();
-                    test.assertEqual("{\"null\":{\"lastModified\":null,\"passedTestCount\":0,\"skippedTestCount\":0,\"failedTestCount\":0}}", classFile.toString());
+                    test.assertEqual("\"null\":{\"lastModified\":null,\"passedTestCount\":0,\"skippedTestCount\":0,\"failedTestCount\":0}", classFile.toString());
                 });
 
                 runner.test("with all properties set", (Test test) ->
@@ -212,7 +212,7 @@ public interface TestJSONClassFileTests
                         .setPassedTestCount(10)
                         .setSkippedTestCount(20)
                         .setFailedTestCount(30);
-                    test.assertEqual("{\"a/b/c.class\":{\"lastModified\":\"2000-10-05T00:00Z\",\"passedTestCount\":10,\"skippedTestCount\":20,\"failedTestCount\":30}}", classFile.toString());
+                    test.assertEqual("\"a/b/c.class\":{\"lastModified\":\"2000-10-05T00:00Z\",\"passedTestCount\":10,\"skippedTestCount\":20,\"failedTestCount\":30}", classFile.toString());
                 });
             });
         });

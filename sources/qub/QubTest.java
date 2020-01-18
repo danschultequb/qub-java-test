@@ -4,7 +4,7 @@ public interface QubTest
 {
     static void main(String[] args)
     {
-        Process.run(args, QubTest::main);
+        Process.run(args, QubTest::getParameters, QubTest::run);
     }
 
     static void main(Process process)

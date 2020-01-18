@@ -7,7 +7,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
 {
     public static void main(String[] args)
     {
-        Console.run(args, ConsoleTestRunner::main);
+        Console.run(args, (Console console) -> ConsoleTestRunner.main(console));
     }
 
     public static void main(Console console)
@@ -164,7 +164,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             final File testJsonFile = outputFolder.getFile("test.json").await();
             final TestJSON testJson = new TestJSON()
                 .setClassFiles(testJSONClassFiles);
-            testJsonFile.setContentsAsString(testJson.toString()).await();
+            testJsonFile.setContentsAsString(testJson.toString(JSONFormat.pretty)).await();
         }
 
         return runner.getFailedTestCount();

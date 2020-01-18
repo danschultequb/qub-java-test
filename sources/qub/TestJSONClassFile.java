@@ -132,25 +132,16 @@ public class TestJSONClassFile
     @Override
     public String toString()
     {
-        return this.toJson().toString();
+        return this.toJsonProperty().toString();
     }
 
-    public JSONObject toJson()
+    public JSONProperty toJsonProperty()
     {
-        return JSON.object(this::toJson);
-    }
-
-    public void toJson(JSONObjectBuilder testJson)
-    {
-        PreCondition.assertNotNull(testJson, "testJson");
-
-        testJson.objectProperty(Objects.toString(this.getRelativePath()), classFileJson ->
-        {
-            classFileJson.stringOrNullProperty(TestJSONClassFile.lastModifiedPropertyName, this.lastModified == null ? null : this.lastModified.toString());
-            classFileJson.numberProperty(TestJSONClassFile.passedTestCountPropertyName, this.passedTestCount);
-            classFileJson.numberProperty(TestJSONClassFile.skippedTestCountPropertyName, this.skippedTestCount);
-            classFileJson.numberProperty(TestJSONClassFile.failedTestCountPropertyName, this.failedTestCount);
-        });
+        return JSONProperty.create(Objects.toString(this.getRelativePath()), JSONObject.create()
+            .setStringOrNull(TestJSONClassFile.lastModifiedPropertyName, this.lastModified == null ? null : this.lastModified.toString())
+            .setNumber(TestJSONClassFile.passedTestCountPropertyName, this.passedTestCount)
+            .setNumber(TestJSONClassFile.skippedTestCountPropertyName, this.skippedTestCount)
+            .setNumber(TestJSONClassFile.failedTestCountPropertyName, this.failedTestCount));
     }
 
     public static Result<TestJSONClassFile> parse(JSONProperty property)
@@ -162,20 +153,20 @@ public class TestJSONClassFile
             final JSONObject propertyValue = property.getObjectValue().await();
             final TestJSONClassFile classFile = new TestJSONClassFile()
                 .setRelativePath(property.getName());
-            propertyValue.getStringPropertyValue(lastModifiedPropertyName)
+            propertyValue.getString(lastModifiedPropertyName)
                 .then((String lastModified) -> DateTime.parse(lastModified).await())
                 .then(classFile::setLastModified)
                 .catchError()
                 .await();
-            propertyValue.getNumberPropertyValue(passedTestCountPropertyName)
+            propertyValue.getNumber(passedTestCountPropertyName)
                 .then((Double passedTestCount) -> classFile.setPassedTestCount(passedTestCount.intValue()))
                 .catchError()
                 .await();
-            propertyValue.getNumberPropertyValue(skippedTestCountPropertyName)
+            propertyValue.getNumber(skippedTestCountPropertyName)
                 .then((Double skippedTestCount) -> classFile.setSkippedTestCount(skippedTestCount.intValue()))
                 .catchError()
                 .await();
-            propertyValue.getNumberPropertyValue(failedTestCountPropertyName)
+            propertyValue.getNumber(failedTestCountPropertyName)
                 .then((Double failedTestCount) -> classFile.setFailedTestCount(failedTestCount.intValue()))
                 .catchError()
                 .await();
