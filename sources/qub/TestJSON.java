@@ -77,15 +77,9 @@ public class TestJSON
     {
         PreCondition.assertNotNull(testJsonFile, "testJsonFile");
 
-        return Result.create(() ->
-        {
-            TestJSON result;
-            try (final ByteReadStream readStream = testJsonFile.getContentByteReadStream().await())
-            {
-                result = TestJSON.parse(readStream).await();
-            }
-            return result;
-        });
+        return Result.createUsing(
+            () -> testJsonFile.getContentByteReadStream().await(),
+            (ByteReadStream readStream) -> TestJSON.parse(readStream).await());
     }
 
     public static Result<TestJSON> parse(ByteReadStream readStream)
