@@ -421,12 +421,6 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     }
 
     @Override
-    public Skip skipIfNoNetworkConnection()
-    {
-        return testRunner.skipIfNoNetworkConnection();
-    }
-
-    @Override
     public Result<Void> testClass(String fullClassName)
     {
         return testRunner.testClass(fullClassName);
