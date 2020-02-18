@@ -4,10 +4,10 @@ public interface QubTest
 {
     static void main(String[] args)
     {
-        Process.run(args, QubTest::getParameters, QubTest::run);
+        QubProcess.run(args, QubTest::getParameters, QubTest::run);
     }
 
-    static void main(Process process)
+    static void main(QubProcess process)
     {
         PreCondition.assertNotNull(process, "process");
 
@@ -21,7 +21,7 @@ public interface QubTest
         }
     }
 
-    static CommandLineParameter<Folder> addFolderToTestParameter(CommandLineParameters parameters, Process process)
+    static CommandLineParameter<Folder> addFolderToTestParameter(CommandLineParameters parameters, QubProcess process)
     {
         PreCondition.assertNotNull(parameters, "parameters");
         PreCondition.assertNotNull(process, "process");
@@ -64,7 +64,7 @@ public interface QubTest
      * @param process The Process that is running.
      * @return The parameters for QubTest.run(), or null if QubTest.run() should not be run.
      */
-    static QubTestParameters getParameters(Process process)
+    static QubTestParameters getParameters(QubProcess process)
     {
         PreCondition.assertNotNull(process, "process");
 

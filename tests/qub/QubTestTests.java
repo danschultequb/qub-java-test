@@ -19,17 +19,17 @@ public interface QubTestTests
             {
                 runner.test("with null", (Test test) ->
                 {
-                    test.assertThrows(() -> QubTest.main((Process)null),
+                    test.assertThrows(() -> QubTest.main((QubProcess)null),
                         new PreConditionFailure("process cannot be null."));
                 });
 
                 runner.test("with -? command line argument", (Test test) ->
                 {
                     final InMemoryByteStream output = new InMemoryByteStream();
-                    try (final Console console = createConsole(output, "-?"))
+                    try (final QubProcess process = createProcess(output, "-?"))
                     {
-                        QubTest.main(console);
-                        test.assertEqual(-1, console.getExitCode());
+                        QubTest.main(process);
+                        test.assertEqual(-1, process.getExitCode());
                     }
                     test.assertEqual(
                         Iterable.create(
@@ -49,14 +49,14 @@ public interface QubTestTests
                 {
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final Console console = createConsole(output, currentFolder, "/i/dont/exist"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "/i/dont/exist"))
                     {
-                        QubTest.main(console);
+                        QubTest.main(process);
                         test.assertEqual(
                             Iterable.create(
                                 "ERROR: The file at \"/i/dont/exist/project.json\" doesn't exist."),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
-                        test.assertEqual(1, console.getExitCode());
+                        test.assertEqual(1, process.getExitCode());
                     }
                 });
 
@@ -64,14 +64,14 @@ public interface QubTestTests
                 {
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final Console console = createConsole(output, currentFolder, "i/dont/exist"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "i/dont/exist"))
                     {
-                        QubTest.main(console);
+                        QubTest.main(process);
                         test.assertEqual(
                             Iterable.create(
                                 "ERROR: The file at \"/i/dont/exist/project.json\" doesn't exist."),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
-                        test.assertEqual(1, console.getExitCode());
+                        test.assertEqual(1, process.getExitCode());
                     }
                 });
 
@@ -79,14 +79,14 @@ public interface QubTestTests
                 {
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final Console console = createConsole(output, currentFolder, "-folder=/i/dont/exist"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-folder=/i/dont/exist"))
                     {
-                        QubTest.main(console);
+                        QubTest.main(process);
                         test.assertEqual(
                             Iterable.create(
                                 "ERROR: The file at \"/i/dont/exist/project.json\" doesn't exist."),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
-                        test.assertEqual(1, console.getExitCode());
+                        test.assertEqual(1, process.getExitCode());
                     }
                 });
 
@@ -94,14 +94,14 @@ public interface QubTestTests
                 {
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final Console console = createConsole(output, currentFolder, "-folder=i/dont/exist"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-folder=i/dont/exist"))
                     {
-                        QubTest.main(console);
+                        QubTest.main(process);
                         test.assertEqual(
                             Iterable.create(
                                 "ERROR: The file at \"/i/dont/exist/project.json\" doesn't exist."),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
-                        test.assertEqual(1, console.getExitCode());
+                        test.assertEqual(1, process.getExitCode());
                     }
                 });
 
@@ -114,15 +114,15 @@ public interface QubTestTests
                             .setJava(new ProjectJSONJava())
                             .toString()).await();
 
-                    try (final Console console = createConsole(output, currentFolder))
+                    try (final QubProcess process = createProcess(output, currentFolder))
                     {
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
                                 "ERROR: No java source files found in /."),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
-                        test.assertEqual(1, console.getExitCode());
+                        test.assertEqual(1, process.getExitCode());
                     }
                 });
 
@@ -136,10 +136,10 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder))
+                    try (final QubProcess process = createProcess(output, currentFolder))
                     {
-                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                        process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -159,7 +159,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -168,7 +168,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -182,10 +182,10 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose"))
                     {
-                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                        process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -205,7 +205,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -225,7 +225,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -239,14 +239,14 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose"))
                     {
-                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/a/5/a.jar").await();
-                        console.setJVMClasspath("/outputs;/foo/subfolder");
-                        console.setEnvironmentVariables(new EnvironmentVariables()
+                        process.setJVMClasspath("/outputs;/foo/subfolder");
+                        process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -266,7 +266,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -286,7 +286,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -302,15 +302,15 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose"))
                     {
-                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/a/5/a.jar").await();
                         qubFolder.createFile("me/b/2/b.jar").await();
-                        console.setJVMClasspath("/outputs;/qub/me/b/2/b.jar");
-                        console.setEnvironmentVariables(new EnvironmentVariables()
+                        process.setJVMClasspath("/outputs;/qub/me/b/2/b.jar");
+                        process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -330,7 +330,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -350,7 +350,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -366,15 +366,15 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/5/a.jar"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/5/a.jar"))
                     {
-                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/a/5/a.jar").await();
                         qubFolder.createFile("me/b/2/b.jar").await();
-                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
-                        console.setEnvironmentVariables(new EnvironmentVariables()
+                        process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
+                        process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -394,7 +394,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -414,7 +414,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -430,15 +430,15 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/6/a.jar"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/6/a.jar"))
                     {
-                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/a/5/a.jar").await();
                         qubFolder.createFile("me/a/6/a.jar").await();
-                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
-                        console.setEnvironmentVariables(new EnvironmentVariables()
+                        process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
+                        process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -458,7 +458,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -478,7 +478,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -494,15 +494,15 @@ public interface QubTestTests
                         .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/4/a.jar"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/4/a.jar"))
                     {
-                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/a/4/a.jar").await();
                         qubFolder.createFile("me/a/5/a.jar").await();
-                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
-                        console.setEnvironmentVariables(new EnvironmentVariables()
+                        process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
+                        process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -522,7 +522,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -542,7 +542,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -559,14 +559,14 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/stuff/7/stuff.jar"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/stuff/7/stuff.jar"))
                     {
-                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("me/stuff/7/stuff.jar").await();
-                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
-                        console.setEnvironmentVariables(new EnvironmentVariables()
+                        process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
+                        process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", qubFolder.toString()));
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), process.getCurrentFolderPath())
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -586,7 +586,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -606,7 +606,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -620,10 +620,10 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "--testjson", "--verbose"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "--testjson", "--verbose"))
                     {
-                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
+                        process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), process.getCurrentFolderPath())
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -643,7 +643,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -663,7 +663,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -677,10 +677,10 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "--testjson=true", "--verbose"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "--testjson=true", "--verbose"))
                     {
-                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
+                        process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), process.getCurrentFolderPath())
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -700,7 +700,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -720,7 +720,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -734,10 +734,10 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "--testjson=false", "--verbose"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "--testjson=false", "--verbose"))
                     {
-                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
+                        process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), process.getCurrentFolderPath())
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -757,7 +757,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -777,7 +777,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -791,16 +791,16 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-coverage"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-coverage"))
                     {
-                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
-                        console
+                        process
                             .setJVMClasspath(currentFolder.getFolder("outputs").await().toString())
                             .setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher())
                             .setEnvironmentVariables(new EnvironmentVariables()
                                 .set("QUB_HOME", "/qub/"))
-                            .setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
+                            .setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), process.getCurrentFolderPath())
                                 .add(new FakeJavacProcessRun()
                                     .setWorkingFolder(currentFolder)
                                     .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -829,7 +829,7 @@ public interface QubTestTests
                                     .addSourceFiles(currentFolder.getFolder("sources").await())
                                     .addHtml(currentFolder.getFolder("outputs/coverage").await())));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -840,7 +840,7 @@ public interface QubTestTests
                                 "Analyzing coverage..."),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -854,16 +854,16 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose", "-coverage"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "-coverage"))
                     {
-                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
-                        console
+                        process
                             .setJVMClasspath(currentFolder.getFolder("outputs").await().toString())
                             .setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher())
                             .setEnvironmentVariables(new EnvironmentVariables()
                                 .set("QUB_HOME", "/qub/"))
-                            .setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), console.getCurrentFolderPath())
+                            .setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), process.getCurrentFolderPath())
                                 .add(new FakeJavacProcessRun()
                                     .setWorkingFolder(currentFolder)
                                     .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -892,7 +892,7 @@ public interface QubTestTests
                                     .addSourceFiles(currentFolder.getFolder("sources").await())
                                     .addHtml(currentFolder.getFolder("outputs/coverage").await())));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -915,7 +915,7 @@ public interface QubTestTests
                                 "VERBOSE: Running /: java -jar /qub/jacoco/jacococli/0.8.1/jacococli.jar report /outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /sources --html /outputs/coverage"),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -929,17 +929,17 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final Console console = createConsole(output, currentFolder, "-verbose", "-coverage"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "-coverage"))
                     {
-                        final Folder qubFolder = console.getFileSystem().createFolder("/qub/").await();
+                        final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
                         qubFolder.createFile("jacoco/jacococli/0.5.0/jacocoagent.jar").await();
                         qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
                         qubFolder.createFile("jacoco/jacococli/0.9.2/jacocoagent.jar").await();
-                        console.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
-                        console.setEnvironmentVariables(new EnvironmentVariables()
+                        process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
+                        process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
-                        console.setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher());
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                        process.setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher());
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
@@ -968,7 +968,7 @@ public interface QubTestTests
                                 .addSourceFiles(currentFolder.getFolder("sources").await())
                                 .addHtml(currentFolder.getFolder("outputs/coverage").await())));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -991,7 +991,7 @@ public interface QubTestTests
                                 "VERBOSE: Running /: java -jar /qub/jacoco/jacococli/0.9.2/jacococli.jar report /outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /sources --html /outputs/coverage"),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -1010,9 +1010,9 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
                     final Folder outputsFolder = currentFolder.getFolder("outputs").await();
-                    try (final Console console = createConsole(output, currentFolder, "-verbose"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose"))
                     {
-                        final Folder qubFolder = console.getFileSystem().getFolder("/qub/").await();
+                        final Folder qubFolder = process.getFileSystem().getFolder("/qub/").await();
                         qubFolder.setFileContentsAsString("me/b/2/project.json",
                             new ProjectJSON()
                                 .setPublisher("me")
@@ -1021,10 +1021,10 @@ public interface QubTestTests
                                 .toString()).await();
                         qubFolder.createFile("me/b/2/b.jar").await();
 
-                        console.setJVMClasspath(outputsFolder.toString());
-                        console.setEnvironmentVariables(new EnvironmentVariables()
+                        process.setJVMClasspath(outputsFolder.toString());
+                        process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", qubFolder.toString()));
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                             .add(new FakeJavacProcessRun()
                                 .setWorkingFolder(currentFolder)
                                 .addOutputFolder(outputsFolder)
@@ -1044,7 +1044,7 @@ public interface QubTestTests
                                 .addCoverage(Coverage.None)
                                 .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -1064,7 +1064,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
 
@@ -1083,9 +1083,9 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
                     final Folder outputsFolder = currentFolder.getFolder("outputs").await();
-                    try (final Console console = createConsole(output, currentFolder, "-verbose"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose"))
                     {
-                        final Folder qubFolder = console.getFileSystem().getFolder("/qub/").await();
+                        final Folder qubFolder = process.getFileSystem().getFolder("/qub/").await();
                         qubFolder.setFileContentsAsString("me/b/2/project.json",
                             new ProjectJSON()
                                 .setPublisher("me")
@@ -1104,10 +1104,10 @@ public interface QubTestTests
                                 .toString()).await();
                         qubFolder.createFile("me/c/3/c.jar").await();
 
-                        console.setJVMClasspath(outputsFolder.toString());
-                        console.setEnvironmentVariables(new EnvironmentVariables()
+                        process.setJVMClasspath(outputsFolder.toString());
+                        process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
-                        console.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                                 .add(new FakeJavacProcessRun()
                                     .setWorkingFolder(currentFolder)
                                     .addOutputFolder(outputsFolder)
@@ -1127,7 +1127,7 @@ public interface QubTestTests
                                     .addCoverage(Coverage.None)
                                     .addFullClassNamesToTest(Iterable.create("A"))));
 
-                        QubTest.main(console);
+                        QubTest.main(process);
 
                         test.assertEqual(
                             Iterable.create(
@@ -1147,7 +1147,7 @@ public interface QubTestTests
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
-                        test.assertEqual(0, console.getExitCode());
+                        test.assertEqual(0, process.getExitCode());
                     }
                 });
             });
@@ -1171,25 +1171,25 @@ public interface QubTestTests
         return getInMemoryFileSystem(test).getFolder("/").await();
     }
 
-    static Console createConsole(ByteWriteStream output, String... commandLineArguments)
+    static QubProcess createProcess(ByteWriteStream output, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(commandLineArguments, "commandLineArguments");
 
-        final Console result = Console.create(commandLineArguments);
+        final QubProcess result = QubProcess.create(commandLineArguments);
         result.setLineSeparator("\n");
         result.setOutputByteWriteStream(output);
 
         return result;
     }
 
-    static Console createConsole(ByteWriteStream output, Folder currentFolder, String... commandLineArguments)
+    static QubProcess createProcess(ByteWriteStream output, Folder currentFolder, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(currentFolder, "currentFolder");
         PreCondition.assertNotNull(commandLineArguments, "commandLineArguments");
 
-        final Console result = createConsole(output, commandLineArguments);
+        final QubProcess result = createProcess(output, commandLineArguments);
         result.setFileSystem(currentFolder.getFileSystem());
         result.setCurrentFolderPath(currentFolder.getPath());
 

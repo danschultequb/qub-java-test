@@ -16,9 +16,9 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with null pattern", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
                         test.assertEqual(0, testRunner.getFailedTestCount());
                     }
                 });
@@ -30,12 +30,12 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
                     final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        console.setOutputCharacterWriteStream(outputStream);
-                        console.setErrorCharacterWriteStream(errorStream);
+                        process.setOutputCharacterWriteStream(outputStream);
+                        process.setErrorCharacterWriteStream(errorStream);
 
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
                         test.assertThrows(() -> testRunner.writeFailure(null),
                             new PreConditionFailure("failure cannot be null."));
                     }
@@ -47,12 +47,12 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
                     final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        console.setOutputCharacterWriteStream(outputStream);
-                        console.setErrorCharacterWriteStream(errorStream);
+                        process.setOutputCharacterWriteStream(outputStream);
+                        process.setErrorCharacterWriteStream(errorStream);
 
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
                         testRunner.writeFailure(new TestError("fake test scope", Iterable.create("message line 1", "message line 2")));
                     }
                     test.assertEqual(
@@ -88,12 +88,12 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
                     final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        console.setOutputCharacterWriteStream(outputStream);
-                        console.setErrorCharacterWriteStream(errorStream);
+                        process.setOutputCharacterWriteStream(outputStream);
+                        process.setErrorCharacterWriteStream(errorStream);
 
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
                         testRunner.writeFailure(
                             new TestError("fake test scope", Iterable.create("message line 1", "message line 2"),
                                 new Exception("hello world!")));
@@ -157,12 +157,12 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
                     final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        console.setOutputCharacterWriteStream(outputStream);
-                        console.setErrorCharacterWriteStream(errorStream);
+                        process.setOutputCharacterWriteStream(outputStream);
+                        process.setErrorCharacterWriteStream(errorStream);
 
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
                         test.assertThrows(() -> testRunner.writeMessageLines(null),
                             new PreConditionFailure("failure cannot be null."));
                     }
@@ -174,12 +174,12 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
                     final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        console.setOutputCharacterWriteStream(outputStream);
-                        console.setErrorCharacterWriteStream(errorStream);
+                        process.setOutputCharacterWriteStream(outputStream);
+                        process.setErrorCharacterWriteStream(errorStream);
 
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
                         test.assertThrows(() -> testRunner.writeMessageLines(new TestError("fake test scope", Iterable.create(""))),
                             new PreConditionFailure("text cannot be empty."));
                     }
@@ -190,9 +190,9 @@ public interface ConsoleTestRunnerTests
 
             runner.test("skip()", (Test test) ->
             {
-                try (final Console console = Console.create())
+                try (final QubProcess process = QubProcess.create())
                 {
-                    final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                    final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                     final Skip skip1 = testRunner.skip();
                     test.assertNotNull(skip1);
@@ -206,9 +206,9 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with false", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         test.assertNull(testRunner.skip(false));
                     }
@@ -216,9 +216,9 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with true", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         final Skip skip1 = testRunner.skip(true);
                         test.assertNotNull(skip1);
@@ -234,9 +234,9 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with false and null message", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         test.assertThrows(() -> testRunner.skip(false, null),
                             new PreConditionFailure("message cannot be null."));
@@ -245,9 +245,9 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with false and empty message", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         test.assertThrows(() -> testRunner.skip(false, ""),
                             new PreConditionFailure("message cannot be empty."));
@@ -256,9 +256,9 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with false and non-empty message", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         test.assertNull(testRunner.skip(false, "hello"));
                     }
@@ -266,9 +266,9 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with true and non-empty message", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         final Skip skip1 = testRunner.skip(true, "hello");
                         test.assertNotNull(skip1);
@@ -285,9 +285,9 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with null message", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         test.assertThrows(() -> testRunner.skip(null),
                             new PreConditionFailure("message cannot be null."));
@@ -296,9 +296,9 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with empty message", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         test.assertThrows(() -> testRunner.skip(""),
                             new PreConditionFailure("message cannot be empty."));
@@ -307,9 +307,9 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with non-empty message", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         final Skip skip1 = testRunner.skip("hello");
                         test.assertNotNull(skip1);
@@ -326,9 +326,9 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with null testGroupName", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         test.assertThrows(() -> testRunner.testGroup((String)null, Action0.empty),
                             new PreConditionFailure("testGroupName cannot be null."));
@@ -337,9 +337,9 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with empty testGroupName", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         test.assertThrows(() -> testRunner.testGroup("", Action0.empty),
                             new PreConditionFailure("testGroupName cannot be empty."));
@@ -348,9 +348,9 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with null testGroupAction", (Test test) ->
                 {
-                    try (final Console console = Console.create())
+                    try (final QubProcess process = QubProcess.create())
                     {
-                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(console, null);
+                        final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
                         test.assertThrows(() -> testRunner.testGroup("hello", null),
                             new PreConditionFailure("testGroupAction cannot be null."));

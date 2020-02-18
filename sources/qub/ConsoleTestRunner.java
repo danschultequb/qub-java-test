@@ -7,35 +7,35 @@ public class ConsoleTestRunner implements TestRunner, Disposable
 {
     public static void main(String[] args)
     {
-        Console.run(args, (Console console) -> ConsoleTestRunner.main(console));
+        QubProcess.run(args, (QubProcess process) -> ConsoleTestRunner.main(process));
     }
 
-    public static void main(Console console)
+    public static void main(QubProcess process)
     {
-        PreCondition.assertNotNull(console, "console");
+        PreCondition.assertNotNull(process, "console");
 
-        ConsoleTestRunnerParameters parameters = ConsoleTestRunner.getParameters(console);
+        ConsoleTestRunnerParameters parameters = ConsoleTestRunner.getParameters(process);
         if (parameters != null)
         {
-            final Stopwatch stopwatch = console.getStopwatch();
+            final Stopwatch stopwatch = process.getStopwatch();
             stopwatch.start();
             try
             {
-                console.setExitCode(ConsoleTestRunner.run(parameters));
+                process.setExitCode(ConsoleTestRunner.run(parameters));
             }
             finally
             {
                 final Duration totalTestsDuration = stopwatch.stop();
-                console.writeLine("Tests Duration: " + totalTestsDuration.toSeconds().toString("0.0")).await();
+                process.getOutputCharacterWriteStream().writeLine("Tests Duration: " + totalTestsDuration.toSeconds().toString("0.0")).await();
             }
         }
     }
 
-    public static ConsoleTestRunnerParameters getParameters(Console console)
+    public static ConsoleTestRunnerParameters getParameters(QubProcess process)
     {
-        PreCondition.assertNotNull(console, "console");
+        PreCondition.assertNotNull(process, "console");
 
-        final CommandLineParameters parameters = console.createCommandLineParameters();
+        final CommandLineParameters parameters = process.createCommandLineParameters();
         final CommandLineParameter<PathPattern> patternParameter = parameters.add("pattern", (String argumentValue) ->
         {
             return Result.success(Strings.isNullOrEmpty(argumentValue)
@@ -43,9 +43,9 @@ public class ConsoleTestRunner implements TestRunner, Disposable
                 : PathPattern.parse(argumentValue));
         });
         final CommandLineParameter<Coverage> coverageParameter = parameters.addEnum("coverage", Coverage.None, Coverage.Sources);
-        final CommandLineParameter<Folder> outputFolderParameter = parameters.addFolder("output-folder", console);
-        final CommandLineParameterVerbose verboseParameter = parameters.addVerbose(console);
-        final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(console, ConsoleTestRunner.class);
+        final CommandLineParameter<Folder> outputFolderParameter = parameters.addFolder("output-folder", process);
+        final CommandLineParameterVerbose verboseParameter = parameters.addVerbose(process);
+        final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(process, ConsoleTestRunner.class);
         final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson", true);
         final CommandLineParameterList<String> testClassNamesParameter = parameters.addPositionStringList("test-class");
 
@@ -54,7 +54,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
         final Folder outputFolder = outputFolderParameter.getValue().await();
         final Iterable<String> testClassNames = testClassNamesParameter.getValues().await();
-        return new ConsoleTestRunnerParameters(console, verbose, outputFolder, testClassNames)
+        return new ConsoleTestRunnerParameters(process, verbose, outputFolder, testClassNames)
             .setPattern(patternParameter.getValue().await())
             .setCoverage(coverageParameter.getValue().await())
             .setTestJson(testJsonParameter.getValue().await());
@@ -64,7 +64,8 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     {
         PreCondition.assertNotNull(parameters, "parameters");
 
-        final Console console = parameters.getConsole();
+        final QubProcess process = parameters.getProcess();
+        final CharacterWriteStream output = process.getOutputCharacterWriteStream();
         final VerboseCharacterWriteStream verbose = parameters.getVerbose();
         final PathPattern pattern = parameters.getPattern();
         final Folder outputFolder = parameters.getOutputFolder();
@@ -72,7 +73,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         final Boolean useTestJson = parameters.getTestJson();
         final Coverage coverage = parameters.getCoverage();
 
-        final ConsoleTestRunner runner = new ConsoleTestRunner(console, pattern);
+        final ConsoleTestRunner runner = new ConsoleTestRunner(process, pattern);
 
         final List<TestJSONClassFile> testJSONClassFiles = List.create();
 
@@ -156,7 +157,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             }
         }
 
-        console.writeLine().await();
+        runner.writeLine().await();
         runner.writeSummary();
 
         if (useTestJson && pattern == null)
@@ -172,22 +173,22 @@ public class ConsoleTestRunner implements TestRunner, Disposable
 
     private final BasicTestRunner testRunner;
     private final IndentedCharacterWriteStream writeStream;
-    private final CharacterWriteStream consoleBackupWriteStream;
-    private final Console console;
+    private final CharacterWriteStream processBackupWriteStream;
+    private final QubProcess process;
     private boolean isDisposed;
     private int unmodifiedPassedTests;
     private int unmodifiedSkippedTests;
 
-    public ConsoleTestRunner(Console console, PathPattern pattern)
+    public ConsoleTestRunner(QubProcess process, PathPattern pattern)
     {
-        PreCondition.assertNotNull(console, "console");
+        PreCondition.assertNotNull(process, "console");
 
-        testRunner = new BasicTestRunner(console, pattern);
+        testRunner = new BasicTestRunner(process, pattern);
 
-        this.console = console;
-        consoleBackupWriteStream = console.getOutputCharacterWriteStream();
-        writeStream = new IndentedCharacterWriteStream(consoleBackupWriteStream);
-        console.setOutputCharacterWriteStream(writeStream);
+        this.process = process;
+        processBackupWriteStream = process.getOutputCharacterWriteStream();
+        writeStream = new IndentedCharacterWriteStream(processBackupWriteStream);
+        process.setOutputCharacterWriteStream(writeStream);
 
         final List<TestParent> testParentsWrittenToConsole = new ArrayList<>();
         testRunner.afterTestClass((TestClass testClass) ->
@@ -251,27 +252,22 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     @Override
     public Result<Boolean> dispose()
     {
-        Result<Boolean> result;
-        if (isDisposed())
+        return Result.create(() ->
         {
-            result = Result.successFalse();
-        }
-        else
-        {
-            console.setOutputCharacterWriteStream(consoleBackupWriteStream);
-            isDisposed = true;
-            result = Result.successTrue();
-        }
-
-        PostCondition.assertNotNull(result, "result");
-
-        return result;
+            boolean result = !this.isDisposed;
+            if (result)
+            {
+                this.process.setOutputCharacterWriteStream(processBackupWriteStream);
+                this.isDisposed = true;
+            }
+            return result;
+        });
     }
 
     @Override
     public boolean isDisposed()
     {
-        return isDisposed;
+        return this.isDisposed;
     }
 
     private void addUnmodifiedPassedTests(int unmodifiedPassedTests)
@@ -557,6 +553,11 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             }
             decreaseIndent();
         }
+    }
+
+    public Result<Integer> writeLine()
+    {
+        return this.writeStream.writeLine();
     }
 
     /**

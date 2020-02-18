@@ -5,7 +5,7 @@ package qub;
  */
 public class ConsoleTestRunnerParameters
 {
-    private final Console console;
+    private final QubProcess process;
     private final VerboseCharacterWriteStream verbose;
     private final Folder outputFolder;
     private final Iterable<String> testClassNames;
@@ -16,31 +16,31 @@ public class ConsoleTestRunnerParameters
 
     /**
      * Create a new ConsoleTestRunnerParameters object.
-     * @param console The console that is running the tests.
+     * @param process The process that is running the tests.
      * @param verbose The stream that verbose text will be written to.
      * @param outputFolder The folder where test classes to run will be found.
      * @param testClassNames The names of the classes that should have their tests run.
      */
-    public ConsoleTestRunnerParameters(Console console, VerboseCharacterWriteStream verbose, Folder outputFolder, Iterable<String> testClassNames)
+    public ConsoleTestRunnerParameters(QubProcess process, VerboseCharacterWriteStream verbose, Folder outputFolder, Iterable<String> testClassNames)
     {
-        PreCondition.assertNotNull(console, "console");
+        PreCondition.assertNotNull(process, "process");
         PreCondition.assertNotNull(verbose, "verbose");
         PreCondition.assertNotNull(outputFolder, "outputFolder");
         PreCondition.assertNotNull(testClassNames, "testClassNames");
 
-        this.console = console;
+        this.process = process;
         this.verbose = verbose;
         this.outputFolder = outputFolder;
         this.testClassNames = testClassNames;
     }
 
     /**
-     * Get the console that is running the tests.
-     * @return The console that is running the tests.
+     * Get the process that is running the tests.
+     * @return The process that is running the tests.
      */
-    public Console getConsole()
+    public QubProcess getProcess()
     {
-        return this.console;
+        return this.process;
     }
 
     /**
