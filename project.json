@@ -1,7 +1,7 @@
 {
   "publisher": "qub",
   "project": "test-java",
-  "version": "1",
+  "version": "2",
   "java": {
     "mainClass": "qub.QubTest",
     "shortcutName": "qub-test",
@@ -10,12 +10,12 @@
       {
         "publisher": "qub",
         "project": "build-java",
-        "version": "1"
+        "version": "2"
       },
       {
         "publisher": "qub",
         "project": "jacococli-java",
-        "version": "2"
+        "version": "3"
       }
     ]
   }
