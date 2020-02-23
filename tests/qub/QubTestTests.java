@@ -1150,6 +1150,89 @@ public interface QubTestTests
                         test.assertEqual(0, process.getExitCode());
                     }
                 });
+
+                runner.test("with one source file, one transitive dependency under versions folder, and verbose", (Test test) ->
+                {
+                    final InMemoryByteStream output = new InMemoryByteStream();
+                    final Folder currentFolder = getInMemoryCurrentFolder(test);
+                    currentFolder.setFileContentsAsString("project.json",
+                        new ProjectJSON()
+                            .setPublisher("me")
+                            .setProject("a")
+                            .setVersion("1")
+                            .setJava(new ProjectJSONJava()
+                                .setDependencies(Iterable.create(
+                                    new ProjectSignature("me", "b", "2"))))
+                            .toString()).await();
+                    currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
+                    final Folder outputsFolder = currentFolder.getFolder("outputs").await();
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose"))
+                    {
+                        final Folder qubFolder = process.getFileSystem().getFolder("/qub/").await();
+                        qubFolder.setFileContentsAsString("me/b/2/project.json",
+                            new ProjectJSON()
+                                .setPublisher("me")
+                                .setProject("b")
+                                .setVersion("2")
+                                .setJava(new ProjectJSONJava()
+                                    .setDependencies(Iterable.create(
+                                        new ProjectSignature("me", "c", "3"))))
+                                .toString()).await();
+                        qubFolder.createFile("me/b/2/b.jar").await();
+                        qubFolder.setFileContentsAsString("me/c/versions/3/project.json",
+                            new ProjectJSON()
+                                .setPublisher("me")
+                                .setProject("c")
+                                .setVersion("3")
+                                .toString()).await();
+                        qubFolder.createFile("me/c/versions/3/c.jar").await();
+
+                        process.setJVMClasspath(outputsFolder.toString());
+                        process.setEnvironmentVariables(new EnvironmentVariables()
+                            .set("QUB_HOME", "/qub/"));
+                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                                .add(new FakeJavacProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addOutputFolder(outputsFolder)
+                                    .addXlintUnchecked()
+                                    .addXlintDeprecation()
+                                    .addClasspath(Iterable.create("/outputs", "/qub/me/b/2/b.jar", "/qub/me/c/versions/3/c.jar"))
+                                    .addSourceFile("sources/A.java")
+                                    .setFunctionAutomatically())
+                                .add(new FakeConsoleTestRunnerProcessRun()
+                                    .setWorkingFolder(currentFolder)
+                                    .addClasspath("/outputs;/qub/me/b/2/b.jar;/qub/me/c/versions/3/c.jar")
+                                    .addConsoleTestRunnerFullClassName()
+                                    .addProfiler(false)
+                                    .addVerbose(true)
+                                    .addTestJson(true)
+                                    .addOutputFolder(outputsFolder)
+                                    .addCoverage(Coverage.None)
+                                    .addFullClassNamesToTest(Iterable.create("A"))));
+
+                        QubTest.main(process);
+
+                        test.assertEqual(
+                            Iterable.create(
+                                "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Updating outputs/build.json...",
+                                "VERBOSE: Setting project.json...",
+                                "VERBOSE: Setting source files...",
+                                "VERBOSE: Detecting java source files to compile...",
+                                "VERBOSE: Compiling all source files.",
+                                "Compiling 1 file...",
+                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/versions/3/c.jar sources/A.java...",
+                                "VERBOSE: Compilation finished.",
+                                "VERBOSE: Writing build.json file...",
+                                "VERBOSE: Done writing build.json file.",
+                                "Running tests...",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/versions/3/c.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
+                                ""),
+                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
+
+                        test.assertEqual(0, process.getExitCode());
+                    }
+                });
             });
         });
     }

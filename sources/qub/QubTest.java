@@ -139,17 +139,23 @@ public interface QubTest
             final ProjectJSONJava projectJsonJava = projectJson.getJava();
 
             final String qubHome = environmentVariables.get("QUB_HOME").await();
-            final QubFolder qubFolder = QubFolder.create(folderToTest.getFileSystem().getFolder(qubHome).await());
+            final QubFolder qubFolder = QubFolder.get(folderToTest.getFileSystem().getFolder(qubHome).await());
             Iterable<ProjectSignature> dependencies = projectJsonJava.getDependencies();
             if (!Iterable.isNullOrEmpty(dependencies))
             {
                 dependencies = projectJsonJava.getTransitiveDependencies(qubFolder);
                 classPaths.addAll(dependencies.map((ProjectSignature dependency) ->
                 {
-                    return qubFolder.getCompiledSourcesFile(
-                        dependency.getPublisher(),
-                        dependency.getProject(),
-                        dependency.getVersion()).await().toString();
+                    final String publisher = dependency.getPublisher();
+                    final String project = dependency.getProject();
+                    final String version = dependency.getVersion();
+                    File compiledSourcesFile = qubFolder.getCompiledSourcesFile2(publisher, project, version).await();
+                    if (!compiledSourcesFile.exists().await())
+                    {
+                        compiledSourcesFile = qubFolder.getCompiledSourcesFile(publisher, project, version).await();
+                    }
+
+                    return compiledSourcesFile.toString();
                 }));
             }
 
@@ -183,9 +189,25 @@ public interface QubTest
             Folder jacocoFolder = null;
             if (coverage != Coverage.None)
             {
-                jacocoFolder = qubFolder.getFolder("jacoco/jacococli").await()
-                    .getFolders().await()
-                    .maximum((Folder lhs, Folder rhs) -> VersionNumber.parse(lhs.getName()).compareTo(VersionNumber.parse(rhs.getName())));
+                final QubProjectFolder jacococliProjectFolder = qubFolder.getProjectFolder("jacoco", "jacococli").await();
+                final Function2<QubProjectVersionFolder,QubProjectVersionFolder,Comparison> versionFolderComparer =
+                    (QubProjectVersionFolder lhs, QubProjectVersionFolder rhs) -> VersionNumber.parse(lhs.getName()).compareTo(VersionNumber.parse(rhs.getName()));
+                final QubProjectVersionFolder maximumVersionFolder = jacococliProjectFolder.getProjectVersionFolders().await()
+                    .maximum(versionFolderComparer);
+                final QubProjectVersionFolder maximumVersionFolder2 = jacococliProjectFolder.getProjectVersionFolders2().await()
+                    .maximum(versionFolderComparer);
+                if (maximumVersionFolder == null)
+                {
+                    jacocoFolder = maximumVersionFolder2;
+                }
+                else if (maximumVersionFolder2 == null)
+                {
+                    jacocoFolder = maximumVersionFolder;
+                }
+                else
+                {
+                    jacocoFolder = Comparer.maximum(Iterable.create(maximumVersionFolder, maximumVersionFolder2), versionFolderComparer);
+                }
             }
 
             final ConsoleTestRunnerProcessBuilder consoleTestRunner = ConsoleTestRunnerProcessBuilder.get(processFactory).await()
