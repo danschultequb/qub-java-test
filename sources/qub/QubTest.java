@@ -192,22 +192,8 @@ public interface QubTest
                 final QubProjectFolder jacococliProjectFolder = qubFolder.getProjectFolder("jacoco", "jacococli").await();
                 final Function2<QubProjectVersionFolder,QubProjectVersionFolder,Comparison> versionFolderComparer =
                     (QubProjectVersionFolder lhs, QubProjectVersionFolder rhs) -> VersionNumber.parse(lhs.getName()).compareTo(VersionNumber.parse(rhs.getName()));
-                final QubProjectVersionFolder maximumVersionFolder = jacococliProjectFolder.getProjectVersionFolders().await()
+                jacocoFolder = jacococliProjectFolder.getProjectVersionFolders().await()
                     .maximum(versionFolderComparer);
-                final QubProjectVersionFolder maximumVersionFolder2 = jacococliProjectFolder.getProjectVersionFolders2().await()
-                    .maximum(versionFolderComparer);
-                if (maximumVersionFolder == null)
-                {
-                    jacocoFolder = maximumVersionFolder2;
-                }
-                else if (maximumVersionFolder2 == null)
-                {
-                    jacocoFolder = maximumVersionFolder;
-                }
-                else
-                {
-                    jacocoFolder = Comparer.maximum(Iterable.create(maximumVersionFolder, maximumVersionFolder2), versionFolderComparer);
-                }
             }
 
             final ConsoleTestRunnerProcessBuilder consoleTestRunner = ConsoleTestRunnerProcessBuilder.get(processFactory).await()

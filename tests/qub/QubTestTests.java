@@ -304,10 +304,10 @@ public interface QubTestTests
 
                     try (final QubProcess process = createProcess(output, currentFolder, "-verbose"))
                     {
-                        final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
-                        qubFolder.createFile("me/a/5/a.jar").await();
-                        qubFolder.createFile("me/b/2/b.jar").await();
-                        process.setJVMClasspath("/outputs;/qub/me/b/2/b.jar");
+                        final QubFolder qubFolder = QubFolder.get(process.getFileSystem().createFolder("/qub/").await());
+                        qubFolder.getCompiledSourcesFile("me", "a", "5").await().create().await();
+                        qubFolder.getCompiledSourcesFile("me", "b", "2").await().create().await();
+                        process.setJVMClasspath("/outputs;/qub/me/b/versions/2/b.jar");
                         process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
                         process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
@@ -316,12 +316,12 @@ public interface QubTestTests
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
                                 .addXlintUnchecked()
                                 .addXlintDeprecation()
-                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
+                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/versions/5/a.jar"))
                                 .addSourceFile("sources/A.java")
                                 .setFunctionAutomatically())
                             .add(new FakeConsoleTestRunnerProcessRun()
                                 .setWorkingFolder(currentFolder)
-                                .addClasspath("/outputs;/qub/me/a/5/a.jar;/qub/me/b/2/b.jar")
+                                .addClasspath("/outputs;/qub/me/a/versions/5/a.jar;/qub/me/b/versions/2/b.jar")
                                 .addConsoleTestRunnerFullClassName()
                                 .addProfiler(false)
                                 .addVerbose(true)
@@ -341,12 +341,12 @@ public interface QubTestTests
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
+                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/versions/5/a.jar sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/versions/5/a.jar;/qub/me/b/versions/2/b.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
@@ -366,11 +366,11 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/5/a.jar"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/versions/5/a.jar"))
                     {
                         final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
-                        qubFolder.createFile("me/a/5/a.jar").await();
-                        qubFolder.createFile("me/b/2/b.jar").await();
+                        qubFolder.createFile("me/a/versions/5/a.jar").await();
+                        qubFolder.createFile("me/b/versions/2/b.jar").await();
                         process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
@@ -380,12 +380,12 @@ public interface QubTestTests
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
                                 .addXlintUnchecked()
                                 .addXlintDeprecation()
-                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
+                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/versions/5/a.jar"))
                                 .addSourceFile("sources/A.java")
                                 .setFunctionAutomatically())
                             .add(new FakeConsoleTestRunnerProcessRun()
                                 .setWorkingFolder(currentFolder)
-                                .addClasspath("/outputs;/qub/me/a/5/a.jar")
+                                .addClasspath("/outputs;/qub/me/a/versions/5/a.jar")
                                 .addConsoleTestRunnerFullClassName()
                                 .addProfiler(false)
                                 .addVerbose(true)
@@ -405,12 +405,12 @@ public interface QubTestTests
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
+                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/versions/5/a.jar sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/versions/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
@@ -430,11 +430,11 @@ public interface QubTestTests
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/6/a.jar"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/versions/6/a.jar"))
                     {
                         final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
-                        qubFolder.createFile("me/a/5/a.jar").await();
-                        qubFolder.createFile("me/a/6/a.jar").await();
+                        qubFolder.createFile("me/a/versions/5/a.jar").await();
+                        qubFolder.createFile("me/a/versions/6/a.jar").await();
                         process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
@@ -444,12 +444,12 @@ public interface QubTestTests
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
                                 .addXlintUnchecked()
                                 .addXlintDeprecation()
-                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
+                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/versions/5/a.jar"))
                                 .addSourceFile("sources/A.java")
                                 .setFunctionAutomatically())
                             .add(new FakeConsoleTestRunnerProcessRun()
                                 .setWorkingFolder(currentFolder)
-                                .addClasspath("/outputs;/qub/me/a/5/a.jar")
+                                .addClasspath("/outputs;/qub/me/a/versions/5/a.jar")
                                 .addConsoleTestRunnerFullClassName()
                                 .addProfiler(false)
                                 .addVerbose(true)
@@ -469,12 +469,12 @@ public interface QubTestTests
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
+                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/versions/5/a.jar sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/versions/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
@@ -494,11 +494,11 @@ public interface QubTestTests
                         .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
-                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/4/a.jar"))
+                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "--jvm.classpath=/qub/me/a/versions/4/a.jar"))
                     {
                         final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
-                        qubFolder.createFile("me/a/4/a.jar").await();
-                        qubFolder.createFile("me/a/5/a.jar").await();
+                        qubFolder.createFile("me/a/versions/4/a.jar").await();
+                        qubFolder.createFile("me/a/versions/5/a.jar").await();
                         process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
@@ -508,12 +508,12 @@ public interface QubTestTests
                                 .addOutputFolder(currentFolder.getFolder("outputs").await())
                                 .addXlintUnchecked()
                                 .addXlintDeprecation()
-                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/5/a.jar"))
+                                .addClasspath(Iterable.create("/outputs", "/qub/me/a/versions/5/a.jar"))
                                 .addSourceFile("sources/A.java")
                                 .setFunctionAutomatically())
                             .add(new FakeConsoleTestRunnerProcessRun()
                                 .setWorkingFolder(currentFolder)
-                                .addClasspath("/outputs;/qub/me/a/5/a.jar")
+                                .addClasspath("/outputs;/qub/me/a/versions/5/a.jar")
                                 .addConsoleTestRunnerFullClassName()
                                 .addProfiler(false)
                                 .addVerbose(true)
@@ -533,12 +533,12 @@ public interface QubTestTests
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/5/a.jar sources/A.java...",
+                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/a/versions/5/a.jar sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/a/versions/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
@@ -794,7 +794,7 @@ public interface QubTestTests
                     try (final QubProcess process = createProcess(output, currentFolder, "-coverage"))
                     {
                         final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
-                        qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
+                        qubFolder.createFile("jacoco/jacococli/versions/0.8.1/jacocoagent.jar").await();
                         process
                             .setJVMClasspath(currentFolder.getFolder("outputs").await().toString())
                             .setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher())
@@ -811,7 +811,7 @@ public interface QubTestTests
                                     .setFunctionAutomatically())
                                 .add(new FakeConsoleTestRunnerProcessRun()
                                     .setWorkingFolder(currentFolder)
-                                    .addJavaAgent("/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec")
+                                    .addJavaAgent("/qub/jacoco/jacococli/versions/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec")
                                     .addClasspath("/outputs")
                                     .addConsoleTestRunnerFullClassName()
                                     .addProfiler(false)
@@ -822,7 +822,7 @@ public interface QubTestTests
                                     .addFullClassNamesToTest(Iterable.create("A")))
                                 .add(new FakeJacocoCliProcessRun()
                                     .setWorkingFolder(currentFolder)
-                                    .addJacocoCliJar("/qub/jacoco/jacococli/0.8.1/jacococli.jar")
+                                    .addJacocoCliJar("/qub/jacoco/jacococli/versions/0.8.1/jacococli.jar")
                                     .addReport()
                                     .addCoverageExec("/outputs/coverage.exec")
                                     .addClassFile(currentFolder.getFile("outputs/A.class").await())
@@ -857,7 +857,7 @@ public interface QubTestTests
                     try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "-coverage"))
                     {
                         final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
-                        qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
+                        qubFolder.createFile("jacoco/jacococli/versions/0.8.1/jacocoagent.jar").await();
                         process
                             .setJVMClasspath(currentFolder.getFolder("outputs").await().toString())
                             .setDefaultApplicationLauncher(new FakeDefaultApplicationLauncher())
@@ -874,7 +874,7 @@ public interface QubTestTests
                                     .setFunctionAutomatically())
                                 .add(new FakeConsoleTestRunnerProcessRun()
                                     .setWorkingFolder(currentFolder)
-                                    .addJavaAgent("/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec")
+                                    .addJavaAgent("/qub/jacoco/jacococli/versions/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec")
                                     .addClasspath("/outputs")
                                     .addConsoleTestRunnerFullClassName()
                                     .addProfiler(false)
@@ -885,7 +885,7 @@ public interface QubTestTests
                                     .addFullClassNamesToTest(Iterable.create("A")))
                                 .add(new FakeJacocoCliProcessRun()
                                     .setWorkingFolder(currentFolder)
-                                    .addJacocoCliJar("/qub/jacoco/jacococli/0.8.1/jacococli.jar")
+                                    .addJacocoCliJar("/qub/jacoco/jacococli/versions/0.8.1/jacococli.jar")
                                     .addReport()
                                     .addCoverageExec("/outputs/coverage.exec")
                                     .addClassFile(currentFolder.getFile("outputs/A.class").await())
@@ -908,11 +908,11 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running /: java -javaagent:/qub/jacoco/jacococli/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=Sources A",
+                                "VERBOSE: Running /: java -javaagent:/qub/jacoco/jacococli/versions/0.8.1/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=Sources A",
                                 "",
                                 "",
                                 "Analyzing coverage...",
-                                "VERBOSE: Running /: java -jar /qub/jacoco/jacococli/0.8.1/jacococli.jar report /outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /sources --html /outputs/coverage"),
+                                "VERBOSE: Running /: java -jar /qub/jacoco/jacococli/versions/0.8.1/jacococli.jar report /outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /sources --html /outputs/coverage"),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, process.getExitCode());
@@ -932,9 +932,9 @@ public interface QubTestTests
                     try (final QubProcess process = createProcess(output, currentFolder, "-verbose", "-coverage"))
                     {
                         final Folder qubFolder = process.getFileSystem().createFolder("/qub/").await();
-                        qubFolder.createFile("jacoco/jacococli/0.5.0/jacocoagent.jar").await();
-                        qubFolder.createFile("jacoco/jacococli/0.8.1/jacocoagent.jar").await();
-                        qubFolder.createFile("jacoco/jacococli/0.9.2/jacocoagent.jar").await();
+                        qubFolder.createFile("jacoco/jacococli/versions/0.5.0/jacocoagent.jar").await();
+                        qubFolder.createFile("jacoco/jacococli/versions/0.8.1/jacocoagent.jar").await();
+                        qubFolder.createFile("jacoco/jacococli/versions/0.9.2/jacocoagent.jar").await();
                         process.setJVMClasspath(currentFolder.getFolder("outputs").await().toString());
                         process.setEnvironmentVariables(new EnvironmentVariables()
                             .set("QUB_HOME", "/qub/"));
@@ -950,7 +950,7 @@ public interface QubTestTests
                                 .setFunctionAutomatically())
                             .add(new FakeConsoleTestRunnerProcessRun()
                                 .setWorkingFolder(currentFolder)
-                                .addJavaAgent("/qub/jacoco/jacococli/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec")
+                                .addJavaAgent("/qub/jacoco/jacococli/versions/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec")
                                 .addClasspath("/outputs")
                                 .addConsoleTestRunnerFullClassName()
                                 .addProfiler(false)
@@ -961,7 +961,7 @@ public interface QubTestTests
                                 .addFullClassNamesToTest(Iterable.create("A")))
                             .add(new FakeJacocoCliProcessRun()
                                 .setWorkingFolder(currentFolder)
-                                .addJacocoCliJar("/qub/jacoco/jacococli/0.9.2/jacococli.jar")
+                                .addJacocoCliJar("/qub/jacoco/jacococli/versions/0.9.2/jacococli.jar")
                                 .addReport()
                                 .addCoverageExec("/outputs/coverage.exec")
                                 .addClassFile(currentFolder.getFile("outputs/A.class").await())
@@ -984,11 +984,11 @@ public interface QubTestTests
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running /: java -javaagent:/qub/jacoco/jacococli/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=Sources A",
+                                "VERBOSE: Running /: java -javaagent:/qub/jacoco/jacococli/versions/0.9.2/jacocoagent.jar=destfile=/outputs/coverage.exec -classpath /outputs qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=Sources A",
                                 "",
                                 "",
                                 "Analyzing coverage...",
-                                "VERBOSE: Running /: java -jar /qub/jacoco/jacococli/0.9.2/jacococli.jar report /outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /sources --html /outputs/coverage"),
+                                "VERBOSE: Running /: java -jar /qub/jacoco/jacococli/versions/0.9.2/jacococli.jar report /outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /sources --html /outputs/coverage"),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
                         test.assertEqual(0, process.getExitCode());
@@ -1013,13 +1013,13 @@ public interface QubTestTests
                     try (final QubProcess process = createProcess(output, currentFolder, "-verbose"))
                     {
                         final Folder qubFolder = process.getFileSystem().getFolder("/qub/").await();
-                        qubFolder.setFileContentsAsString("me/b/2/project.json",
+                        qubFolder.setFileContentsAsString("me/b/versions/2/project.json",
                             new ProjectJSON()
                                 .setPublisher("me")
                                 .setProject("b")
                                 .setVersion("2")
                                 .toString()).await();
-                        qubFolder.createFile("me/b/2/b.jar").await();
+                        qubFolder.createFile("me/b/versions/2/b.jar").await();
 
                         process.setJVMClasspath(outputsFolder.toString());
                         process.setEnvironmentVariables(new EnvironmentVariables()
@@ -1030,12 +1030,12 @@ public interface QubTestTests
                                 .addOutputFolder(outputsFolder)
                                 .addXlintUnchecked()
                                 .addXlintDeprecation()
-                                .addClasspath(Iterable.create("/outputs", "/qub/me/b/2/b.jar"))
+                                .addClasspath(Iterable.create("/outputs", "/qub/me/b/versions/2/b.jar"))
                                 .addSourceFile("sources/A.java")
                                 .setFunctionAutomatically())
                             .add(new FakeConsoleTestRunnerProcessRun()
                                 .setWorkingFolder(currentFolder)
-                                .addClasspath("/outputs;/qub/me/b/2/b.jar")
+                                .addClasspath("/outputs;/qub/me/b/versions/2/b.jar")
                                 .addConsoleTestRunnerFullClassName()
                                 .addProfiler(false)
                                 .addVerbose(true)
@@ -1055,12 +1055,12 @@ public interface QubTestTests
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/b/2/b.jar sources/A.java...",
+                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/b/versions/2/b.jar sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/b/2/b.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/b/versions/2/b.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
@@ -1086,7 +1086,7 @@ public interface QubTestTests
                     try (final QubProcess process = createProcess(output, currentFolder, "-verbose"))
                     {
                         final Folder qubFolder = process.getFileSystem().getFolder("/qub/").await();
-                        qubFolder.setFileContentsAsString("me/b/2/project.json",
+                        qubFolder.setFileContentsAsString("me/b/versions/2/project.json",
                             new ProjectJSON()
                                 .setPublisher("me")
                                 .setProject("b")
@@ -1095,90 +1095,7 @@ public interface QubTestTests
                                     .setDependencies(Iterable.create(
                                         new ProjectSignature("me", "c", "3"))))
                                 .toString()).await();
-                        qubFolder.createFile("me/b/2/b.jar").await();
-                        qubFolder.setFileContentsAsString("me/c/3/project.json",
-                            new ProjectJSON()
-                                .setPublisher("me")
-                                .setProject("c")
-                                .setVersion("3")
-                                .toString()).await();
-                        qubFolder.createFile("me/c/3/c.jar").await();
-
-                        process.setJVMClasspath(outputsFolder.toString());
-                        process.setEnvironmentVariables(new EnvironmentVariables()
-                            .set("QUB_HOME", "/qub/"));
-                        process.setProcessFactory(new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
-                                .add(new FakeJavacProcessRun()
-                                    .setWorkingFolder(currentFolder)
-                                    .addOutputFolder(outputsFolder)
-                                    .addXlintUnchecked()
-                                    .addXlintDeprecation()
-                                    .addClasspath(Iterable.create("/outputs", "/qub/me/b/2/b.jar", "/qub/me/c/3/c.jar"))
-                                    .addSourceFile("sources/A.java")
-                                    .setFunctionAutomatically())
-                                .add(new FakeConsoleTestRunnerProcessRun()
-                                    .setWorkingFolder(currentFolder)
-                                    .addClasspath("/outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar")
-                                    .addConsoleTestRunnerFullClassName()
-                                    .addProfiler(false)
-                                    .addVerbose(true)
-                                    .addTestJson(true)
-                                    .addOutputFolder(outputsFolder)
-                                    .addCoverage(Coverage.None)
-                                    .addFullClassNamesToTest(Iterable.create("A"))));
-
-                        QubTest.main(process);
-
-                        test.assertEqual(
-                            Iterable.create(
-                                "VERBOSE: Parsing project.json...",
-                                "VERBOSE: Updating outputs/build.json...",
-                                "VERBOSE: Setting project.json...",
-                                "VERBOSE: Setting source files...",
-                                "VERBOSE: Detecting java source files to compile...",
-                                "VERBOSE: Compiling all source files.",
-                                "Compiling 1 file...",
-                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar sources/A.java...",
-                                "VERBOSE: Compilation finished.",
-                                "VERBOSE: Writing build.json file...",
-                                "VERBOSE: Done writing build.json file.",
-                                "Running tests...",
-                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/3/c.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
-                                ""),
-                            Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
-
-                        test.assertEqual(0, process.getExitCode());
-                    }
-                });
-
-                runner.test("with one source file, one transitive dependency under versions folder, and verbose", (Test test) ->
-                {
-                    final InMemoryByteStream output = new InMemoryByteStream();
-                    final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setPublisher("me")
-                            .setProject("a")
-                            .setVersion("1")
-                            .setJava(new ProjectJSONJava()
-                                .setDependencies(Iterable.create(
-                                    new ProjectSignature("me", "b", "2"))))
-                            .toString()).await();
-                    currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
-                    final Folder outputsFolder = currentFolder.getFolder("outputs").await();
-                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose"))
-                    {
-                        final Folder qubFolder = process.getFileSystem().getFolder("/qub/").await();
-                        qubFolder.setFileContentsAsString("me/b/2/project.json",
-                            new ProjectJSON()
-                                .setPublisher("me")
-                                .setProject("b")
-                                .setVersion("2")
-                                .setJava(new ProjectJSONJava()
-                                    .setDependencies(Iterable.create(
-                                        new ProjectSignature("me", "c", "3"))))
-                                .toString()).await();
-                        qubFolder.createFile("me/b/2/b.jar").await();
+                        qubFolder.createFile("me/b/versions/2/b.jar").await();
                         qubFolder.setFileContentsAsString("me/c/versions/3/project.json",
                             new ProjectJSON()
                                 .setPublisher("me")
@@ -1196,12 +1113,12 @@ public interface QubTestTests
                                     .addOutputFolder(outputsFolder)
                                     .addXlintUnchecked()
                                     .addXlintDeprecation()
-                                    .addClasspath(Iterable.create("/outputs", "/qub/me/b/2/b.jar", "/qub/me/c/versions/3/c.jar"))
+                                    .addClasspath(Iterable.create("/outputs", "/qub/me/b/versions/2/b.jar", "/qub/me/c/versions/3/c.jar"))
                                     .addSourceFile("sources/A.java")
                                     .setFunctionAutomatically())
                                 .add(new FakeConsoleTestRunnerProcessRun()
                                     .setWorkingFolder(currentFolder)
-                                    .addClasspath("/outputs;/qub/me/b/2/b.jar;/qub/me/c/versions/3/c.jar")
+                                    .addClasspath("/outputs;/qub/me/b/versions/2/b.jar;/qub/me/c/versions/3/c.jar")
                                     .addConsoleTestRunnerFullClassName()
                                     .addProfiler(false)
                                     .addVerbose(true)
@@ -1221,12 +1138,12 @@ public interface QubTestTests
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/versions/3/c.jar sources/A.java...",
+                                "VERBOSE: Running /: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /outputs;/qub/me/b/versions/2/b.jar;/qub/me/c/versions/3/c.jar sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/b/2/b.jar;/qub/me/c/versions/3/c.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
+                                "VERBOSE: Running /: java -classpath /outputs;/qub/me/b/versions/2/b.jar;/qub/me/c/versions/3/c.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --output-folder=/outputs --coverage=None A",
                                 ""),
                             Strings.getLines(output.asCharacterReadStream().getText().await()).skipLast());
 
