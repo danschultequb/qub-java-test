@@ -17,17 +17,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         ConsoleTestRunnerParameters parameters = ConsoleTestRunner.getParameters(process);
         if (parameters != null)
         {
-            final Stopwatch stopwatch = process.getStopwatch();
-            stopwatch.start();
-            try
-            {
-                process.setExitCode(ConsoleTestRunner.run(parameters));
-            }
-            finally
-            {
-                final Duration totalTestsDuration = stopwatch.stop();
-                process.getOutputCharacterWriteStream().writeLine("Tests Duration: " + totalTestsDuration.toSeconds().toString("0.0")).await();
-            }
+            process.setExitCode(ConsoleTestRunner.run(parameters));
         }
     }
 
@@ -65,6 +55,10 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         PreCondition.assertNotNull(parameters, "parameters");
 
         final QubProcess process = parameters.getProcess();
+
+        final Stopwatch stopwatch = process.getStopwatch();
+        stopwatch.start();
+
         final CharacterWriteStream output = process.getOutputCharacterWriteStream();
         final VerboseCharacterWriteStream verbose = parameters.getVerbose();
         final PathPattern pattern = parameters.getPattern();
@@ -157,9 +151,6 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             }
         }
 
-        runner.writeLine().await();
-        runner.writeSummary();
-
         if (useTestJson && pattern == null)
         {
             final File testJsonFile = outputFolder.getFile("test.json").await();
@@ -167,6 +158,9 @@ public class ConsoleTestRunner implements TestRunner, Disposable
                 .setClassFiles(testJSONClassFiles);
             testJsonFile.setContentsAsString(testJson.toString(JSONFormat.pretty)).await();
         }
+
+        runner.writeLine().await();
+        runner.writeSummary(stopwatch);
 
         return runner.getFailedTestCount();
     }
@@ -563,74 +557,83 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     /**
      * Write the current statistics of this ConsoleTestRunner.
      */
-    public void writeSummary()
+    public void writeSummary(Stopwatch stopwatch)
     {
+        PreCondition.assertNotNull(stopwatch, "stopwatch");
+
         final Iterable<Test> skippedTests = testRunner.getSkippedTests();
         if (skippedTests.any())
         {
-            writeStream.writeLine("Skipped Tests:");
+            writeStream.writeLine("Skipped Tests:").await();
             increaseIndent();
             int testSkippedNumber = 1;
             for (final Test skippedTest : skippedTests)
             {
                 final String skipMessage = skippedTest.getSkipMessage();
-                writeStream.writeLine(testSkippedNumber + ") " + skippedTest.getFullName() + (Strings.isNullOrEmpty(skipMessage) ? "" : ": " + skipMessage));
+                writeStream.writeLine(testSkippedNumber + ") " + skippedTest.getFullName() + (Strings.isNullOrEmpty(skipMessage) ? "" : ": " + skipMessage)).await();
                 ++testSkippedNumber;
             }
             decreaseIndent();
 
-            writeStream.writeLine();
+            writeStream.writeLine().await();
         }
 
         final Iterable<TestError> testFailures = testRunner.getTestFailures();
         if (testFailures.any())
         {
-            writeStream.writeLine("Test failures:");
+            writeStream.writeLine("Test failures:").await();
             increaseIndent();
 
             int testFailureNumber = 1;
             for (final TestError failure : testFailures)
             {
-                writeStream.writeLine(testFailureNumber + ") " + failure.getTestScope());
+                writeStream.writeLine(testFailureNumber + ") " + failure.getTestScope()).await();
                 ++testFailureNumber;
                 increaseIndent();
                 writeFailure(failure);
                 decreaseIndent();
 
-                writeStream.writeLine();
+                writeStream.writeLine().await();
             }
 
             decreaseIndent();
         }
 
+        final CharacterTable table = CharacterTable.create();
         if (unmodifiedPassedTests > 0 || unmodifiedSkippedTests > 0)
         {
-            writeStream.writeLine("Unmodified Tests:         " + (unmodifiedPassedTests + unmodifiedSkippedTests)).await();
+            table.addRow("Unmodified Tests:", Integers.toString(unmodifiedPassedTests + unmodifiedSkippedTests));
             if (unmodifiedPassedTests > 0)
             {
-                writeStream.writeLine("Unmodified Passed Tests:  " + unmodifiedPassedTests).await();
+                table.addRow("Unmodified Passed Tests:", Integers.toString(unmodifiedPassedTests));
             }
             if (unmodifiedSkippedTests > 0)
             {
-                writeStream.writeLine("Unmodified Skipped Tests: " + unmodifiedSkippedTests).await();
+                table.addRow("Unmodified Skipped Tests:", Integers.toString(unmodifiedSkippedTests));
             }
         }
 
         if (testRunner.getFinishedTestCount() > 0)
         {
-            writeStream.writeLine("Tests Run:                " + testRunner.getFinishedTestCount()).await();
+            table.addRow("Tests Run:", Integers.toString(testRunner.getFinishedTestCount()));
             if (testRunner.getPassedTestCount() > 0)
             {
-                writeStream.writeLine("Tests Passed:             " + testRunner.getPassedTestCount()).await();
+                table.addRow("Tests Passed:", Integers.toString(testRunner.getPassedTestCount()));
             }
             if (testRunner.getFailedTestCount() > 0)
             {
-                writeStream.writeLine("Tests Failed:             " + testRunner.getFailedTestCount()).await();
+                table.addRow("Tests Failed:", Integers.toString(testRunner.getFailedTestCount()));
             }
             if (testRunner.getSkippedTestCount() > 0)
             {
-                writeStream.writeLine("Tests Skipped:            " + testRunner.getSkippedTestCount()).await();
+                table.addRow("Tests Skipped:", Integers.toString(testRunner.getSkippedTestCount()));
             }
         }
+
+        final Duration totalTestsDuration = stopwatch.stop();
+        table.addRow("Tests Duration:", totalTestsDuration.toSeconds().toString("0.0"));
+
+        table.toString(writeStream, CharacterTableFormat.consise).await();
+        writeStream.writeLine().await();
     }
 }

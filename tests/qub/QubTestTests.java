@@ -110,8 +110,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava())
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create())
                             .toString()).await();
 
                     try (final QubProcess process = createProcess(output, currentFolder))
@@ -131,8 +131,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava())
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create())
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -177,8 +177,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava())
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create())
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -234,8 +234,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava())
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create())
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -295,8 +295,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava()
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create()
                                 .setDependencies(Iterable.create(
                                     new ProjectSignature("me", "a", "5"))))
                             .toString()).await();
@@ -359,8 +359,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava()
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create()
                                 .setDependencies(Iterable.create(
                                     new ProjectSignature("me", "a", "5"))))
                             .toString()).await();
@@ -423,8 +423,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava()
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create()
                                 .setDependencies(Iterable.create(
                                     new ProjectSignature("me", "a", "5"))))
                             .toString()).await();
@@ -487,8 +487,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava()
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create()
                                 .setDependencies(Iterable.create(
                                     new ProjectSignature("me", "a", "5"))))
                         .toString()).await();
@@ -551,11 +551,11 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
+                        ProjectJSON.create()
                             .setPublisher("me")
                             .setProject("stuff")
                             .setVersion("7")
-                            .setJava(new ProjectJSONJava())
+                            .setJava(ProjectJSONJava.create())
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -615,8 +615,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava())
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create())
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -672,8 +672,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava())
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create())
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -729,8 +729,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava())
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create())
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -786,8 +786,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava())
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create())
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -849,8 +849,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava())
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create())
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -924,8 +924,8 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
-                            .setJava(new ProjectJSONJava())
+                        ProjectJSON.create()
+                            .setJava(ProjectJSONJava.create())
                             .toString()).await();
                     currentFolder.setFileContentsAsString("sources/A.java", "A.java source").await();
 
@@ -1000,11 +1000,11 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
+                        ProjectJSON.create()
                             .setPublisher("me")
                             .setProject("a")
                             .setVersion("1")
-                            .setJava(new ProjectJSONJava()
+                            .setJava(ProjectJSONJava.create()
                                 .setDependencies(Iterable.create(
                                     new ProjectSignature("me", "b", "2"))))
                             .toString()).await();
@@ -1014,7 +1014,7 @@ public interface QubTestTests
                     {
                         final Folder qubFolder = process.getFileSystem().getFolder("/qub/").await();
                         qubFolder.setFileContentsAsString("me/b/versions/2/project.json",
-                            new ProjectJSON()
+                            ProjectJSON.create()
                                 .setPublisher("me")
                                 .setProject("b")
                                 .setVersion("2")
@@ -1073,11 +1073,11 @@ public interface QubTestTests
                     final InMemoryByteStream output = new InMemoryByteStream();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
-                        new ProjectJSON()
+                        ProjectJSON.create()
                             .setPublisher("me")
                             .setProject("a")
                             .setVersion("1")
-                            .setJava(new ProjectJSONJava()
+                            .setJava(ProjectJSONJava.create()
                                 .setDependencies(Iterable.create(
                                     new ProjectSignature("me", "b", "2"))))
                             .toString()).await();
@@ -1087,17 +1087,17 @@ public interface QubTestTests
                     {
                         final Folder qubFolder = process.getFileSystem().getFolder("/qub/").await();
                         qubFolder.setFileContentsAsString("me/b/versions/2/project.json",
-                            new ProjectJSON()
+                            ProjectJSON.create()
                                 .setPublisher("me")
                                 .setProject("b")
                                 .setVersion("2")
-                                .setJava(new ProjectJSONJava()
+                                .setJava(ProjectJSONJava.create()
                                     .setDependencies(Iterable.create(
                                         new ProjectSignature("me", "c", "3"))))
                                 .toString()).await();
                         qubFolder.createFile("me/b/versions/2/b.jar").await();
                         qubFolder.setFileContentsAsString("me/c/versions/3/project.json",
-                            new ProjectJSON()
+                            ProjectJSON.create()
                                 .setPublisher("me")
                                 .setProject("c")
                                 .setVersion("3")

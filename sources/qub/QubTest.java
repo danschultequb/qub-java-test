@@ -149,12 +149,7 @@ public interface QubTest
                     final String publisher = dependency.getPublisher();
                     final String project = dependency.getProject();
                     final String version = dependency.getVersion();
-                    File compiledSourcesFile = qubFolder.getCompiledSourcesFile2(publisher, project, version).await();
-                    if (!compiledSourcesFile.exists().await())
-                    {
-                        compiledSourcesFile = qubFolder.getCompiledSourcesFile(publisher, project, version).await();
-                    }
-
+                    final File compiledSourcesFile = qubFolder.getCompiledSourcesFile(publisher, project, version).await();
                     return compiledSourcesFile.toString();
                 }));
             }
