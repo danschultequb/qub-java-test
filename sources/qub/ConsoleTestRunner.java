@@ -59,7 +59,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         final Stopwatch stopwatch = process.getStopwatch();
         stopwatch.start();
 
-        final CharacterWriteStream output = process.getOutputCharacterWriteStream();
+        final CharacterWriteStream output = process.getOutputWriteStream();
         final VerboseCharacterWriteStream verbose = parameters.getVerbose();
         final PathPattern pattern = parameters.getPattern();
         final Folder outputFolder = parameters.getOutputFolder();
@@ -167,7 +167,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
 
     private final BasicTestRunner testRunner;
     private final IndentedCharacterWriteStream writeStream;
-    private final CharacterWriteStream processBackupWriteStream;
+    private final CharacterToByteWriteStream processBackupWriteStream;
     private final QubProcess process;
     private boolean isDisposed;
     private int unmodifiedPassedTests;
@@ -180,7 +180,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         testRunner = new BasicTestRunner(process, pattern);
 
         this.process = process;
-        processBackupWriteStream = process.getOutputCharacterWriteStream();
+        processBackupWriteStream = process.getOutputWriteStream();
         writeStream = new IndentedCharacterWriteStream(processBackupWriteStream);
         process.setOutputCharacterWriteStream(writeStream);
 
@@ -251,7 +251,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             boolean result = !this.isDisposed;
             if (result)
             {
-                this.process.setOutputCharacterWriteStream(processBackupWriteStream);
+                this.process.setOutputWriteStream(processBackupWriteStream);
                 this.isDisposed = true;
             }
             return result;
@@ -323,7 +323,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         {
             if (messageLine != null)
             {
-                writeStream.writeLine(messageLine);
+                writeStream.writeLine(messageLine).await();
             }
         }
     }
@@ -336,7 +336,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         }
         else if (!Strings.isNullOrEmpty(throwable.getMessage()))
         {
-            writeStream.writeLine("Message: " + throwable.getMessage());
+            writeStream.writeLine("Message: " + throwable.getMessage()).await();
         }
     }
 
@@ -346,12 +346,12 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         {
             final ErrorIterable errors = (ErrorIterable)cause;
 
-            writeStream.writeLine("Caused by:");
+            writeStream.writeLine("Caused by:").await();
             int causeNumber = 0;
             for (final Throwable innerCause : errors)
             {
                 ++causeNumber;
-                writeStream.write(causeNumber + ") " + innerCause.getClass().getName());
+                writeStream.write(causeNumber + ") " + innerCause.getClass().getName()).await();
 
                 increaseIndent();
                 writeMessage(innerCause);
@@ -369,7 +369,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         }
         else
         {
-            writeStream.writeLine("Caused by: " + cause.getClass().getName());
+            writeStream.writeLine("Caused by: " + cause.getClass().getName()).await();
 
             increaseIndent();
             writeMessage(cause);

@@ -28,12 +28,12 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with null error", (Test test) ->
                 {
-                    final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
-                    final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
+                    final InMemoryCharacterToByteStream outputStream = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream errorStream = new InMemoryCharacterToByteStream();
                     try (final QubProcess process = QubProcess.create())
                     {
-                        process.setOutputCharacterWriteStream(outputStream);
-                        process.setErrorCharacterWriteStream(errorStream);
+                        process.setOutputWriteStream(outputStream);
+                        process.setErrorWriteStream(errorStream);
 
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
                         test.assertThrows(() -> testRunner.writeFailure(null),
@@ -45,12 +45,12 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with non-null error with no inner cause", runner.skip(), (Test test) ->
                 {
-                    final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
-                    final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
+                    final InMemoryCharacterToByteStream outputStream = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream errorStream = new InMemoryCharacterToByteStream();
                     try (final QubProcess process = QubProcess.create())
                     {
-                        process.setOutputCharacterWriteStream(outputStream);
-                        process.setErrorCharacterWriteStream(errorStream);
+                        process.setOutputWriteStream(outputStream);
+                        process.setErrorWriteStream(errorStream);
 
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
                         testRunner.writeFailure(new TestError("fake test scope", Iterable.create("message line 1", "message line 2")));
@@ -86,12 +86,12 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with non-null error with inner cause", runner.skip(), (Test test) ->
                 {
-                    final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
-                    final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
+                    final InMemoryCharacterToByteStream outputStream = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream errorStream = new InMemoryCharacterToByteStream();
                     try (final QubProcess process = QubProcess.create())
                     {
-                        process.setOutputCharacterWriteStream(outputStream);
-                        process.setErrorCharacterWriteStream(errorStream);
+                        process.setOutputWriteStream(outputStream);
+                        process.setErrorWriteStream(errorStream);
 
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
                         testRunner.writeFailure(
@@ -155,12 +155,12 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with null failure", (Test test) ->
                 {
-                    final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
-                    final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
+                    final InMemoryCharacterToByteStream outputStream = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream errorStream = new InMemoryCharacterToByteStream();
                     try (final QubProcess process = QubProcess.create())
                     {
-                        process.setOutputCharacterWriteStream(outputStream);
-                        process.setErrorCharacterWriteStream(errorStream);
+                        process.setOutputWriteStream(outputStream);
+                        process.setErrorWriteStream(errorStream);
 
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
                         test.assertThrows(() -> testRunner.writeMessageLines(null),
@@ -172,18 +172,19 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with one empty message line", (Test test) ->
                 {
-                    final InMemoryCharacterStream outputStream = new InMemoryCharacterStream();
-                    final InMemoryCharacterStream errorStream = new InMemoryCharacterStream();
+                    final InMemoryCharacterToByteStream outputStream = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream errorStream = new InMemoryCharacterToByteStream();
                     try (final QubProcess process = QubProcess.create())
                     {
-                        process.setOutputCharacterWriteStream(outputStream);
-                        process.setErrorCharacterWriteStream(errorStream);
+                        process.setOutputWriteStream(outputStream);
+                        process.setErrorWriteStream(errorStream);
 
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
-                        test.assertThrows(() -> testRunner.writeMessageLines(new TestError("fake test scope", Iterable.create(""))),
-                            new PreConditionFailure("text cannot be empty."));
+                        testRunner.writeMessageLines(new TestError("fake test scope", Iterable.create("")));
                     }
-                    test.assertEqual("", outputStream.getText().await());
+                    test.assertEqual(
+                        Iterable.create(""),
+                        Strings.getLines(outputStream.getText().await()));
                     test.assertEqual("", errorStream.getText().await());
                 });
             });

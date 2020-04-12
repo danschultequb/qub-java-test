@@ -5,8 +5,7 @@ package qub;
  */
 public class QubTestParameters extends QubBuildParameters
 {
-    private final ByteWriteStream outputByteWriteStream;
-    private final ByteWriteStream errorByteWriteStream;
+    private final CharacterToByteWriteStream errorWriteStream;
     private final DefaultApplicationLauncher defaultApplicationLauncher;
     private String jvmClassPath;
     private String pattern;
@@ -17,25 +16,24 @@ public class QubTestParameters extends QubBuildParameters
     /**
      * Create a new QubTestParameters object.
      * @param outputByteWriteStream The ByteWriteStream that output should be written to.
-     * @param errorByteWriteStream The ByteWriteStream that errors should be written to.
+     * @param errorWriteStream The ByteWriteStream that errors should be written to.
      * @param folderToTest The folder that should have its tests run.
      * @param environmentVariables The environment variables of the running process.
      * @param processFactory The factory that will be used to create new processes.
      */
-    public QubTestParameters(ByteWriteStream outputByteWriteStream, ByteWriteStream errorByteWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath)
+    public QubTestParameters(CharacterToByteWriteStream outputByteWriteStream, CharacterToByteWriteStream errorWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath)
     {
-        super(outputByteWriteStream == null ? null : outputByteWriteStream.asCharacterWriteStream(), folderToTest, environmentVariables, processFactory);
+        super(outputByteWriteStream, folderToTest, environmentVariables, processFactory);
 
         PreCondition.assertNotNull(outputByteWriteStream, "outputByteWriteStream");
-        PreCondition.assertNotNull(errorByteWriteStream, "errorByteWriteStream");
+        PreCondition.assertNotNull(errorWriteStream, "errorByteWriteStream");
         PreCondition.assertNotNull(folderToTest, "folderToTest");
         PreCondition.assertNotNull(environmentVariables, "environmentVariables");
         PreCondition.assertNotNull(processFactory, "processFactory");
         PreCondition.assertNotNull(defaultApplicationLauncher, "defaultApplicationLauncher");
         PreCondition.assertNotNullAndNotEmpty(jvmClassPath, "jvmClassPath");
 
-        this.outputByteWriteStream = outputByteWriteStream;
-        this.errorByteWriteStream = errorByteWriteStream;
+        this.errorWriteStream = errorWriteStream;
         this.defaultApplicationLauncher = defaultApplicationLauncher;
         this.jvmClassPath = jvmClassPath;
         this.coverage = QubTestParameters.getCoverageDefault();
@@ -43,21 +41,12 @@ public class QubTestParameters extends QubBuildParameters
     }
 
     /**
-     * Get the ByteWriteStream that output should be written to.
-     * @return The ByteWriteStream that output should be written to.
-     */
-    public ByteWriteStream getOutputByteWriteStream()
-    {
-        return this.outputByteWriteStream;
-    }
-
-    /**
      * Get the ByteWriteStream that errors should be written to.
      * @return The ByteWriteStream that errors should be written to.
      */
-    public ByteWriteStream getErrorByteWriteStream()
+    public CharacterToByteWriteStream getErrorWriteStream()
     {
-        return this.errorByteWriteStream;
+        return this.errorWriteStream;
     }
 
     /**

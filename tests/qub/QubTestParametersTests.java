@@ -10,8 +10,8 @@ public interface QubTestParametersTests
             {
                 runner.test("with null outputByteWriteStream", (Test test) ->
                 {
-                    final InMemoryByteStream output = null;
-                    final InMemoryByteStream error = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream output = null;
+                    final InMemoryCharacterToByteStream error = new InMemoryCharacterToByteStream();
                     final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
                     fileSystem.createRoot("/").await();
                     final Folder folderToTest = fileSystem.getFolder("/").await();
@@ -20,13 +20,13 @@ public interface QubTestParametersTests
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = new FakeDefaultApplicationLauncher();
                     final String jvmClassPath = "apples";
                     test.assertThrows(() -> new QubTestParameters(output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath),
-                        new PreConditionFailure("outputCharacterWriteStream cannot be null."));
+                        new PreConditionFailure("outputWriteStream cannot be null."));
                 });
 
                 runner.test("with valid arguments", (Test test) ->
                 {
-                    final InMemoryByteStream output = new InMemoryByteStream();
-                    final InMemoryByteStream error = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream error = new InMemoryCharacterToByteStream();
                     final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
                     fileSystem.createRoot("/").await();
                     final Folder folderToTest = fileSystem.getFolder("/").await();
@@ -35,8 +35,8 @@ public interface QubTestParametersTests
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = new FakeDefaultApplicationLauncher();
                     final String jvmClassPath = "apples";
                     final QubTestParameters parameters = new QubTestParameters(output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath);
-                    test.assertSame(output, parameters.getOutputByteWriteStream());
-                    test.assertSame(error, parameters.getErrorByteWriteStream());
+                    test.assertSame(output, parameters.getOutputWriteStream());
+                    test.assertSame(error, parameters.getErrorWriteStream());
                     test.assertSame(folderToTest, parameters.getFolderToTest());
                     test.assertSame(folderToTest, parameters.getFolderToBuild());
                     test.assertSame(environmentVariables, parameters.getEnvironmentVariables());
@@ -49,8 +49,8 @@ public interface QubTestParametersTests
 
             runner.test("getOutputCharacterWriteStream()", (Test test) ->
             {
-                final InMemoryByteStream output = new InMemoryByteStream();
-                final InMemoryByteStream error = new InMemoryByteStream();
+                final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                final InMemoryCharacterToByteStream error = new InMemoryCharacterToByteStream();
                 final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
                 fileSystem.createRoot("/").await();
                 final Folder folderToTest = fileSystem.getFolder("/").await();
@@ -60,7 +60,7 @@ public interface QubTestParametersTests
                 final String jvmClassPath = "apples";
                 final QubTestParameters parameters = new QubTestParameters(output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath);
 
-                final CharacterWriteStream outputCharacterWriteStream = parameters.getOutputCharacterWriteStream();
+                final CharacterWriteStream outputCharacterWriteStream = parameters.getOutputWriteStream();
                 test.assertNotNull(outputCharacterWriteStream);
                 outputCharacterWriteStream.write("hello").await();
                 test.assertEqual(new byte[] { 104, 101, 108, 108, 111 }, output.getBytes());

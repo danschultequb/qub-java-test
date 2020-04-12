@@ -85,8 +85,8 @@ public interface QubTest
             profilerParameter.await();
             profilerParameter.removeValue().await();
 
-            final ByteWriteStream output = process.getOutputByteWriteStream();
-            final ByteWriteStream error = process.getErrorByteWriteStream();
+            final CharacterToByteWriteStream output = process.getOutputWriteStream();
+            final CharacterToByteWriteStream error = process.getErrorWriteStream();
             final DefaultApplicationLauncher defaultApplicationLauncher = process.getDefaultApplicationLauncher();
             final Folder folderToTest = folderToTestParameter.getValue().await();
             final EnvironmentVariables environmentVariables = process.getEnvironmentVariables();
@@ -112,10 +112,10 @@ public interface QubTest
         final String pattern = parameters.getPattern();
         final Coverage coverage = parameters.getCoverage();
         final VerboseCharacterWriteStream verbose = parameters.getVerbose();
-        final ByteWriteStream outputByteWriteStream = parameters.getOutputByteWriteStream();
-        final ByteWriteStream errorByteWriteStream = parameters.getErrorByteWriteStream();
+        final CharacterToByteWriteStream outputByteWriteStream = parameters.getOutputWriteStream();
+        final CharacterToByteWriteStream errorByteWriteStream = parameters.getErrorWriteStream();
         final DefaultApplicationLauncher defaultApplicationLauncher = parameters.getDefaultApplicationLauncher();
-        final CharacterWriteStream output = parameters.getOutputCharacterWriteStream();
+        final CharacterWriteStream output = parameters.getOutputWriteStream();
         final EnvironmentVariables environmentVariables = parameters.getEnvironmentVariables();
         final ProcessFactory processFactory = parameters.getProcessFactory();
         final boolean profiler = parameters.getProfiler();
