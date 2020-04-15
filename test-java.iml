@@ -47,11 +47,11 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://C:/qub/qub/build-java/versions/8/build-java.jar!/"/>
+          <root url="jar://C:/qub/qub/build-java/versions/9/build-java.jar!/"/>
         </CLASSES>
         <JAVADOC/>
         <SOURCES>
-          <root url="jar://C:/qub/qub/build-java/versions/8/build-java.sources.jar!/"/>
+          <root url="jar://C:/qub/qub/build-java/versions/9/build-java.sources.jar!/"/>
         </SOURCES>
       </library>
     </orderEntry>
