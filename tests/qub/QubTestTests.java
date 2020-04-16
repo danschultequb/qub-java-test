@@ -25,7 +25,7 @@ public interface QubTestTests
 
                 runner.test("with -? command line argument", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     try (final QubProcess process = createProcess(output, "-?"))
                     {
                         QubTest.main(process);
@@ -47,7 +47,7 @@ public interface QubTestTests
 
                 runner.test("with unnamed folder argument to rooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final QubProcess process = createProcess(output, currentFolder, "/i/dont/exist"))
                     {
@@ -62,7 +62,7 @@ public interface QubTestTests
 
                 runner.test("with unnamed folder argument to unrooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final QubProcess process = createProcess(output, currentFolder, "i/dont/exist"))
                     {
@@ -77,7 +77,7 @@ public interface QubTestTests
 
                 runner.test("with named folder argument to rooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final QubProcess process = createProcess(output, currentFolder, "-folder=/i/dont/exist"))
                     {
@@ -92,7 +92,7 @@ public interface QubTestTests
 
                 runner.test("with named folder argument to unrooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final QubProcess process = createProcess(output, currentFolder, "-folder=i/dont/exist"))
                     {
@@ -107,7 +107,7 @@ public interface QubTestTests
 
                 runner.test("with no source files", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -128,7 +128,7 @@ public interface QubTestTests
 
                 runner.test("with one source file", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -174,7 +174,7 @@ public interface QubTestTests
 
                 runner.test("with one source file and verbose", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -231,7 +231,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, and jvm.classpath=/foo/subfolder", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -292,7 +292,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, 1 dependency, and jvm.classpath with different dependency", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -356,7 +356,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, 1 dependency, and jvm.classpath with same dependency", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -420,7 +420,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, 1 dependency, and jvm.classpath with same dependency with newer version", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -484,7 +484,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, 1 dependency, and jvm.classpath with same dependency with older version", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -548,7 +548,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, and jvm.classpath equal to current project", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -612,7 +612,7 @@ public interface QubTestTests
 
                 runner.test("with one source file and --testjson and --verbose", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -669,7 +669,7 @@ public interface QubTestTests
 
                 runner.test("with one source file and --testjson=true and --verbose", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -726,7 +726,7 @@ public interface QubTestTests
 
                 runner.test("with one source file and --testjson=false and --verbose", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -783,7 +783,7 @@ public interface QubTestTests
 
                 runner.test("with one source file and coverage", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -846,7 +846,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, and coverage", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -921,7 +921,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, verbose, coverage, and multiple jacoco installations", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -997,7 +997,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, one dependency, and verbose", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()
@@ -1070,7 +1070,7 @@ public interface QubTestTests
 
                 runner.test("with one source file, one transitive dependency, and verbose", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     currentFolder.setFileContentsAsString("project.json",
                         ProjectJSON.create()

@@ -166,7 +166,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     }
 
     private final BasicTestRunner testRunner;
-    private final IndentedCharacterWriteStream writeStream;
+    private final IndentedCharacterToByteWriteStream writeStream;
     private final CharacterToByteWriteStream processBackupWriteStream;
     private final QubProcess process;
     private boolean isDisposed;
@@ -181,8 +181,8 @@ public class ConsoleTestRunner implements TestRunner, Disposable
 
         this.process = process;
         processBackupWriteStream = process.getOutputWriteStream();
-        writeStream = new IndentedCharacterWriteStream(processBackupWriteStream);
-        process.setOutputCharacterWriteStream(writeStream);
+        writeStream = IndentedCharacterToByteWriteStream.create(processBackupWriteStream);
+        process.setOutputWriteStream(writeStream);
 
         final List<TestParent> testParentsWrittenToConsole = new ArrayList<>();
         testRunner.afterTestClass((TestClass testClass) ->

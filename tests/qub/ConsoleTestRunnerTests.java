@@ -28,8 +28,8 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with null error", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream outputStream = new InMemoryCharacterToByteStream();
-                    final InMemoryCharacterToByteStream errorStream = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream outputStream = InMemoryCharacterToByteStream.create();
+                    final InMemoryCharacterToByteStream errorStream = InMemoryCharacterToByteStream.create();
                     try (final QubProcess process = QubProcess.create())
                     {
                         process.setOutputWriteStream(outputStream);
@@ -45,8 +45,8 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with non-null error with no inner cause", runner.skip(), (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream outputStream = new InMemoryCharacterToByteStream();
-                    final InMemoryCharacterToByteStream errorStream = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream outputStream = InMemoryCharacterToByteStream.create();
+                    final InMemoryCharacterToByteStream errorStream = InMemoryCharacterToByteStream.create();
                     try (final QubProcess process = QubProcess.create())
                     {
                         process.setOutputWriteStream(outputStream);
@@ -86,8 +86,8 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with non-null error with inner cause", runner.skip(), (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream outputStream = new InMemoryCharacterToByteStream();
-                    final InMemoryCharacterToByteStream errorStream = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream outputStream = InMemoryCharacterToByteStream.create();
+                    final InMemoryCharacterToByteStream errorStream = InMemoryCharacterToByteStream.create();
                     try (final QubProcess process = QubProcess.create())
                     {
                         process.setOutputWriteStream(outputStream);
@@ -155,8 +155,8 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with null failure", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream outputStream = new InMemoryCharacterToByteStream();
-                    final InMemoryCharacterToByteStream errorStream = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream outputStream = InMemoryCharacterToByteStream.create();
+                    final InMemoryCharacterToByteStream errorStream = InMemoryCharacterToByteStream.create();
                     try (final QubProcess process = QubProcess.create())
                     {
                         process.setOutputWriteStream(outputStream);
@@ -172,8 +172,8 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with one empty message line", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream outputStream = new InMemoryCharacterToByteStream();
-                    final InMemoryCharacterToByteStream errorStream = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream outputStream = InMemoryCharacterToByteStream.create();
+                    final InMemoryCharacterToByteStream errorStream = InMemoryCharacterToByteStream.create();
                     try (final QubProcess process = QubProcess.create())
                     {
                         process.setOutputWriteStream(outputStream);

@@ -11,7 +11,7 @@ public interface QubTestParametersTests
                 runner.test("with null outputByteWriteStream", (Test test) ->
                 {
                     final InMemoryCharacterToByteStream output = null;
-                    final InMemoryCharacterToByteStream error = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
                     fileSystem.createRoot("/").await();
                     final Folder folderToTest = fileSystem.getFolder("/").await();
@@ -25,8 +25,8 @@ public interface QubTestParametersTests
 
                 runner.test("with valid arguments", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
-                    final InMemoryCharacterToByteStream error = new InMemoryCharacterToByteStream();
+                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
+                    final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
                     fileSystem.createRoot("/").await();
                     final Folder folderToTest = fileSystem.getFolder("/").await();
@@ -49,8 +49,8 @@ public interface QubTestParametersTests
 
             runner.test("getOutputCharacterWriteStream()", (Test test) ->
             {
-                final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
-                final InMemoryCharacterToByteStream error = new InMemoryCharacterToByteStream();
+                final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
+                final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                 final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
                 fileSystem.createRoot("/").await();
                 final Folder folderToTest = fileSystem.getFolder("/").await();
