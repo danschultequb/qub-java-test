@@ -77,9 +77,8 @@ public class TestJSON
     {
         PreCondition.assertNotNull(testJsonFile, "testJsonFile");
 
-        return Result.createUsing(
-            () -> testJsonFile.getContentByteReadStream().await(),
-            (ByteReadStream readStream) -> TestJSON.parse(readStream).await());
+        return JSON.parseObject(testJsonFile)
+            .then((JSONObject json) -> TestJSON.parse(json).await());
     }
 
     public static Result<TestJSON> parse(ByteReadStream readStream)
@@ -87,7 +86,8 @@ public class TestJSON
         PreCondition.assertNotNull(readStream, "readStream");
         PreCondition.assertNotDisposed(readStream, "readStream.isDisposed()");
 
-        return parse(readStream.asCharacterReadStream());
+        return JSON.parseObject(readStream)
+            .then((JSONObject json) -> TestJSON.parse(json).await());
     }
 
     public static Result<TestJSON> parse(CharacterReadStream readStream)
@@ -95,9 +95,16 @@ public class TestJSON
         PreCondition.assertNotNull(readStream, "readStream");
         PreCondition.assertNotDisposed(readStream, "readStream.isDisposed()");
 
+        return JSON.parseObject(readStream)
+            .then((JSONObject json) -> TestJSON.parse(json).await());
+    }
+
+    public static Result<TestJSON> parse(JSONObject rootObject)
+    {
+        PreCondition.assertNotNull(rootObject, "rootObject");
+
         return Result.create(() ->
         {
-            final JSONObject rootObject = JSON.parseObject(readStream).await();
             final JSONObject classFilesObject = rootObject.getObject(classFilesPropertyName)
                 .catchError()
                 .await();
