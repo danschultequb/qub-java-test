@@ -90,7 +90,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             {
                 verbose.writeLine("Updating test.json class file for " + testClass.getFullName() + "...").await();
                 final File testClassFile = QubTest.getClassFile(outputFolder, testClass.getFullName());
-                testJSONClassFiles.add(new TestJSONClassFile()
+                testJSONClassFiles.addAll(new TestJSONClassFile()
                     .setRelativePath(testClassFile.relativeTo(outputFolder))
                     .setLastModified(testClassFile.getLastModified().await())
                     .setPassedTestCount(testClass.getPassedTestCount())
@@ -137,7 +137,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
                         verbose.writeLine("Previous run of " + testClassName + " didn't contain errors and the test class hasn't changed since then. Skipping test class tests.").await();
                         runner.addUnmodifiedPassedTests(testJSONClassFile.getPassedTestCount());
                         runner.addUnmodifiedSkippedTests(testJSONClassFile.getSkippedTestCount());
-                        testJSONClassFiles.add(testJSONClassFile);
+                        testJSONClassFiles.addAll(testJSONClassFile);
                         runTestClass = false;
                     }
                 }
@@ -216,7 +216,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
                 final String skipMessage = testParentToWrite.getSkipMessage();
                 final String testGroupMessage = testParentToWrite.getName() + (!testParentToWrite.shouldSkip() ? "" : " - Skipped" + (Strings.isNullOrEmpty(skipMessage) ? "" : ": " + skipMessage));
                 writeStream.writeLine(testGroupMessage).await();
-                testParentsWrittenToConsole.add(testParentToWrite);
+                testParentsWrittenToConsole.addAll(testParentToWrite);
                 increaseIndent();
             }
 

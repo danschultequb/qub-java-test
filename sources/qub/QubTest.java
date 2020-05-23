@@ -176,7 +176,7 @@ public interface QubTest
 
                     if (addJvmClassPathString)
                     {
-                        classPaths.add(jvmClassPathString);
+                        classPaths.addAll(jvmClassPathString);
                     }
                 }
             }

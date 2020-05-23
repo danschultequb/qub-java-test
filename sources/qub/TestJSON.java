@@ -118,7 +118,7 @@ public class TestJSON
                         .await();
                     if (classFile != null)
                     {
-                        classFiles.add(classFile);
+                        classFiles.addAll(classFile);
                     }
                 }
             }
