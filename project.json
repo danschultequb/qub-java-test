@@ -1,26 +1,25 @@
 {
   "publisher": "qub",
   "project": "test-java",
-  "version": "23",
+  "version": "27",
   "java": {
     "mainClass": "qub.QubTest",
     "shortcutName": "qub-test",
-    "version": "1.8",
     "dependencies": [
       {
         "publisher": "qub",
         "project": "build-java",
-        "version": "21"
+        "version": "25"
       },
       {
         "publisher": "qub",
         "project": "jacococli-java",
-        "version": "17"
+        "version": "21"
       },
       {
         "publisher": "qub",
         "project": "charactertable-java",
-        "version": "21"
+        "version": "25"
       }
     ]
   }

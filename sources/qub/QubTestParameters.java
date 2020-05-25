@@ -5,6 +5,7 @@ package qub;
  */
 public class QubTestParameters extends QubBuildParameters
 {
+    private final CharacterToByteReadStream inputReadStream;
     private final CharacterToByteWriteStream errorWriteStream;
     private final DefaultApplicationLauncher defaultApplicationLauncher;
     private String jvmClassPath;
@@ -15,16 +16,18 @@ public class QubTestParameters extends QubBuildParameters
 
     /**
      * Create a new QubTestParameters object.
+     * @param inputReadStream The input read stream.
      * @param outputByteWriteStream The ByteWriteStream that output should be written to.
      * @param errorWriteStream The ByteWriteStream that errors should be written to.
      * @param folderToTest The folder that should have its tests run.
      * @param environmentVariables The environment variables of the running process.
      * @param processFactory The factory that will be used to create new processes.
      */
-    public QubTestParameters(CharacterToByteWriteStream outputByteWriteStream, CharacterToByteWriteStream errorWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath)
+    public QubTestParameters(CharacterToByteReadStream inputReadStream, CharacterToByteWriteStream outputByteWriteStream, CharacterToByteWriteStream errorWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath)
     {
         super(outputByteWriteStream, folderToTest, environmentVariables, processFactory);
 
+        PreCondition.assertNotNull(inputReadStream, "inputReadStream");
         PreCondition.assertNotNull(outputByteWriteStream, "outputByteWriteStream");
         PreCondition.assertNotNull(errorWriteStream, "errorByteWriteStream");
         PreCondition.assertNotNull(folderToTest, "folderToTest");
@@ -33,11 +36,21 @@ public class QubTestParameters extends QubBuildParameters
         PreCondition.assertNotNull(defaultApplicationLauncher, "defaultApplicationLauncher");
         PreCondition.assertNotNullAndNotEmpty(jvmClassPath, "jvmClassPath");
 
+        this.inputReadStream = inputReadStream;
         this.errorWriteStream = errorWriteStream;
         this.defaultApplicationLauncher = defaultApplicationLauncher;
         this.jvmClassPath = jvmClassPath;
         this.coverage = QubTestParameters.getCoverageDefault();
         this.testJson = QubTestParameters.getTestJsonDefault();
+    }
+
+    /**
+     * Get the read stream that input should be read from.
+     * @return The read stream that input should be read from.
+     */
+    public CharacterToByteReadStream getInputReadStream()
+    {
+        return this.inputReadStream;
     }
 
     /**

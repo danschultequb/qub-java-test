@@ -85,6 +85,7 @@ public interface QubTest
             profilerParameter.await();
             profilerParameter.removeValue().await();
 
+            final CharacterToByteReadStream input = process.getInputReadStream();
             final CharacterToByteWriteStream output = process.getOutputWriteStream();
             final CharacterToByteWriteStream error = process.getErrorWriteStream();
             final DefaultApplicationLauncher defaultApplicationLauncher = process.getDefaultApplicationLauncher();
@@ -92,13 +93,15 @@ public interface QubTest
             final EnvironmentVariables environmentVariables = process.getEnvironmentVariables();
             final ProcessFactory processFactory = process.getProcessFactory();
             final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
+            final boolean profiler = profilerParameter.getValue().await();
             final String jvmClassPath = process.getJVMClasspath().await();
 
-            result = new QubTestParameters(output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath)
+            result = new QubTestParameters(input, output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath)
                 .setPattern(patternParameter.removeValue().await())
                 .setCoverage(coverageParameter.removeValue().await())
                 .setTestJson(testJsonParameter.removeValue().await())
-                .setVerbose(verbose);
+                .setVerbose(verbose)
+                .setProfiler(profiler);
         }
 
         return result;
@@ -112,6 +115,7 @@ public interface QubTest
         final String pattern = parameters.getPattern();
         final Coverage coverage = parameters.getCoverage();
         final VerboseCharacterWriteStream verbose = parameters.getVerbose();
+        final CharacterToByteReadStream inputReadStream = parameters.getInputReadStream();
         final CharacterToByteWriteStream outputByteWriteStream = parameters.getOutputWriteStream();
         final CharacterToByteWriteStream errorByteWriteStream = parameters.getErrorWriteStream();
         final DefaultApplicationLauncher defaultApplicationLauncher = parameters.getDefaultApplicationLauncher();
@@ -185,13 +189,14 @@ public interface QubTest
             if (coverage != Coverage.None)
             {
                 final QubProjectFolder jacococliProjectFolder = qubFolder.getProjectFolder("jacoco", "jacococli").await();
-                final Function2<QubProjectVersionFolder,QubProjectVersionFolder,Comparison> versionFolderComparer =
-                    (QubProjectVersionFolder lhs, QubProjectVersionFolder rhs) -> VersionNumber.parse(lhs.getName()).compareTo(VersionNumber.parse(rhs.getName()));
-                jacocoFolder = jacococliProjectFolder.getProjectVersionFolders().await()
-                    .maximum(versionFolderComparer);
+                jacocoFolder = jacococliProjectFolder.getLatestProjectVersionFolder((QubProjectVersionFolder lhs, QubProjectVersionFolder rhs) ->
+                {
+                    return VersionNumber.parse(lhs.getName()).compareTo(VersionNumber.parse(rhs.getName()));
+                }).await();
             }
 
             final ConsoleTestRunnerProcessBuilder consoleTestRunner = ConsoleTestRunnerProcessBuilder.get(processFactory).await()
+                .redirectInput(inputReadStream)
                 .redirectOutput(outputByteWriteStream)
                 .redirectError(errorByteWriteStream);
 
