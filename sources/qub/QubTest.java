@@ -125,7 +125,7 @@ public interface QubTest
         final boolean profiler = parameters.getProfiler();
         final boolean testJson = parameters.getTestJson();
 
-        int result = QubBuild.run(parameters);
+        int result = QubBuildCompile.run(parameters);
         if (result == 0)
         {
             output.writeLine("Running tests...").await();

@@ -3,7 +3,7 @@ package qub;
 /**
  * Parameters that are passed to QubTest.run().
  */
-public class QubTestParameters extends QubBuildParameters
+public class QubTestParameters extends QubBuildCompileParameters
 {
     private final CharacterToByteReadStream inputReadStream;
     private final CharacterToByteWriteStream errorWriteStream;
@@ -25,7 +25,7 @@ public class QubTestParameters extends QubBuildParameters
      */
     public QubTestParameters(CharacterToByteReadStream inputReadStream, CharacterToByteWriteStream outputByteWriteStream, CharacterToByteWriteStream errorWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath)
     {
-        super(outputByteWriteStream, folderToTest, environmentVariables, processFactory);
+        super(outputByteWriteStream, folderToTest, environmentVariables, processFactory, QubTestParameters.getQubBuildDataFolder(folderToTest.getFileSystem()));
 
         PreCondition.assertNotNull(inputReadStream, "inputReadStream");
         PreCondition.assertNotNull(outputByteWriteStream, "outputByteWriteStream");
@@ -42,6 +42,12 @@ public class QubTestParameters extends QubBuildParameters
         this.jvmClassPath = jvmClassPath;
         this.coverage = QubTestParameters.getCoverageDefault();
         this.testJson = QubTestParameters.getTestJsonDefault();
+    }
+
+    private static Folder getQubBuildDataFolder(FileSystem fileSystem)
+    {
+        return QubProjectVersionFolder.getFromType(fileSystem, QubBuild.class).await()
+            .getProjectDataFolder().await();
     }
 
     /**

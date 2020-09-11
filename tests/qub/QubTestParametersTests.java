@@ -14,8 +14,8 @@ public interface QubTestParametersTests
                     final InMemoryCharacterToByteStream output = null;
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
-                    fileSystem.createRoot("/").await();
-                    final Folder folderToTest = fileSystem.getFolder("/").await();
+                    fileSystem.createRoot("C:/").await();
+                    final Folder folderToTest = fileSystem.getFolder("C:/").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables();
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), test.getProcess().getCurrentFolderPath());
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = new FakeDefaultApplicationLauncher();
@@ -30,8 +30,8 @@ public interface QubTestParametersTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
-                    fileSystem.createRoot("/").await();
-                    final Folder folderToTest = fileSystem.getFolder("/").await();
+                    fileSystem.createRoot("C:/").await();
+                    final Folder folderToTest = fileSystem.getFolder("C:/").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables();
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), test.getProcess().getCurrentFolderPath());
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = new FakeDefaultApplicationLauncher();
@@ -55,8 +55,8 @@ public interface QubTestParametersTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                 final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                 final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
-                fileSystem.createRoot("/").await();
-                final Folder folderToTest = fileSystem.getFolder("/").await();
+                fileSystem.createRoot("C:/").await();
+                final Folder folderToTest = fileSystem.getFolder("C:/").await();
                 final EnvironmentVariables environmentVariables = new EnvironmentVariables();
                 final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), test.getProcess().getCurrentFolderPath());
                 final FakeDefaultApplicationLauncher defaultApplicationLauncher = new FakeDefaultApplicationLauncher();
