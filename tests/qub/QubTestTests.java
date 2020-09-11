@@ -36,13 +36,13 @@ public interface QubTestTests
                             Iterable.create(
                                 "Usage: qub-test [[--folder=]<folder-to-test>] [--pattern=<test-name-pattern>] [--coverage[=<None|Sources|Tests|All>]] [--testjson] [--verbose] [--profiler] [--help]",
                                 "  Used to run tests in source code projects.",
-                                "  --folder: The folder to run tests in. Defaults to the current folder.",
-                                "  --pattern: The pattern to match against tests to determine if they will be run or not.",
+                                "  --folder:      The folder to run tests in. Defaults to the current folder.",
+                                "  --pattern:     The pattern to match against tests to determine if they will be run or not.",
                                 "  --coverage(c): Whether or not to collect code coverage information while running tests.",
-                                "  --testjson: Whether or not to write the test results to a test.json file.",
-                                "  --verbose(v): Whether or not to show verbose logs.",
-                                "  --profiler: Whether or not this application should pause before it is run to allow a profiler to be attached.",
-                                "  --help(?): Show the help message for this application."),
+                                "  --testjson:    Whether or not to write the test results to a test.json file.",
+                                "  --verbose(v):  Whether or not to show verbose logs.",
+                                "  --profiler:    Whether or not this application should pause before it is run to allow a profiler to be attached.",
+                                "  --help(?):     Show the help message for this application."),
                             Strings.getLines(output.getText().await()));
                     }
                 });
@@ -60,13 +60,13 @@ public interface QubTestTests
                             Iterable.create(
                                 "Usage: qub-test [[--folder=]<folder-to-test>] [--pattern=<test-name-pattern>] [--coverage[=<None|Sources|Tests|All>]] [--testjson] [--verbose] [--profiler] [--help]",
                                 "  Used to run tests in source code projects.",
-                                "  --folder: The folder to run tests in. Defaults to the current folder.",
-                                "  --pattern: The pattern to match against tests to determine if they will be run or not.",
+                                "  --folder:      The folder to run tests in. Defaults to the current folder.",
+                                "  --pattern:     The pattern to match against tests to determine if they will be run or not.",
                                 "  --coverage(c): Whether or not to collect code coverage information while running tests.",
-                                "  --testjson: Whether or not to write the test results to a test.json file.",
-                                "  --verbose(v): Whether or not to show verbose logs.",
-                                "  --profiler: Whether or not this application should pause before it is run to allow a profiler to be attached.",
-                                "  --help(?): Show the help message for this application."),
+                                "  --testjson:    Whether or not to write the test results to a test.json file.",
+                                "  --verbose(v):  Whether or not to show verbose logs.",
+                                "  --profiler:    Whether or not this application should pause before it is run to allow a profiler to be attached.",
+                                "  --help(?):     Show the help message for this application."),
                             Strings.getLines(output.getText().await()));
                     }
                 });
