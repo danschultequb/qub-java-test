@@ -152,7 +152,7 @@ public interface QubTest
                 {
                     final String publisher = dependency.getPublisher();
                     final String project = dependency.getProject();
-                    final String version = dependency.getVersion();
+                    final VersionNumber version = dependency.getVersion();
                     final File compiledSourcesFile = qubFolder.getCompiledSourcesFile(publisher, project, version).await();
                     return compiledSourcesFile.toString();
                 }));
@@ -173,7 +173,7 @@ public interface QubTest
                     {
                         final Path relativeJvmClassPath = Path.parse(jvmClassPathString).relativeTo(qubFolder);
                         final Indexable<String> segments = relativeJvmClassPath.getSegments();
-                        final ProjectSignature jvmProjectSignature = new ProjectSignature(segments.get(0), segments.get(1), segments.get(2));
+                        final ProjectSignature jvmProjectSignature = ProjectSignature.create(segments.get(0), segments.get(1), segments.get(2));
                         addJvmClassPathString = !QubTest.equal(jvmProjectSignature, projectJson.getPublisher(), projectJson.getProject()) &&
                             (Iterable.isNullOrEmpty(dependencies) || !dependencies.contains(jvmProjectSignature::equalsIgnoreVersion));
                     }
@@ -189,10 +189,7 @@ public interface QubTest
             if (coverage != Coverage.None)
             {
                 final QubProjectFolder jacococliProjectFolder = qubFolder.getProjectFolder("jacoco", "jacococli").await();
-                jacocoFolder = jacococliProjectFolder.getLatestProjectVersionFolder((QubProjectVersionFolder lhs, QubProjectVersionFolder rhs) ->
-                {
-                    return VersionNumber.parse(lhs.getName()).compareTo(VersionNumber.parse(rhs.getName()));
-                }).await();
+                jacocoFolder = jacococliProjectFolder.getLatestProjectVersionFolder().await();
             }
 
             final ConsoleTestRunnerProcessBuilder consoleTestRunner = ConsoleTestRunnerProcessBuilder.get(processFactory).await()

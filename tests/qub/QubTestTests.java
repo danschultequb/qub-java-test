@@ -1164,7 +1164,7 @@ public interface QubTestTests
                             ProjectJSON.create()
                                 .setPublisher(meB2Folder.getPublisherName().await())
                                 .setProject(meB2Folder.getProjectName().await())
-                                .setVersion(meB2Folder.getVersion())
+                                .setVersion(meB2Folder.getVersion().await())
                                 .toString())
                             .await();
                     final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
@@ -1248,7 +1248,7 @@ public interface QubTestTests
                             ProjectJSON.create()
                                 .setPublisher(meC3Folder.getPublisherName().await())
                                 .setProject(meC3Folder.getProjectName().await())
-                                .setVersion(meC3Folder.getVersion())
+                                .setVersion(meC3Folder.getVersion().await())
                                 .toString())
                             .await();
                     final QubProjectVersionFolder meB2Folder = qubFolder.getProjectVersionFolder("me", "b", "2").await();
@@ -1258,7 +1258,7 @@ public interface QubTestTests
                             ProjectJSON.create()
                                 .setPublisher(meB2Folder.getPublisherName().await())
                                 .setProject(meB2Folder.getProjectName().await())
-                                .setVersion(meB2Folder.getVersion())
+                                .setVersion(meB2Folder.getVersion().await())
                                 .setJava(ProjectJSONJava.create()
                                     .setDependencies(Iterable.create(
                                         meC3Folder.getProjectSignature().await())))

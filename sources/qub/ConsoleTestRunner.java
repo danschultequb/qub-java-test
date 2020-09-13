@@ -459,7 +459,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     }
 
     @Override
-    public void speedTest(String testName, Duration maximumDuration, Action1<Test> testAction)
+    public void speedTest(String testName, Duration2 maximumDuration, Action1<Test> testAction)
     {
         testRunner.speedTest(testName, maximumDuration, testAction);
     }
