@@ -60,7 +60,7 @@ public class TestJSONClassFile
     {
         PreCondition.assertNotNull(getRelativePath(), "getRelativePath()");
 
-        final String result = QubTest.getFullClassName(getRelativePath());
+        final String result = QubTestRun.getFullClassName(getRelativePath());
 
         PostCondition.assertNotNullAndNotEmpty(result, "result");
 

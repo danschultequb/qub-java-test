@@ -58,6 +58,16 @@ public interface ConsoleTestRunnerArguments<T>
     }
 
     /**
+     * Add a logfile argument to this process builder.
+     * @param logFile The path to the log file to use.
+     * @return This object for method chaining.
+     */
+    default T addLogFile(File logFile)
+    {
+        return this.addArguments("--logfile=" + logFile);
+    }
+
+    /**
      * Add a pattern argument to this process builder.
      * @param pattern The value of the pattern argument to add.
      * @return This object for method chaining.
@@ -141,7 +151,7 @@ public interface ConsoleTestRunnerArguments<T>
 
         return this.addFullClassNamesToTest(classFilesToTest.map((File classFileToTest) ->
         {
-            return QubTest.getFullClassName(outputFolder, classFileToTest);
+            return QubTestRun.getFullClassName(outputFolder, classFileToTest);
         }));
     }
 }

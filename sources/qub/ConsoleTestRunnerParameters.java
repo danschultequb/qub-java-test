@@ -13,6 +13,7 @@ public class ConsoleTestRunnerParameters
     private PathPattern pattern;
     private Coverage coverage;
     private Boolean testJson;
+    private File logFile;
 
     /**
      * Create a new ConsoleTestRunnerParameters object.
@@ -114,5 +115,16 @@ public class ConsoleTestRunnerParameters
     public Boolean getTestJson()
     {
         return this.testJson;
+    }
+
+    public ConsoleTestRunnerParameters setLogFile(File logFile)
+    {
+        this.logFile = logFile;
+        return this;
+    }
+
+    public File getLogFile()
+    {
+        return this.logFile;
     }
 }

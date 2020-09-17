@@ -3,11 +3,12 @@ package qub;
 /**
  * Parameters that are passed to QubTest.run().
  */
-public class QubTestParameters extends QubBuildCompileParameters
+public class QubTestRunParameters extends QubBuildCompileParameters
 {
     private final CharacterToByteReadStream inputReadStream;
     private final CharacterToByteWriteStream errorWriteStream;
     private final DefaultApplicationLauncher defaultApplicationLauncher;
+    private final Folder qubTestDataFolder;
     private String jvmClassPath;
     private String pattern;
     private Coverage coverage;
@@ -23,9 +24,9 @@ public class QubTestParameters extends QubBuildCompileParameters
      * @param environmentVariables The environment variables of the running process.
      * @param processFactory The factory that will be used to create new processes.
      */
-    public QubTestParameters(CharacterToByteReadStream inputReadStream, CharacterToByteWriteStream outputByteWriteStream, CharacterToByteWriteStream errorWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath)
+    public QubTestRunParameters(CharacterToByteReadStream inputReadStream, CharacterToByteWriteStream outputByteWriteStream, CharacterToByteWriteStream errorWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath, Folder qubTestDataFolder)
     {
-        super(outputByteWriteStream, folderToTest, environmentVariables, processFactory, QubTestParameters.getQubBuildDataFolder(folderToTest.getFileSystem()));
+        super(outputByteWriteStream, folderToTest, environmentVariables, processFactory, QubTestRunParameters.getQubBuildDataFolder(folderToTest));
 
         PreCondition.assertNotNull(inputReadStream, "inputReadStream");
         PreCondition.assertNotNull(outputByteWriteStream, "outputByteWriteStream");
@@ -35,17 +36,22 @@ public class QubTestParameters extends QubBuildCompileParameters
         PreCondition.assertNotNull(processFactory, "processFactory");
         PreCondition.assertNotNull(defaultApplicationLauncher, "defaultApplicationLauncher");
         PreCondition.assertNotNullAndNotEmpty(jvmClassPath, "jvmClassPath");
+        PreCondition.assertNotNull(qubTestDataFolder, "qubTestDataFolder");
 
         this.inputReadStream = inputReadStream;
         this.errorWriteStream = errorWriteStream;
         this.defaultApplicationLauncher = defaultApplicationLauncher;
         this.jvmClassPath = jvmClassPath;
-        this.coverage = QubTestParameters.getCoverageDefault();
-        this.testJson = QubTestParameters.getTestJsonDefault();
+        this.coverage = QubTestRunParameters.getCoverageDefault();
+        this.testJson = QubTestRunParameters.getTestJsonDefault();
+        this.qubTestDataFolder = qubTestDataFolder;
     }
 
-    private static Folder getQubBuildDataFolder(FileSystem fileSystem)
+    private static Folder getQubBuildDataFolder(Folder folderToTest)
     {
+        PreCondition.assertNotNull(folderToTest, "folderToTest");
+
+        final FileSystem fileSystem = folderToTest.getFileSystem();
         return QubProjectVersionFolder.getFromType(fileSystem, QubBuild.class).await()
             .getProjectDataFolder().await();
     }
@@ -86,6 +92,11 @@ public class QubTestParameters extends QubBuildCompileParameters
         return this.getFolderToBuild();
     }
 
+    public Folder getQubTestDataFolder()
+    {
+        return this.qubTestDataFolder;
+    }
+
     /**
      * Get the pattern that will be used to determine whether or not a test should run.
      * @return The pattern that will be used to determine whether or not a test should run.
@@ -100,7 +111,7 @@ public class QubTestParameters extends QubBuildCompileParameters
      * @param pattern The pattern that will be used to determine whether or not a test should run.
      * @return This object for method chaining.
      */
-    public QubTestParameters setPattern(String pattern)
+    public QubTestRunParameters setPattern(String pattern)
     {
         this.pattern = pattern;
         return this;
@@ -121,7 +132,7 @@ public class QubTestParameters extends QubBuildCompileParameters
      *                 for.
      * @return This object for method chaining.
      */
-    public QubTestParameters setCoverage(Coverage coverage)
+    public QubTestRunParameters setCoverage(Coverage coverage)
     {
         PreCondition.assertNotNull(coverage, "coverage");
 
@@ -143,7 +154,7 @@ public class QubTestParameters extends QubBuildCompileParameters
      * @param testJson Whether or not a test.json file should be written after the tests are done.
      * @return This object for method chaining.
      */
-    public QubTestParameters setTestJson(boolean testJson)
+    public QubTestRunParameters setTestJson(boolean testJson)
     {
         this.testJson = testJson;
         return this;
@@ -163,7 +174,7 @@ public class QubTestParameters extends QubBuildCompileParameters
      * @param jvmClassPath The classpath that was passed to this application's JVM.
      * @return This object for method chaining.
      */
-    public QubTestParameters setJvmClassPath(String jvmClassPath)
+    public QubTestRunParameters setJvmClassPath(String jvmClassPath)
     {
         this.jvmClassPath = jvmClassPath;
         return this;
@@ -174,28 +185,28 @@ public class QubTestParameters extends QubBuildCompileParameters
         return this.profiler;
     }
 
-    public QubTestParameters setProfiler(boolean profiler)
+    public QubTestRunParameters setProfiler(boolean profiler)
     {
         this.profiler = profiler;
         return this;
     }
 
     @Override
-    public QubTestParameters setWarnings(Warnings warnings)
+    public QubTestRunParameters setWarnings(Warnings warnings)
     {
-        return (QubTestParameters)super.setWarnings(warnings);
+        return (QubTestRunParameters)super.setWarnings(warnings);
     }
 
     @Override
-    public QubTestParameters setBuildJson(boolean buildJson)
+    public QubTestRunParameters setBuildJson(boolean buildJson)
     {
-        return (QubTestParameters)super.setBuildJson(buildJson);
+        return (QubTestRunParameters)super.setBuildJson(buildJson);
     }
 
     @Override
-    public QubTestParameters setVerbose(VerboseCharacterWriteStream verbose)
+    public QubTestRunParameters setVerbose(VerboseCharacterWriteStream verbose)
     {
-        return (QubTestParameters)super.setVerbose(verbose);
+        return (QubTestRunParameters)super.setVerbose(verbose);
     }
 
     /**
