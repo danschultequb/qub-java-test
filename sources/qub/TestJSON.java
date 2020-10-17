@@ -7,65 +7,18 @@ public class TestJSON
 {
     private static final String classFilesPropertyName = "classFiles";
 
-    private Iterable<TestJSONClassFile> classFiles;
+    private final JSONObject json;
 
-    /**
-     * Set the TestJSONClassFile objects for a test.json file.
-     * @param classFiles The TestJSONClassFile objects for a test.json file.
-     * @return This object for method chaining.
-     */
-    public TestJSON setClassFiles(Iterable<TestJSONClassFile> classFiles)
+    private TestJSON(JSONObject json)
     {
-        PreCondition.assertNotNull(classFiles, "classFiles");
+        PreCondition.assertNotNull(json, "json");
 
-        this.classFiles = classFiles;
-        return this;
+        this.json = json;
     }
 
-    /**
-     * Get the TestJSONClassFile objects for a test.json file.
-     * @return The TestJSONClassFile objects for a test.json file.
-     */
-    public Iterable<TestJSONClassFile> getClassFiles()
+    public static TestJSON create()
     {
-        return this.classFiles;
-    }
-
-    @Override
-    public boolean equals(Object rhs)
-    {
-        return rhs instanceof TestJSON && equals((TestJSON)rhs);
-    }
-
-    /**
-     * Get whether or not this TestJSON object is equal to the provided TestJSON object.
-     * @param rhs The TestJSON object to compare against this TestJSON object.
-     * @return Whether or not this TestJSON object is equal to the provided TestJSON object.
-     */
-    public boolean equals(TestJSON rhs)
-    {
-        return rhs != null &&
-            Comparer.equal(classFiles, rhs.classFiles);
-    }
-
-    @Override
-    public String toString()
-    {
-        return this.toString(JSONFormat.consise);
-    }
-
-    public String toString(JSONFormat format)
-    {
-        PreCondition.assertNotNull(format, "format");
-
-        return this.toJson().toString(format);
-    }
-
-    public JSONObject toJson()
-    {
-        return JSONObject.create()
-            .set(TestJSON.classFilesPropertyName, JSONObject.create()
-                .setAll(this.classFiles.map(TestJSONClassFile::toJsonProperty)));
+        return new TestJSON(JSONObject.create());
     }
 
     /**
@@ -105,25 +58,73 @@ public class TestJSON
 
         return Result.create(() ->
         {
-            final JSONObject classFilesObject = rootObject.getObject(classFilesPropertyName)
-                .catchError()
-                .await();
-            final List<TestJSONClassFile> classFiles = List.create();
-            if (classFilesObject != null)
-            {
-                for (final JSONProperty property : classFilesObject.getProperties())
-                {
-                    final TestJSONClassFile classFile = TestJSONClassFile.parse(property)
-                        .catchError()
-                        .await();
-                    if (classFile != null)
-                    {
-                        classFiles.addAll(classFile);
-                    }
-                }
-            }
-            return new TestJSON()
-                .setClassFiles(classFiles);
+            return new TestJSON(rootObject);
         });
+    }
+
+    /**
+     * Set the TestJSONClassFile objects for a test.json file.
+     * @param classFiles The TestJSONClassFile objects for a test.json file.
+     * @return This object for method chaining.
+     */
+    public TestJSON setClassFiles(Iterable<TestJSONClassFile> classFiles)
+    {
+        PreCondition.assertNotNull(classFiles, "classFiles");
+
+        this.json.set(TestJSON.classFilesPropertyName, JSONObject.create()
+            .setAll(classFiles.map(TestJSONClassFile::toJsonProperty)));
+
+        return this;
+    }
+
+    /**
+     * Get the TestJSONClassFile objects for a test.json file.
+     * @return The TestJSONClassFile objects for a test.json file.
+     */
+    public Iterable<TestJSONClassFile> getClassFiles()
+    {
+        return this.json.getObject(TestJSON.classFilesPropertyName)
+            .then((JSONObject classFilesJsonObject) ->
+            {
+                return classFilesJsonObject.getProperties()
+                    .map((JSONProperty classFileJsonProperty) -> TestJSONClassFile.parse(classFileJsonProperty).await());
+            })
+            .catchError(() -> Iterable.create())
+            .await();
+    }
+
+    @Override
+    public boolean equals(Object rhs)
+    {
+        return rhs instanceof TestJSON && equals((TestJSON)rhs);
+    }
+
+    /**
+     * Get whether or not this TestJSON object is equal to the provided TestJSON object.
+     * @param rhs The TestJSON object to compare against this TestJSON object.
+     * @return Whether or not this TestJSON object is equal to the provided TestJSON object.
+     */
+    public boolean equals(TestJSON rhs)
+    {
+        return rhs != null &&
+            Comparer.equal(this.json, rhs.json);
+    }
+
+    @Override
+    public String toString()
+    {
+        return this.toString(JSONFormat.consise);
+    }
+
+    public String toString(JSONFormat format)
+    {
+        PreCondition.assertNotNull(format, "format");
+
+        return this.toJson().toString(format);
+    }
+
+    public JSONObject toJson()
+    {
+        return this.json;
     }
 }

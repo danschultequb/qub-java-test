@@ -114,8 +114,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
                 {
                     verbose.writeLine("Updating test.json class file for " + testClass.getFullName() + "...").await();
                     final File testClassFile = QubTestRun.getClassFile(outputFolder, testClass.getFullName());
-                    testJSONClassFiles.addAll(new TestJSONClassFile()
-                        .setRelativePath(testClassFile.relativeTo(outputFolder))
+                    testJSONClassFiles.addAll(TestJSONClassFile.create(testClassFile.relativeTo(outputFolder))
                         .setLastModified(testClassFile.getLastModified().await())
                         .setPassedTestCount(testClass.getPassedTestCount())
                         .setSkippedTestCount(testClass.getSkippedTestCount())
@@ -178,7 +177,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             if (useTestJson && pattern == null)
             {
                 final File testJsonFile = outputFolder.getFile("test.json").await();
-                final TestJSON testJson = new TestJSON()
+                final TestJSON testJson = TestJSON.create()
                     .setClassFiles(testJSONClassFiles);
                 testJsonFile.setContentsAsString(testJson.toString(JSONFormat.pretty)).await();
             }

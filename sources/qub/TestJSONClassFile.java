@@ -10,37 +10,43 @@ public class TestJSONClassFile
     private static final String skippedTestCountPropertyName = "skippedTestCount";
     private static final String failedTestCountPropertyName = "failedTestCount";
 
-    private Path relativePath;
-    private DateTime lastModified;
-    private int passedTestCount;
-    private int skippedTestCount;
-    private int failedTestCount;
+    private final JSONProperty jsonProperty;
 
-    /**
-     * Set the path to the class file relative to the test.json file.
-     * @param relativePath The path to the class file relative to the test.json file.
-     * @return This object for method chaining.
-     */
-    public TestJSONClassFile setRelativePath(String relativePath)
+    private TestJSONClassFile(JSONProperty jsonProperty)
     {
-        PreCondition.assertNotNullAndNotEmpty(relativePath, "relativePath");
+        PreCondition.assertNotNull(jsonProperty, "jsonProperty");
 
-        return setRelativePath(Path.parse(relativePath));
+        this.jsonProperty = jsonProperty;
     }
 
-    /**
-     * Set the path to the class file relative to the test.json file.
-     * @param relativePath The path to the class file relative to the test.json file.
-     * @return This object for method chaining.
-     */
-    public TestJSONClassFile setRelativePath(Path relativePath)
+    public static TestJSONClassFile create(String classFileRelativePath)
     {
-        PreCondition.assertNotNull(relativePath, "relativePath");
-        PreCondition.assertFalse(relativePath.isRooted(), "relativePath.isRooted()");
+        PreCondition.assertNotNullAndNotEmpty(classFileRelativePath, "classFileRelativePath");
 
-        this.relativePath = relativePath;
+        return TestJSONClassFile.create(Path.parse(classFileRelativePath));
+    }
 
-        return this;
+    public static TestJSONClassFile create(Path classFileRelativePath)
+    {
+        PreCondition.assertNotNull(classFileRelativePath, "classFileRelativePath");
+        PreCondition.assertFalse(classFileRelativePath.isRooted(), "classFileRelativePath.isRooted()");
+
+        return new TestJSONClassFile(JSONProperty.create(classFileRelativePath.toString(), JSONObject.create()));
+    }
+
+    public static Result<TestJSONClassFile> parse(JSONProperty property)
+    {
+        PreCondition.assertNotNull(property, "property");
+
+        return Result.create(() ->
+        {
+            return new TestJSONClassFile(property);
+        });
+    }
+
+    private JSONObject getPropertyValue()
+    {
+        return this.jsonProperty.getObjectValue().await();
     }
 
     /**
@@ -49,7 +55,7 @@ public class TestJSONClassFile
      */
     public Path getRelativePath()
     {
-        return relativePath;
+        return Path.parse(this.jsonProperty.getName());
     }
 
     /**
@@ -58,9 +64,7 @@ public class TestJSONClassFile
      */
     public String getFullClassName()
     {
-        PreCondition.assertNotNull(getRelativePath(), "getRelativePath()");
-
-        final String result = QubTestRun.getFullClassName(getRelativePath());
+        final String result = QubTestRun.getFullClassName(this.getRelativePath());
 
         PostCondition.assertNotNullAndNotEmpty(result, "result");
 
@@ -76,7 +80,7 @@ public class TestJSONClassFile
     {
         PreCondition.assertNotNull(lastModified, "lastModified");
 
-        this.lastModified = lastModified;
+        this.getPropertyValue().setString(TestJSONClassFile.lastModifiedPropertyName, lastModified.toString());
 
         return this;
     }
@@ -87,46 +91,62 @@ public class TestJSONClassFile
      */
     public DateTime getLastModified()
     {
-        return lastModified;
+        return this.getPropertyValue()
+            .getString(lastModifiedPropertyName)
+            .then((String lastModified) -> DateTime.parse(lastModified).await())
+            .catchError()
+            .await();
     }
 
     public TestJSONClassFile setPassedTestCount(int passedTestCount)
     {
         PreCondition.assertGreaterThanOrEqualTo(passedTestCount, 0, "passedTestCount");
 
-        this.passedTestCount = passedTestCount;
+        this.getPropertyValue().setNumber(TestJSONClassFile.passedTestCountPropertyName, passedTestCount);
+
         return this;
     }
 
     public int getPassedTestCount()
     {
-        return passedTestCount;
+        return this.getPropertyValue().getNumber(TestJSONClassFile.passedTestCountPropertyName)
+            .then(Double::intValue)
+            .catchError(() -> 0)
+            .await();
     }
 
     public TestJSONClassFile setSkippedTestCount(int skippedTestCount)
     {
         PreCondition.assertGreaterThanOrEqualTo(skippedTestCount, 0, "skippedTestCount");
 
-        this.skippedTestCount = skippedTestCount;
+        this.getPropertyValue().setNumber(TestJSONClassFile.skippedTestCountPropertyName, skippedTestCount);
+
         return this;
     }
 
     public int getSkippedTestCount()
     {
-        return skippedTestCount;
+        return this.getPropertyValue().getNumber(TestJSONClassFile.skippedTestCountPropertyName)
+            .then(Double::intValue)
+            .catchError(() -> 0)
+            .await();
     }
 
     public TestJSONClassFile setFailedTestCount(int failedTestCount)
     {
         PreCondition.assertGreaterThanOrEqualTo(failedTestCount, 0, "failedTestCount");
 
-        this.failedTestCount = failedTestCount;
+        this.getPropertyValue().setNumber(TestJSONClassFile.failedTestCountPropertyName, failedTestCount);
+
         return this;
     }
 
     public int getFailedTestCount()
     {
-        return failedTestCount;
+        return this.getPropertyValue().getNumber(TestJSONClassFile.failedTestCountPropertyName)
+            .then(Double::intValue)
+            .catchError(() -> 0)
+            .await();
     }
 
     @Override
@@ -137,40 +157,6 @@ public class TestJSONClassFile
 
     public JSONProperty toJsonProperty()
     {
-        return JSONProperty.create(Objects.toString(this.getRelativePath()), JSONObject.create()
-            .setStringOrNull(TestJSONClassFile.lastModifiedPropertyName, this.lastModified == null ? null : this.lastModified.toString())
-            .setNumber(TestJSONClassFile.passedTestCountPropertyName, this.passedTestCount)
-            .setNumber(TestJSONClassFile.skippedTestCountPropertyName, this.skippedTestCount)
-            .setNumber(TestJSONClassFile.failedTestCountPropertyName, this.failedTestCount));
-    }
-
-    public static Result<TestJSONClassFile> parse(JSONProperty property)
-    {
-        PreCondition.assertNotNull(property, "property");
-
-        return Result.create(() ->
-        {
-            final JSONObject propertyValue = property.getObjectValue().await();
-            final TestJSONClassFile classFile = new TestJSONClassFile()
-                .setRelativePath(property.getName());
-            propertyValue.getString(lastModifiedPropertyName)
-                .then((String lastModified) -> DateTime.parse(lastModified).await())
-                .then(classFile::setLastModified)
-                .catchError()
-                .await();
-            propertyValue.getNumber(passedTestCountPropertyName)
-                .then((Double passedTestCount) -> classFile.setPassedTestCount(passedTestCount.intValue()))
-                .catchError()
-                .await();
-            propertyValue.getNumber(skippedTestCountPropertyName)
-                .then((Double skippedTestCount) -> classFile.setSkippedTestCount(skippedTestCount.intValue()))
-                .catchError()
-                .await();
-            propertyValue.getNumber(failedTestCountPropertyName)
-                .then((Double failedTestCount) -> classFile.setFailedTestCount(failedTestCount.intValue()))
-                .catchError()
-                .await();
-            return classFile;
-        });
+        return this.jsonProperty;
     }
 }
