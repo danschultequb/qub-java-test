@@ -387,12 +387,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(outputsFolder.toString())
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addClasspath(Iterable.create(outputsFolder.toString(), jvmClassPath))
@@ -459,12 +463,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(outputsFolder.toString())
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addClasspath(Iterable.create(outputsFolder.toString(), jvmClassPath))
@@ -485,6 +493,8 @@ public interface QubTestRunTests
                     test.assertEqual(
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Getting javac version...",
+                                "VERBOSE: Running C:/current/folder/: javac --version...",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
@@ -544,12 +554,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(Iterable.create(outputsFolder.toString(), meA5VersionFolder.getCompiledSourcesFile().await().toString()))
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addClasspath(Iterable.create(outputsFolder.toString(), meA5VersionFolder.getCompiledSourcesFile().await().toString(), jvmClassPath))
@@ -570,6 +584,8 @@ public interface QubTestRunTests
                     test.assertEqual(
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Getting javac version...",
+                                "VERBOSE: Running C:/current/folder/: javac --version...",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
@@ -629,12 +645,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(Iterable.create(outputsFolder.toString(), meA5VersionFolder.getCompiledSourcesFile().await().toString()))
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addClasspath(Iterable.create(outputsFolder.toString(), meA5VersionFolder.getCompiledSourcesFile().await().toString()))
@@ -655,6 +675,8 @@ public interface QubTestRunTests
                     test.assertEqual(
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Getting javac version...",
+                                "VERBOSE: Running C:/current/folder/: javac --version...",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
@@ -714,12 +736,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(Iterable.create(outputsFolder.toString(), meA5VersionFolder.getCompiledSourcesFile().await().toString()))
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addClasspath(Iterable.create(outputsFolder.toString(), meA5VersionFolder.getCompiledSourcesFile().await().toString()))
@@ -740,6 +766,8 @@ public interface QubTestRunTests
                     test.assertEqual(
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Getting javac version...",
+                                "VERBOSE: Running C:/current/folder/: javac --version...",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
@@ -793,12 +821,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(outputsFolder.toString())
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addClasspath(outputsFolder.toString())
@@ -819,6 +851,8 @@ public interface QubTestRunTests
                     test.assertEqual(
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Getting javac version...",
+                                "VERBOSE: Running C:/current/folder/: javac --version...",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
@@ -872,12 +906,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(outputsFolder.toString())
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addClasspath(Iterable.create(outputsFolder.toString(), jvmClassPath))
@@ -899,6 +937,8 @@ public interface QubTestRunTests
                     test.assertEqual(
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Getting javac version...",
+                                "VERBOSE: Running C:/current/folder/: javac --version...",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
@@ -952,12 +992,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(outputsFolder.toString())
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addClasspath(Iterable.create(outputsFolder.toString(), jvmClassPath))
@@ -979,6 +1023,8 @@ public interface QubTestRunTests
                     test.assertEqual(
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Getting javac version...",
+                                "VERBOSE: Running C:/current/folder/: javac --version...",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
@@ -1036,12 +1082,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(outputsFolder.toString())
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addJavaAgent(jacocoAgentJarFile + "=destfile=" + coverageExecFile)
@@ -1122,12 +1172,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(outputsFolder.toString())
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addJavaAgent(jacocoAgentJarFile + "=destfile=" + coverageExecFile)
@@ -1158,6 +1212,8 @@ public interface QubTestRunTests
                     test.assertEqual(
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Getting javac version...",
+                                "VERBOSE: Running C:/current/folder/: javac --version...",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
@@ -1226,12 +1282,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(outputsFolder.toString())
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addJavaAgent(jacocoAgentJarFile + "=destfile=" + coverageExecFile)
@@ -1262,6 +1322,8 @@ public interface QubTestRunTests
                     test.assertEqual(
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Getting javac version...",
+                                "VERBOSE: Running C:/current/folder/: javac --version...",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
@@ -1337,12 +1399,16 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
                             .addClasspath(Iterable.create(outputsFolder.toString(), meB2Folder.getCompiledSourcesFile().await().toString()))
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addClasspath(Iterable.create(outputsFolder.toString(), meB2Folder.getCompiledSourcesFile().await().toString(), jvmClassPath))
@@ -1363,6 +1429,8 @@ public interface QubTestRunTests
                     test.assertEqual(
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Getting javac version...",
+                                "VERBOSE: Running C:/current/folder/: javac --version...",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
@@ -1444,6 +1512,10 @@ public interface QubTestRunTests
                     final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
+                            .addVersion()
+                            .setVersionFunctionAutomatically("javac 14.0.1"))
+                        .add(new FakeJavacProcessRun()
+                            .setWorkingFolder(currentFolder)
                             .addOutputFolder(outputsFolder)
                             .addXlintUnchecked()
                             .addXlintDeprecation()
@@ -1452,7 +1524,7 @@ public interface QubTestRunTests
                                 meB2Folder.getCompiledSourcesFile().await().toString(),
                                 meC3Folder.getCompiledSourcesFile().await().toString()))
                             .addSourceFile(aJavaFile.relativeTo(currentFolder))
-                            .setFunctionAutomatically())
+                            .setCompileFunctionAutomatically())
                         .add(new FakeConsoleTestRunnerProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addClasspath(Iterable.create(
@@ -1477,6 +1549,8 @@ public interface QubTestRunTests
                     test.assertEqual(
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
+                                "VERBOSE: Getting javac version...",
+                                "VERBOSE: Running C:/current/folder/: javac --version...",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
