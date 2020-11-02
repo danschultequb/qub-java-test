@@ -96,6 +96,8 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             final List<TestJSONClassFile> testJSONClassFiles = List.create();
 
             MutableMap<String, TestJSONClassFile> fullClassNameToTestJSONClassFileMap = Map.create();
+            final VersionNumber currentJavaVersion = process.getJavaVersion();
+            VersionNumber previousJavaVersion = null;
             if (useTestJson)
             {
                 final TestJSON testJson = TestJSON.parse(outputFolder.getFile("test.json").await())
@@ -104,6 +106,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
                 if (testJson != null)
                 {
                     verbose.writeLine("Found and parsed test.json file.").await();
+                    previousJavaVersion = testJson.getJavaVersion().catchError().await();
                     for (final TestJSONClassFile testJSONClassFile : testJson.getClassFiles())
                     {
                         fullClassNameToTestJSONClassFileMap.set(testJSONClassFile.getFullClassName(), testJSONClassFile);
@@ -126,7 +129,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             {
                 boolean runTestClass;
 
-                if (!useTestJson || coverage != Coverage.None)
+                if (!useTestJson || !currentJavaVersion.equals(previousJavaVersion) || coverage != Coverage.None)
                 {
                     runTestClass = true;
                 }
@@ -178,6 +181,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
             {
                 final File testJsonFile = outputFolder.getFile("test.json").await();
                 final TestJSON testJson = TestJSON.create()
+                    .setJavaVersion(currentJavaVersion)
                     .setClassFiles(testJSONClassFiles);
                 testJsonFile.setContentsAsString(testJson.toString(JSONFormat.pretty)).await();
             }

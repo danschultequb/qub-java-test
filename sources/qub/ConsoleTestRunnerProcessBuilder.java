@@ -14,11 +14,11 @@ public class ConsoleTestRunnerProcessBuilder extends JavaProcessBuilderDecorator
      * @param process The Process to get the JavaProcessBuilder from.
      * @return The JavaProcessBuilder.
      */
-    public static Result<ConsoleTestRunnerProcessBuilder> get(Process process)
+    public static Result<ConsoleTestRunnerProcessBuilder> create(Process process)
     {
         PreCondition.assertNotNull(process, "process");
 
-        return ConsoleTestRunnerProcessBuilder.get(process.getProcessFactory());
+        return ConsoleTestRunnerProcessBuilder.create(process.getProcessFactory());
     }
 
     /**
@@ -26,13 +26,13 @@ public class ConsoleTestRunnerProcessBuilder extends JavaProcessBuilderDecorator
      * @param processFactory The ProcessFactory to get the JavaProcessBuilder from.
      * @return The JavaProcessBuilder.
      */
-    public static Result<ConsoleTestRunnerProcessBuilder> get(ProcessFactory processFactory)
+    public static Result<ConsoleTestRunnerProcessBuilder> create(ProcessFactory processFactory)
     {
         PreCondition.assertNotNull(processFactory, "processFactory");
 
         return Result.create(() ->
         {
-            return new ConsoleTestRunnerProcessBuilder(JavaProcessBuilder.get(processFactory).await());
+            return new ConsoleTestRunnerProcessBuilder(JavaProcessBuilder.create(processFactory).await());
         });
     }
 }

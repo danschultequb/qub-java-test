@@ -204,7 +204,7 @@ public interface QubTestRun
                     jacocoFolder = jacococliProjectFolder.getLatestProjectVersionFolder().await();
                 }
 
-                final ConsoleTestRunnerProcessBuilder consoleTestRunner = ConsoleTestRunnerProcessBuilder.get(processFactory).await()
+                final ConsoleTestRunnerProcessBuilder consoleTestRunner = ConsoleTestRunnerProcessBuilder.create(processFactory).await()
                     .redirectInput(inputReadStream)
                     .redirectOutput(outputByteWriteStream)
                     .redirectError(errorByteWriteStream);
@@ -258,7 +258,7 @@ public interface QubTestRun
                     output.writeLine().await();
                     output.writeLine("Analyzing coverage...").await();
 
-                    final JacocoCliProcessBuilder jacococli = JacocoCliProcessBuilder.get(processFactory).await()
+                    final JacocoCliProcessBuilder jacococli = JacocoCliProcessBuilder.create(processFactory).await()
                         .addJacocoCliJar(jacocoFolder.getFile("jacococli.jar").await())
                         .addReport()
                         .addCoverageExec(outputFolder.getFile("coverage.exec").await())

@@ -358,6 +358,13 @@ public interface ConsoleTestRunnerTests
                     }
                 });
             });
+
+            runner.test("fake test", (Test test) ->
+            {
+                final Process process = test.getProcess();
+                final Map<String,String> systemProperties = process.getSystemProperties();
+                test.assertNotNull(systemProperties);
+            });
         });
     }
 }

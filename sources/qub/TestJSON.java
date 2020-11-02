@@ -5,6 +5,7 @@ package qub;
  */
 public class TestJSON
 {
+    private static final String javaVersionPropertyName = "javaVersion";
     private static final String classFilesPropertyName = "classFiles";
 
     private final JSONObject json;
@@ -59,6 +60,44 @@ public class TestJSON
         return Result.create(() ->
         {
             return new TestJSON(rootObject);
+        });
+    }
+
+    /**
+     * Set the version of java that was used to run the tests.
+     * @param javaVersion The version of java that was used to run the tests.
+     * @return This object for method chaining.
+     */
+    public TestJSON setJavaVersion(String javaVersion)
+    {
+        PreCondition.assertNotNullAndNotEmpty(javaVersion, "javaVersion");
+
+        return this.setJavaVersion(VersionNumber.parse(javaVersion).await());
+    }
+
+    /**
+     * Set the version of java that was used to run the tests.
+     * @param javaVersion The version of java that was used to run the tests.
+     * @return This object for method chaining.
+     */
+    public TestJSON setJavaVersion(VersionNumber javaVersion)
+    {
+        PreCondition.assertNotNullAndNotEmpty(javaVersion, "javaVersion");
+
+        this.json.setString(TestJSON.javaVersionPropertyName, javaVersion.toString());
+        return this;
+    }
+
+    /**
+     * Get the version of java that was used to run the tests.
+     * @return The version of java that was used to run the tests.
+     */
+    public Result<VersionNumber> getJavaVersion()
+    {
+        return Result.create(() ->
+        {
+            final String javaVersionString = this.json.getString(TestJSON.javaVersionPropertyName).await();
+            return VersionNumber.parse(javaVersionString).await();
         });
     }
 
