@@ -22,8 +22,7 @@ public interface QubTest
             .setDescription(QubTestRun.actionDescription)
             .setDefaultAction();
 
-        actions.addAction(QubTestLogs.actionName, QubTestLogs::run)
-            .setDescription(QubTestLogs.actionDescription);
+        CommandLineLogsAction.add(actions);
 
         actions.run(process);
     }

@@ -113,8 +113,9 @@ public interface QubTestRun
         final String pattern = parameters.getPattern();
         final Coverage coverage = parameters.getCoverage();
         final CharacterToByteReadStream inputReadStream = parameters.getInputReadStream();
-        final CharacterToByteWriteStream outputByteWriteStream = parameters.getOutputWriteStream();
-        final CharacterToByteWriteStream errorByteWriteStream = parameters.getErrorWriteStream();
+        final CharacterToByteWriteStream parametersOutput = parameters.getOutputWriteStream();
+        final CharacterToByteWriteStream parametersError = parameters.getErrorWriteStream();
+        final VerboseCharacterWriteStream parametersVerbose = parameters.getVerbose();
         final DefaultApplicationLauncher defaultApplicationLauncher = parameters.getDefaultApplicationLauncher();
         final EnvironmentVariables environmentVariables = parameters.getEnvironmentVariables();
         final ProcessFactory processFactory = parameters.getProcessFactory();
@@ -122,17 +123,9 @@ public interface QubTestRun
         final boolean testJson = parameters.getTestJson();
         final Folder qubTestDataFolder = parameters.getQubTestDataFolder();
 
-        final Folder qubTestLogsFolder = QubTest.getLogsFolder(qubTestDataFolder);
-        final int logFileCount = qubTestLogsFolder.getFiles()
-            .catchError(NotFoundException.class, () -> Iterable.create())
-            .await()
-            .getCount();
-        final String logFileName = (logFileCount + 1) + ".log";
-        final File logFile = qubTestLogsFolder.getFile(logFileName).await();
-        CharacterToByteWriteStream logStream = logFile.getContentsCharacterWriteStream().await();
-        CharacterWriteStream output = CharacterWriteStreamList.create(parameters.getOutputWriteStream(), logStream);
-        final VerboseCharacterWriteStream parametersVerbose = parameters.getVerbose();
-        CharacterWriteStream verbose = CharacterWriteStreamList.create(parametersVerbose, new VerboseCharacterWriteStream(true, logStream));
+        LogCharacterWriteStreams logStreams = CommandLineLogsAction.addLogStream(qubTestDataFolder, parametersOutput, parametersVerbose);
+        CharacterWriteStream output = logStreams.getCombinedStream(0);
+        CharacterWriteStream verbose = logStreams.getCombinedStream(1);
 
         int result;
         try
@@ -206,8 +199,8 @@ public interface QubTestRun
 
                 final ConsoleTestRunnerProcessBuilder consoleTestRunner = ConsoleTestRunnerProcessBuilder.create(processFactory).await()
                     .redirectInput(inputReadStream)
-                    .redirectOutput(outputByteWriteStream)
-                    .redirectError(errorByteWriteStream);
+                    .redirectOutput(parametersOutput)
+                    .redirectError(parametersError);
 
                 if (jacocoFolder != null)
                 {
@@ -221,7 +214,7 @@ public interface QubTestRun
                 consoleTestRunner.addProfiler(profiler);
                 consoleTestRunner.addVerbose(parametersVerbose.isVerbose());
                 consoleTestRunner.addTestJson(testJson);
-                consoleTestRunner.addLogFile(logFile);
+                consoleTestRunner.addLogFile(logStreams.getLogFile());
 
                 if (!Strings.isNullOrEmpty(pattern))
                 {
@@ -245,13 +238,13 @@ public interface QubTestRun
 
                 output.writeLine().await();
 
-                logStream.dispose().await();
+                logStreams.getLogStream().dispose().await();
 
                 result = consoleTestRunner.run().await();
 
-                logStream = logFile.getContentsCharacterWriteStream(OpenWriteType.CreateOrAppend).await();
-                output = CharacterWriteStreamList.create(parameters.getOutputWriteStream(), logStream);
-                verbose = CharacterWriteStreamList.create(parametersVerbose, new VerboseCharacterWriteStream(true, logStream));
+                logStreams = CommandLineLogsAction.addLogStream(logStreams.getLogFile(), parametersOutput, parametersVerbose);
+                output = logStreams.getCombinedStream(0);
+                verbose = logStreams.getCombinedStream(1);
 
                 if (jacocoFolder != null)
                 {
@@ -268,8 +261,8 @@ public interface QubTestRun
 
                     if (parametersVerbose.isVerbose())
                     {
-                        jacococli.redirectOutput(outputByteWriteStream);
-                        jacococli.redirectError(errorByteWriteStream);
+                        jacococli.redirectOutput(parametersOutput);
+                        jacococli.redirectError(parametersError);
 
                         verbose.writeLine("Running " + jacococli.getCommand()).await();
                     }
@@ -289,7 +282,7 @@ public interface QubTestRun
         }
         finally
         {
-            logStream.dispose().await();
+            logStreams.getLogStream().dispose().await();
         }
 
         return result;
