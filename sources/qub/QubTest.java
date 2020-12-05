@@ -33,11 +33,4 @@ public interface QubTest
 
         return QubTest.applicationName + " " + actionName;
     }
-
-    static Folder getLogsFolder(Folder qubTestDataFolder)
-    {
-        PreCondition.assertNotNull(qubTestDataFolder, "qubTestDataFolder");
-
-        return qubTestDataFolder.getFolder("logs").await();
-    }
 }

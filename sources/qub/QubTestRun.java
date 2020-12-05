@@ -201,7 +201,8 @@ public interface QubTestRun
                 final ConsoleTestRunnerProcessBuilder consoleTestRunner = ConsoleTestRunnerProcessBuilder.create(processFactory).await()
                     .redirectInput(inputReadStream)
                     .redirectOutput(parametersOutput)
-                    .redirectError(parametersError);
+                    .redirectError(parametersError)
+                    .setVerbose(verbose);
 
                 if (jacocoFolder != null)
                 {
