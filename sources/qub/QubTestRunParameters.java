@@ -23,10 +23,14 @@ public class QubTestRunParameters extends QubBuildCompileParameters
      * @param folderToTest The folder that should have its tests run.
      * @param environmentVariables The environment variables of the running process.
      * @param processFactory The factory that will be used to create new processes.
+     * @param typeLoader The TypeLoader that will be used to locate where the qub-build data folder is.
      */
-    public QubTestRunParameters(CharacterToByteReadStream inputReadStream, CharacterToByteWriteStream outputByteWriteStream, CharacterToByteWriteStream errorWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath, Folder qubTestDataFolder)
+    public QubTestRunParameters(CharacterToByteReadStream inputReadStream, CharacterToByteWriteStream outputByteWriteStream,
+                                CharacterToByteWriteStream errorWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables,
+                                ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath,
+                                Folder qubTestDataFolder, TypeLoader typeLoader)
     {
-        super(outputByteWriteStream, folderToTest, environmentVariables, processFactory, QubTestRunParameters.getQubBuildDataFolder(folderToTest));
+        super(outputByteWriteStream, folderToTest, environmentVariables, processFactory, QubTestRunParameters.getQubBuildDataFolder(folderToTest, typeLoader));
 
         PreCondition.assertNotNull(inputReadStream, "inputReadStream");
         PreCondition.assertNotNull(outputByteWriteStream, "outputByteWriteStream");
@@ -47,12 +51,23 @@ public class QubTestRunParameters extends QubBuildCompileParameters
         this.qubTestDataFolder = qubTestDataFolder;
     }
 
-    private static Folder getQubBuildDataFolder(Folder folderToTest)
+    private static Folder getQubBuildDataFolder(Folder folderToTest, TypeLoader typeLoader)
     {
         PreCondition.assertNotNull(folderToTest, "folderToTest");
+        PreCondition.assertNotNull(typeLoader, "typeLoader");
 
         final FileSystem fileSystem = folderToTest.getFileSystem();
-        return QubProjectVersionFolder.getFromType(fileSystem, QubBuild.class).await()
+        final Path path = typeLoader.getTypeContainerPath(QubBuild.class).await();
+        Folder projectVersionFolder;
+        if (fileSystem.fileExists(path).await())
+        {
+            projectVersionFolder = fileSystem.getFile(path).await().getParentFolder().await();
+        }
+        else
+        {
+            projectVersionFolder = fileSystem.getFolder(path).await();
+        }
+        return QubProjectVersionFolder.get(projectVersionFolder)
             .getProjectDataFolder().await();
     }
 
@@ -204,7 +219,7 @@ public class QubTestRunParameters extends QubBuildCompileParameters
     }
 
     @Override
-    public QubTestRunParameters setVerbose(VerboseCharacterWriteStream verbose)
+    public QubTestRunParameters setVerbose(VerboseCharacterToByteWriteStream verbose)
     {
         return (QubTestRunParameters)super.setVerbose(verbose);
     }

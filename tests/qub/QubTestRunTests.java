@@ -6,22 +6,22 @@ public interface QubTestRunTests
     {
         runner.testGroup(QubTestRun.class, () ->
         {
-            runner.testGroup("getParameters(QubProcess)", () ->
+            runner.testGroup("getParameters(DesktopProcess)", () ->
             {
                 runner.test("with null", (Test test) ->
                 {
-                    test.assertThrows(() -> QubTestRun.getParameters((QubProcess)null),
+                    test.assertThrows(() -> QubTestRun.getParameters((DesktopProcess)null),
                         new PreConditionFailure("process cannot be null."));
                 });
 
                 runner.test("with --help", (Test test) ->
                 {
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
 
-                    try (final QubProcess process = QubProcess.create("--help"))
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create("--help"))
                     {
                         final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                         process.setOutputWriteStream(output);
@@ -46,15 +46,15 @@ public interface QubTestRunTests
                 runner.test("with --?", (Test test) ->
                 {
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
 
-                    try (final QubProcess process = QubProcess.create("--?"))
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create("--?"))
                     {
                         final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                         process.setOutputWriteStream(output);
-                        process.setFileSystem(fileSystem);
+                        process.setFileSystem(fileSystem, "/");
 
                         test.assertNull(QubTestRun.getParameters(process, qubTestDataFolder));
 
@@ -76,15 +76,21 @@ public interface QubTestRunTests
                 runner.test("with no command line arguments", (Test test) ->
                 {
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
-                    final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
+                    final QubProjectFolder qubBuildProjectFolder = qubFolder.getProjectFolder("qub", "qub-build").await();
+                    final Folder qubBuildDataFolder = qubBuildProjectFolder.getProjectDataFolder().await();
+                    final File qubBuildCompiledSourcesFile = qubBuildProjectFolder.getCompiledSourcesFile("7").await();
+                    qubBuildCompiledSourcesFile.create().await();
+                    final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "qub-test").await();
 
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                         process.setOutputWriteStream(output);
-                        process.setFileSystem(fileSystem);
+                        process.setFileSystem(fileSystem, "/");
+                        process.setTypeLoader(FakeTypeLoader.create()
+                            .addTypeContainer(QubBuild.class, qubBuildCompiledSourcesFile));
 
                         final QubTestRunParameters parameters = QubTestRun.getParameters(process, qubTestDataFolder);
                         test.assertNotNull(parameters);
@@ -100,11 +106,11 @@ public interface QubTestRunTests
                         test.assertSame(process.getOutputWriteStream(), parameters.getOutputWriteStream());
                         test.assertNull(parameters.getPattern());
                         test.assertFalse(parameters.getProfiler());
-                        test.assertEqual(qubFolder.getProjectDataFolder("qub", "build-java").await(), parameters.getQubBuildDataFolder());
+                        test.assertEqual(qubBuildDataFolder, parameters.getQubBuildDataFolder());
                         test.assertEqual(qubTestDataFolder, parameters.getQubTestDataFolder());
                         test.assertTrue(parameters.getTestJson());
                         test.assertSame(process.getProcessFactory(), parameters.getProcessFactory());
-                        final VerboseCharacterWriteStream verbose = parameters.getVerbose();
+                        final VerboseCharacterToByteWriteStream verbose = parameters.getVerbose();
                         test.assertNotNull(verbose);
                         test.assertFalse(verbose.isVerbose());
                         test.assertEqual(Warnings.Show, parameters.getWarnings());
@@ -116,16 +122,22 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
 
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
-                    final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
+                    final QubProjectFolder qubBuildProjectFolder = qubFolder.getProjectFolder("qub", "qub-build").await();
+                    final Folder qubBuildDataFolder = qubBuildProjectFolder.getProjectDataFolder().await();
+                    final File qubBuildCompiledSourcesFile = qubBuildProjectFolder.getCompiledSourcesFile("7").await();
+                    qubBuildCompiledSourcesFile.create().await();
+                    final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "qub-test").await();
 
-                    final Folder iDontExist = fileSystem.getFolder("C:/i/dont/exist/").await();
+                    final Folder iDontExist = fileSystem.getFolder("/i/dont/exist/").await();
 
-                    try (final QubProcess process = QubProcess.create(iDontExist.toString()))
+                    try (final DesktopProcess process = DesktopProcess.create(iDontExist.toString()))
                     {
                         process.setOutputWriteStream(output);
-                        process.setFileSystem(fileSystem);
+                        process.setFileSystem(fileSystem, "/");
+                        process.setTypeLoader(FakeTypeLoader.create()
+                            .addTypeContainer(QubBuild.class, qubBuildCompiledSourcesFile));
 
                         final QubTestRunParameters parameters = QubTestRun.getParameters(process, qubTestDataFolder);
                         test.assertNotNull(parameters);
@@ -141,11 +153,11 @@ public interface QubTestRunTests
                         test.assertSame(process.getOutputWriteStream(), parameters.getOutputWriteStream());
                         test.assertNull(parameters.getPattern());
                         test.assertFalse(parameters.getProfiler());
-                        test.assertEqual(qubFolder.getProjectDataFolder("qub", "build-java").await(), parameters.getQubBuildDataFolder());
+                        test.assertEqual(qubBuildDataFolder, parameters.getQubBuildDataFolder());
                         test.assertEqual(qubTestDataFolder, parameters.getQubTestDataFolder());
                         test.assertTrue(parameters.getTestJson());
                         test.assertSame(process.getProcessFactory(), parameters.getProcessFactory());
-                        final VerboseCharacterWriteStream verbose = parameters.getVerbose();
+                        final VerboseCharacterToByteWriteStream verbose = parameters.getVerbose();
                         test.assertNotNull(verbose);
                         test.assertFalse(verbose.isVerbose());
                         test.assertEqual(Warnings.Show, parameters.getWarnings());
@@ -157,18 +169,24 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
 
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
-                    final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
+                    final QubProjectFolder qubBuildProjectFolder = qubFolder.getProjectFolder("qub", "qub-build").await();
+                    final Folder qubBuildDataFolder = qubBuildProjectFolder.getProjectDataFolder().await();
+                    final File qubBuildCompiledSourcesFile = qubBuildProjectFolder.getCompiledSourcesFile("7").await();
+                    qubBuildCompiledSourcesFile.create().await();
+                    final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "qub-test").await();
 
-                    final Folder currentFolder = fileSystem.getFolder("C:/i/").await();
-                    final Folder iDontExist = fileSystem.getFolder("C:/i/dont/exist/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/i/").await();
+                    final Folder iDontExist = fileSystem.getFolder("/i/dont/exist/").await();
 
-                    try (final QubProcess process = QubProcess.create(iDontExist.relativeTo(currentFolder).toString()))
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create(iDontExist.relativeTo(currentFolder).toString()))
                     {
                         process.setOutputWriteStream(output);
-                        process.setFileSystem(fileSystem);
+                        process.setFileSystem(fileSystem, "/");
                         process.setCurrentFolder(currentFolder);
+                        process.setTypeLoader(FakeTypeLoader.create()
+                            .addTypeContainer(QubBuild.class, qubBuildCompiledSourcesFile));
 
                         final QubTestRunParameters parameters = QubTestRun.getParameters(process, qubTestDataFolder);
                         test.assertNotNull(parameters);
@@ -184,11 +202,11 @@ public interface QubTestRunTests
                         test.assertSame(process.getOutputWriteStream(), parameters.getOutputWriteStream());
                         test.assertNull(parameters.getPattern());
                         test.assertFalse(parameters.getProfiler());
-                        test.assertEqual(qubFolder.getProjectDataFolder("qub", "build-java").await(), parameters.getQubBuildDataFolder());
+                        test.assertEqual(qubBuildDataFolder, parameters.getQubBuildDataFolder());
                         test.assertEqual(qubTestDataFolder, parameters.getQubTestDataFolder());
                         test.assertTrue(parameters.getTestJson());
                         test.assertSame(process.getProcessFactory(), parameters.getProcessFactory());
-                        final VerboseCharacterWriteStream verbose = parameters.getVerbose();
+                        final VerboseCharacterToByteWriteStream verbose = parameters.getVerbose();
                         test.assertNotNull(verbose);
                         test.assertFalse(verbose.isVerbose());
                         test.assertEqual(Warnings.Show, parameters.getWarnings());
@@ -200,16 +218,22 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
 
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
-                    final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
+                    final QubProjectFolder qubBuildProjectFolder = qubFolder.getProjectFolder("qub", "qub-build").await();
+                    final Folder qubBuildDataFolder = qubBuildProjectFolder.getProjectDataFolder().await();
+                    final File qubBuildCompiledSourcesFile = qubBuildProjectFolder.getCompiledSourcesFile("7").await();
+                    qubBuildCompiledSourcesFile.create().await();
+                    final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "qub-test").await();
 
-                    final Folder iDontExist = fileSystem.getFolder("C:/i/dont/exist/").await();
+                    final Folder iDontExist = fileSystem.getFolder("/i/dont/exist/").await();
 
-                    try (final QubProcess process = QubProcess.create("-folder=" + iDontExist.toString()))
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create("-folder=" + iDontExist.toString()))
                     {
                         process.setOutputWriteStream(output);
-                        process.setFileSystem(fileSystem);
+                        process.setFileSystem(fileSystem, "/");
+                        process.setTypeLoader(FakeTypeLoader.create()
+                            .addTypeContainer(QubBuild.class, qubBuildCompiledSourcesFile));
 
                         final QubTestRunParameters parameters = QubTestRun.getParameters(process, qubTestDataFolder);
                         test.assertNotNull(parameters);
@@ -225,11 +249,11 @@ public interface QubTestRunTests
                         test.assertSame(process.getOutputWriteStream(), parameters.getOutputWriteStream());
                         test.assertNull(parameters.getPattern());
                         test.assertFalse(parameters.getProfiler());
-                        test.assertEqual(qubFolder.getProjectDataFolder("qub", "build-java").await(), parameters.getQubBuildDataFolder());
+                        test.assertEqual(qubBuildDataFolder, parameters.getQubBuildDataFolder());
                         test.assertEqual(qubTestDataFolder, parameters.getQubTestDataFolder());
                         test.assertTrue(parameters.getTestJson());
                         test.assertSame(process.getProcessFactory(), parameters.getProcessFactory());
-                        final VerboseCharacterWriteStream verbose = parameters.getVerbose();
+                        final VerboseCharacterToByteWriteStream verbose = parameters.getVerbose();
                         test.assertNotNull(verbose);
                         test.assertFalse(verbose.isVerbose());
                         test.assertEqual(Warnings.Show, parameters.getWarnings());
@@ -241,18 +265,24 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
 
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
+                    final QubProjectFolder qubBuildProjectFolder = qubFolder.getProjectFolder("qub", "qub-build").await();
+                    final Folder qubBuildDataFolder = qubBuildProjectFolder.getProjectDataFolder().await();
+                    final File qubBuildCompiledSourcesFile = qubBuildProjectFolder.getCompiledSourcesFile("7").await();
+                    qubBuildCompiledSourcesFile.create().await();
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "qub-test").await();
 
-                    final Folder currentFolder = fileSystem.getFolder("C:/i/").await();
-                    final Folder iDontExist = fileSystem.getFolder("C:/i/dont/exist/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/i/").await();
+                    final Folder iDontExist = fileSystem.getFolder("/i/dont/exist/").await();
 
-                    try (final QubProcess process = QubProcess.create("-folder=" + iDontExist.relativeTo(currentFolder).toString()))
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create("-folder=" + iDontExist.relativeTo(currentFolder).toString()))
                     {
                         process.setOutputWriteStream(output);
-                        process.setFileSystem(fileSystem);
+                        process.setFileSystem(fileSystem, "/");
                         process.setCurrentFolder(currentFolder);
+                        process.setTypeLoader(FakeTypeLoader.create()
+                            .addTypeContainer(QubBuild.class, qubBuildCompiledSourcesFile));
 
                         final QubTestRunParameters parameters = QubTestRun.getParameters(process, qubTestDataFolder);
                         test.assertNotNull(parameters);
@@ -268,11 +298,11 @@ public interface QubTestRunTests
                         test.assertSame(process.getOutputWriteStream(), parameters.getOutputWriteStream());
                         test.assertNull(parameters.getPattern());
                         test.assertFalse(parameters.getProfiler());
-                        test.assertEqual(qubFolder.getProjectDataFolder("qub", "build-java").await(), parameters.getQubBuildDataFolder());
+                        test.assertEqual(qubBuildDataFolder, parameters.getQubBuildDataFolder());
                         test.assertEqual(qubTestDataFolder, parameters.getQubTestDataFolder());
                         test.assertTrue(parameters.getTestJson());
                         test.assertSame(process.getProcessFactory(), parameters.getProcessFactory());
-                        final VerboseCharacterWriteStream verbose = parameters.getVerbose();
+                        final VerboseCharacterToByteWriteStream verbose = parameters.getVerbose();
                         test.assertNotNull(verbose);
                         test.assertFalse(verbose.isVerbose());
                         test.assertEqual(Warnings.Show, parameters.getWarnings());
@@ -294,23 +324,25 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
-                    final Folder folderToTest = fileSystem.getFolder("C:/folder/to/test/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
+                    final Folder folderToTest = fileSystem.getFolder("/folder/to/test/").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder);
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder);
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
                     final String jvmClassPath = "fake-jvm-classpath";
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder);
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader);
 
                     final int exitCode = QubTestRun.run(parameters);
 
                     test.assertEqual(
                         Iterable.create(
-                            "ERROR: The file at \"C:/folder/to/test/project.json\" doesn't exist."),
+                            "ERROR: The file at \"/folder/to/test/project.json\" doesn't exist."),
                         Strings.getLines(output.getText().await()));
                     test.assertEqual(
                         Iterable.create(),
@@ -328,10 +360,10 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -340,16 +372,18 @@ public interface QubTestRunTests
                         .await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder);
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder);
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
                     final String jvmClassPath = "fake-jvm-classpath";
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder);
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader);
 
                     final int exitCode = QubTestRun.run(parameters);
 
                     test.assertEqual(
                         Iterable.create(
-                            "ERROR: No java source files found in C:/current/folder/."),
+                            "ERROR: No java source files found in /current/folder/."),
                         Strings.getLines(output.getText().await()));
                     test.assertEqual(
                         Iterable.create(),
@@ -367,11 +401,11 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -383,8 +417,8 @@ public interface QubTestRunTests
                     final Folder outputsFolder = currentFolder.getFolder("outputs").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
-                    final String jvmClassPath = "C:/fake-jvm-classpath";
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final String jvmClassPath = "/fake-jvm-classpath";
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -413,7 +447,9 @@ public interface QubTestRunTests
                                 CharacterWriteStream.create(functionOutput).writeLine("Inside test runner!").await();
                             }));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder);
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader);
 
                     final int exitCode = QubTestRun.run(parameters);
 
@@ -432,7 +468,7 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=false --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                            "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=false --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                             ""),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });
@@ -443,11 +479,11 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -459,8 +495,8 @@ public interface QubTestRunTests
                     final Folder outputsFolder = currentFolder.getFolder("outputs").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
-                    final String jvmClassPath = "C:/fake-jvm-classpath";
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final String jvmClassPath = "/fake-jvm-classpath";
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -485,8 +521,10 @@ public interface QubTestRunTests
                             .addCoverage(Coverage.None)
                             .addFullClassNamesToTest(Iterable.create("A")));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
-                        .setVerbose(new VerboseCharacterWriteStream(true, output));
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
+                        .setVerbose(VerboseCharacterToByteWriteStream.create(output));
 
                     final int exitCode = QubTestRun.run(parameters);
 
@@ -494,19 +532,20 @@ public interface QubTestRunTests
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
                                 "VERBOSE: Getting javac version...",
-                                "VERBOSE: Running C:/current/folder/: javac --version...",
+                                "VERBOSE: Running /current/folder/: javac --version...",
+                                "VERBOSE: javac 14.0.1",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running C:/current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath C:/current/folder/outputs/ sources/A.java...",
+                                "VERBOSE: Running /current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /current/folder/outputs/ sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                                "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()));
                     test.assertEqual(
@@ -517,7 +556,7 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                            "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                             ""),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });
@@ -528,15 +567,15 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
                     final QubProjectVersionFolder meA5VersionFolder = qubFolder.getProjectVersionFolder("me", "a", "5").await();
                     meA5VersionFolder.getCompiledSourcesFile().await().create().await();
                     final QubProjectVersionFolder meB2VersionFolder = qubFolder.getProjectVersionFolder("me", "b", "2").await();
                     meB2VersionFolder.getCompiledSourcesFile().await().create().await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -551,7 +590,7 @@ public interface QubTestRunTests
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
                     final String jvmClassPath = meB2VersionFolder.toString();
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -576,8 +615,10 @@ public interface QubTestRunTests
                             .addCoverage(Coverage.None)
                             .addFullClassNamesToTest(Iterable.create("A")));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
-                        .setVerbose(new VerboseCharacterWriteStream(true, output));
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
+                        .setVerbose(VerboseCharacterToByteWriteStream.create(output));
 
                     final int exitCode = QubTestRun.run(parameters);
 
@@ -585,19 +626,20 @@ public interface QubTestRunTests
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
                                 "VERBOSE: Getting javac version...",
-                                "VERBOSE: Running C:/current/folder/: javac --version...",
+                                "VERBOSE: Running /current/folder/: javac --version...",
+                                "VERBOSE: javac 14.0.1",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running C:/current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath C:/current/folder/outputs/;C:/qub/me/a/versions/5/a.jar sources/A.java...",
+                                "VERBOSE: Running /current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /current/folder/outputs/;/qub/me/a/versions/5/a.jar sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/qub/me/a/versions/5/a.jar;C:/qub/me/b/versions/2/ qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                                "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/qub/me/a/versions/5/a.jar;/qub/me/b/versions/2/ qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()));
                     test.assertEqual(
@@ -608,7 +650,7 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/qub/me/a/versions/5/a.jar;C:/qub/me/b/versions/2/ qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                            "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/qub/me/a/versions/5/a.jar;/qub/me/b/versions/2/ qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                             ""),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });
@@ -619,15 +661,15 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
                     final QubProjectVersionFolder meA5VersionFolder = qubFolder.getProjectVersionFolder("me", "a", "5").await();
                     meA5VersionFolder.getCompiledSourcesFile().await().create().await();
                     final QubProjectVersionFolder meA6VersionFolder = qubFolder.getProjectVersionFolder("me", "a", "6").await();
                     meA6VersionFolder.getCompiledSourcesFile().await().create().await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -642,7 +684,7 @@ public interface QubTestRunTests
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
                     final String jvmClassPath = meA6VersionFolder.toString();
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -667,8 +709,10 @@ public interface QubTestRunTests
                             .addCoverage(Coverage.None)
                             .addFullClassNamesToTest(Iterable.create("A")));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
-                        .setVerbose(new VerboseCharacterWriteStream(true, output));
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
+                        .setVerbose(VerboseCharacterToByteWriteStream.create(output));
 
                     final int exitCode = QubTestRun.run(parameters);
 
@@ -676,19 +720,20 @@ public interface QubTestRunTests
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
                                 "VERBOSE: Getting javac version...",
-                                "VERBOSE: Running C:/current/folder/: javac --version...",
+                                "VERBOSE: Running /current/folder/: javac --version...",
+                                "VERBOSE: javac 14.0.1",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running C:/current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath C:/current/folder/outputs/;C:/qub/me/a/versions/5/a.jar sources/A.java...",
+                                "VERBOSE: Running /current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /current/folder/outputs/;/qub/me/a/versions/5/a.jar sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/qub/me/a/versions/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                                "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/qub/me/a/versions/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()));
                     test.assertEqual(
@@ -699,7 +744,7 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/qub/me/a/versions/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                            "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/qub/me/a/versions/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                             ""),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });
@@ -710,15 +755,15 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
                     final QubProjectVersionFolder meA5VersionFolder = qubFolder.getProjectVersionFolder("me", "a", "5").await();
                     meA5VersionFolder.getCompiledSourcesFile().await().create().await();
                     final QubProjectVersionFolder meA4VersionFolder = qubFolder.getProjectVersionFolder("me", "a", "4").await();
                     meA4VersionFolder.getCompiledSourcesFile().await().create().await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -733,7 +778,7 @@ public interface QubTestRunTests
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
                     final String jvmClassPath = meA4VersionFolder.toString();
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -758,8 +803,10 @@ public interface QubTestRunTests
                             .addCoverage(Coverage.None)
                             .addFullClassNamesToTest(Iterable.create("A")));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
-                        .setVerbose(new VerboseCharacterWriteStream(true, output));
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
+                        .setVerbose(VerboseCharacterToByteWriteStream.create(output));
 
                     final int exitCode = QubTestRun.run(parameters);
 
@@ -767,19 +814,20 @@ public interface QubTestRunTests
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
                                 "VERBOSE: Getting javac version...",
-                                "VERBOSE: Running C:/current/folder/: javac --version...",
+                                "VERBOSE: Running /current/folder/: javac --version...",
+                                "VERBOSE: javac 14.0.1",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running C:/current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath C:/current/folder/outputs/;C:/qub/me/a/versions/5/a.jar sources/A.java...",
+                                "VERBOSE: Running /current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /current/folder/outputs/;/qub/me/a/versions/5/a.jar sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/qub/me/a/versions/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                                "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/qub/me/a/versions/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()));
                     test.assertEqual(
@@ -790,7 +838,7 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/qub/me/a/versions/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                            "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/qub/me/a/versions/5/a.jar qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                             ""),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });
@@ -801,11 +849,11 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -818,7 +866,7 @@ public interface QubTestRunTests
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
                     final String jvmClassPath = outputsFolder.toString();
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -843,8 +891,10 @@ public interface QubTestRunTests
                             .addCoverage(Coverage.None)
                             .addFullClassNamesToTest(Iterable.create("A")));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
-                        .setVerbose(new VerboseCharacterWriteStream(true, output));
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
+                        .setVerbose(VerboseCharacterToByteWriteStream.create(output));
 
                     final int exitCode = QubTestRun.run(parameters);
 
@@ -852,19 +902,20 @@ public interface QubTestRunTests
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
                                 "VERBOSE: Getting javac version...",
-                                "VERBOSE: Running C:/current/folder/: javac --version...",
+                                "VERBOSE: Running /current/folder/: javac --version...",
+                                "VERBOSE: javac 14.0.1",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running C:/current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath C:/current/folder/outputs/ sources/A.java...",
+                                "VERBOSE: Running /current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /current/folder/outputs/ sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/ qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                                "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/ qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()));
                     test.assertEqual(
@@ -875,7 +926,7 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/ qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                            "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/ qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                             ""),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });
@@ -886,11 +937,11 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -902,8 +953,8 @@ public interface QubTestRunTests
                     final Folder outputsFolder = currentFolder.getFolder("outputs").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
-                    final String jvmClassPath = "C:/fake-jvm-classpath";
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final String jvmClassPath = "/fake-jvm-classpath";
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -928,8 +979,10 @@ public interface QubTestRunTests
                             .addCoverage(Coverage.None)
                             .addFullClassNamesToTest(Iterable.create("A")));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
-                        .setVerbose(new VerboseCharacterWriteStream(true, output))
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
+                        .setVerbose(VerboseCharacterToByteWriteStream.create(output))
                         .setTestJson(true);
 
                     final int exitCode = QubTestRun.run(parameters);
@@ -938,19 +991,20 @@ public interface QubTestRunTests
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
                                 "VERBOSE: Getting javac version...",
-                                "VERBOSE: Running C:/current/folder/: javac --version...",
+                                "VERBOSE: Running /current/folder/: javac --version...",
+                                "VERBOSE: javac 14.0.1",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running C:/current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath C:/current/folder/outputs/ sources/A.java...",
+                                "VERBOSE: Running /current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /current/folder/outputs/ sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                                "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()));
                     test.assertEqual(
@@ -961,7 +1015,7 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                            "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                             ""),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });
@@ -972,11 +1026,11 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -988,8 +1042,8 @@ public interface QubTestRunTests
                     final Folder outputsFolder = currentFolder.getFolder("outputs").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
-                    final String jvmClassPath = "C:/fake-jvm-classpath";
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final String jvmClassPath = "/fake-jvm-classpath";
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -1014,8 +1068,10 @@ public interface QubTestRunTests
                             .addCoverage(Coverage.None)
                             .addFullClassNamesToTest(Iterable.create("A")));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
-                        .setVerbose(new VerboseCharacterWriteStream(true, output))
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
+                        .setVerbose(VerboseCharacterToByteWriteStream.create(output))
                         .setTestJson(false);
 
                     final int exitCode = QubTestRun.run(parameters);
@@ -1024,19 +1080,20 @@ public interface QubTestRunTests
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
                                 "VERBOSE: Getting javac version...",
-                                "VERBOSE: Running C:/current/folder/: javac --version...",
+                                "VERBOSE: Running /current/folder/: javac --version...",
+                                "VERBOSE: javac 14.0.1",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running C:/current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath C:/current/folder/outputs/ sources/A.java...",
+                                "VERBOSE: Running /current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /current/folder/outputs/ sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=false --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                                "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=false --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()));
                     test.assertEqual(
@@ -1047,7 +1104,7 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=false --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                            "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=false --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                             ""),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });
@@ -1058,14 +1115,14 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
                     final QubProjectVersionFolder jacocoFolder = qubFolder.getProjectVersionFolder("jacoco", "jacococli", "0.8.1").await();
                     final File jacocoAgentJarFile = jacocoFolder.createFile("jacocoagent.jar").await();
                     final File jacocoCliJarFile = jacocoFolder.createFile("jacococli.jar").await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -1078,8 +1135,8 @@ public interface QubTestRunTests
                     final File coverageExecFile = outputsFolder.getFile("coverage.exec").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
-                    final String jvmClassPath = "C:/fake-jvm-classpath";
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final String jvmClassPath = "/fake-jvm-classpath";
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -1113,7 +1170,9 @@ public interface QubTestRunTests
                             .addSourceFiles(currentFolder.getFolder("sources").await())
                             .addHtml(outputsFolder.getFolder("coverage").await()));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
                         .setCoverage(Coverage.Sources);
 
                     final int exitCode = QubTestRun.run(parameters);
@@ -1134,7 +1193,7 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -javaagent:C:/qub/jacoco/jacococli/versions/0.8.1/jacocoagent.jar=destfile=C:/current/folder/outputs/coverage.exec -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=false --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=Sources A",
+                            "VERBOSE: Running /current/folder/: java -javaagent:/qub/jacoco/jacococli/versions/0.8.1/jacocoagent.jar=destfile=/current/folder/outputs/coverage.exec -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=false --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=Sources A",
                             "",
                             "",
                             "Analyzing coverage..."
@@ -1148,14 +1207,14 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
                     final QubProjectVersionFolder jacocoFolder = qubFolder.getProjectVersionFolder("jacoco", "jacococli", "0.8.1").await();
                     final File jacocoAgentJarFile = jacocoFolder.createFile("jacocoagent.jar").await();
                     final File jacocoCliJarFile = jacocoFolder.createFile("jacococli.jar").await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -1168,8 +1227,8 @@ public interface QubTestRunTests
                     final File coverageExecFile = outputsFolder.getFile("coverage.exec").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
-                    final String jvmClassPath = "C:/fake-jvm-classpath";
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final String jvmClassPath = "/fake-jvm-classpath";
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -1203,9 +1262,11 @@ public interface QubTestRunTests
                             .addSourceFiles(currentFolder.getFolder("sources").await())
                             .addHtml(outputsFolder.getFolder("coverage").await()));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
                         .setCoverage(Coverage.Sources)
-                        .setVerbose(new VerboseCharacterWriteStream(true, output));
+                        .setVerbose(VerboseCharacterToByteWriteStream.create(output));
 
                     final int exitCode = QubTestRun.run(parameters);
 
@@ -1213,23 +1274,24 @@ public interface QubTestRunTests
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
                                 "VERBOSE: Getting javac version...",
-                                "VERBOSE: Running C:/current/folder/: javac --version...",
+                                "VERBOSE: Running /current/folder/: javac --version...",
+                                "VERBOSE: javac 14.0.1",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running C:/current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath C:/current/folder/outputs/ sources/A.java...",
+                                "VERBOSE: Running /current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /current/folder/outputs/ sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running C:/current/folder/: java -javaagent:C:/qub/jacoco/jacococli/versions/0.8.1/jacocoagent.jar=destfile=C:/current/folder/outputs/coverage.exec -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=Sources A",
+                                "VERBOSE: Running /current/folder/: java -javaagent:/qub/jacoco/jacococli/versions/0.8.1/jacocoagent.jar=destfile=/current/folder/outputs/coverage.exec -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=Sources A",
                                 "",
                                 "",
                                 "Analyzing coverage...",
-                                "VERBOSE: Running C:/current/folder/: java -jar C:/qub/jacoco/jacococli/versions/0.8.1/jacococli.jar report C:/current/folder/outputs/coverage.exec --classfiles outputs/A.class --sourcefiles C:/current/folder/sources/ --html C:/current/folder/outputs/coverage/"),
+                                "VERBOSE: Running /current/folder/: java -jar /qub/jacoco/jacococli/versions/0.8.1/jacococli.jar report /current/folder/outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /current/folder/sources/ --html /current/folder/outputs/coverage/"),
                             Strings.getLines(output.getText().await()));
                     test.assertEqual(
                         Iterable.create(),
@@ -1239,11 +1301,11 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -javaagent:C:/qub/jacoco/jacococli/versions/0.8.1/jacocoagent.jar=destfile=C:/current/folder/outputs/coverage.exec -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=Sources A",
+                            "VERBOSE: Running /current/folder/: java -javaagent:/qub/jacoco/jacococli/versions/0.8.1/jacocoagent.jar=destfile=/current/folder/outputs/coverage.exec -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=Sources A",
                             "",
                             "",
                             "Analyzing coverage...",
-                            "VERBOSE: Running C:/current/folder/: java -jar C:/qub/jacoco/jacococli/versions/0.8.1/jacococli.jar report C:/current/folder/outputs/coverage.exec --classfiles outputs/A.class --sourcefiles C:/current/folder/sources/ --html C:/current/folder/outputs/coverage/"),
+                            "VERBOSE: Running /current/folder/: java -jar /qub/jacoco/jacococli/versions/0.8.1/jacococli.jar report /current/folder/outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /current/folder/sources/ --html /current/folder/outputs/coverage/"),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });
 
@@ -1253,8 +1315,8 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
                     final QubProjectFolder jacocoCliFolder = qubFolder.getProjectFolder("jacoco", "jacococli").await();
@@ -1265,7 +1327,7 @@ public interface QubTestRunTests
                     final QubProjectVersionFolder jacoco092Folder = jacocoCliFolder.getProjectVersionFolder("0.9.2").await();
                     final File jacocoAgentJarFile = jacoco092Folder.createFile("jacocoagent.jar").await();
                     final File jacocoCliJarFile = jacoco092Folder.createFile("jacococli.jar").await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -1278,8 +1340,8 @@ public interface QubTestRunTests
                     final File coverageExecFile = outputsFolder.getFile("coverage.exec").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
-                    final String jvmClassPath = "C:/fake-jvm-classpath";
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final String jvmClassPath = "/fake-jvm-classpath";
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -1313,9 +1375,11 @@ public interface QubTestRunTests
                             .addSourceFiles(currentFolder.getFolder("sources").await())
                             .addHtml(outputsFolder.getFolder("coverage").await()));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
                         .setCoverage(Coverage.Sources)
-                        .setVerbose(new VerboseCharacterWriteStream(true, output));
+                        .setVerbose(VerboseCharacterToByteWriteStream.create(output));
 
                     final int exitCode = QubTestRun.run(parameters);
 
@@ -1323,23 +1387,24 @@ public interface QubTestRunTests
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
                                 "VERBOSE: Getting javac version...",
-                                "VERBOSE: Running C:/current/folder/: javac --version...",
+                                "VERBOSE: Running /current/folder/: javac --version...",
+                                "VERBOSE: javac 14.0.1",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running C:/current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath C:/current/folder/outputs/ sources/A.java...",
+                                "VERBOSE: Running /current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /current/folder/outputs/ sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running C:/current/folder/: java -javaagent:C:/qub/jacoco/jacococli/versions/0.9.2/jacocoagent.jar=destfile=C:/current/folder/outputs/coverage.exec -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=Sources A",
+                                "VERBOSE: Running /current/folder/: java -javaagent:/qub/jacoco/jacococli/versions/0.9.2/jacocoagent.jar=destfile=/current/folder/outputs/coverage.exec -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=Sources A",
                                 "",
                                 "",
                                 "Analyzing coverage...",
-                                "VERBOSE: Running C:/current/folder/: java -jar C:/qub/jacoco/jacococli/versions/0.9.2/jacococli.jar report C:/current/folder/outputs/coverage.exec --classfiles outputs/A.class --sourcefiles C:/current/folder/sources/ --html C:/current/folder/outputs/coverage/"),
+                                "VERBOSE: Running /current/folder/: java -jar /qub/jacoco/jacococli/versions/0.9.2/jacococli.jar report /current/folder/outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /current/folder/sources/ --html /current/folder/outputs/coverage/"),
                             Strings.getLines(output.getText().await()));
                     test.assertEqual(
                         Iterable.create(),
@@ -1349,11 +1414,11 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -javaagent:C:/qub/jacoco/jacococli/versions/0.9.2/jacocoagent.jar=destfile=C:/current/folder/outputs/coverage.exec -classpath C:/current/folder/outputs/;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=Sources A",
+                            "VERBOSE: Running /current/folder/: java -javaagent:/qub/jacoco/jacococli/versions/0.9.2/jacocoagent.jar=destfile=/current/folder/outputs/coverage.exec -classpath /current/folder/outputs/;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=Sources A",
                             "",
                             "",
                             "Analyzing coverage...",
-                            "VERBOSE: Running C:/current/folder/: java -jar C:/qub/jacoco/jacococli/versions/0.9.2/jacococli.jar report C:/current/folder/outputs/coverage.exec --classfiles outputs/A.class --sourcefiles C:/current/folder/sources/ --html C:/current/folder/outputs/coverage/"
+                            "VERBOSE: Running /current/folder/: java -jar /qub/jacoco/jacococli/versions/0.9.2/jacococli.jar report /current/folder/outputs/coverage.exec --classfiles outputs/A.class --sourcefiles /current/folder/sources/ --html /current/folder/outputs/coverage/"
                         ),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });
@@ -1364,8 +1429,8 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
                     final QubProjectVersionFolder meB2Folder = qubFolder.getProjectVersionFolder("me", "b", "2").await();
@@ -1378,7 +1443,7 @@ public interface QubTestRunTests
                                 .setVersion(meB2Folder.getVersion().await())
                                 .toString())
                             .await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -1395,8 +1460,8 @@ public interface QubTestRunTests
                     final Folder outputsFolder = currentFolder.getFolder("outputs").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
-                    final String jvmClassPath = "C:/fake-jvm-classpath";
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final String jvmClassPath = "/fake-jvm-classpath";
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -1421,8 +1486,10 @@ public interface QubTestRunTests
                             .addCoverage(Coverage.None)
                             .addFullClassNamesToTest(Iterable.create("A")));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
-                        .setVerbose(new VerboseCharacterWriteStream(true, output));
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
+                        .setVerbose(VerboseCharacterToByteWriteStream.create(output));
 
                     final int exitCode = QubTestRun.run(parameters);
 
@@ -1430,19 +1497,20 @@ public interface QubTestRunTests
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
                                 "VERBOSE: Getting javac version...",
-                                "VERBOSE: Running C:/current/folder/: javac --version...",
+                                "VERBOSE: Running /current/folder/: javac --version...",
+                                "VERBOSE: javac 14.0.1",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running C:/current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath C:/current/folder/outputs/;C:/qub/me/b/versions/2/b.jar sources/A.java...",
+                                "VERBOSE: Running /current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /current/folder/outputs/;/qub/me/b/versions/2/b.jar sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/qub/me/b/versions/2/b.jar;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                                "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/qub/me/b/versions/2/b.jar;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()));
                     test.assertEqual(
@@ -1453,7 +1521,7 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/qub/me/b/versions/2/b.jar;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                            "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/qub/me/b/versions/2/b.jar;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                             ""),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });
@@ -1464,8 +1532,8 @@ public interface QubTestRunTests
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream error = InMemoryCharacterToByteStream.create();
                     final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
-                    fileSystem.createRoot("C:/").await();
-                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("C:/qub/").await());
+                    fileSystem.createRoot("/").await();
+                    final QubFolder qubFolder = QubFolder.get(fileSystem.getFolder("/qub/").await());
                     final Folder qubTestDataFolder = qubFolder.getProjectDataFolder("qub", "test-java").await();
                     final File logFile = qubTestDataFolder.getFile("logs/1.log").await();
                     final QubProjectVersionFolder meC3Folder = qubFolder.getProjectVersionFolder("me", "c", "3").await();
@@ -1491,7 +1559,7 @@ public interface QubTestRunTests
                                         meC3Folder.getProjectSignature().await())))
                                 .toString())
                             .await();
-                    final Folder currentFolder = fileSystem.getFolder("C:/current/folder/").await();
+                    final Folder currentFolder = fileSystem.getFolder("/current/folder/").await();
                     final File projectJsonFile = currentFolder.getFile("project.json").await();
                     projectJsonFile.setContentsAsString(
                         ProjectJSON.create()
@@ -1508,8 +1576,8 @@ public interface QubTestRunTests
                     final Folder outputsFolder = currentFolder.getFolder("outputs").await();
                     final EnvironmentVariables environmentVariables = new EnvironmentVariables()
                         .set("QUB_HOME", qubFolder.toString());
-                    final String jvmClassPath = "C:/fake-jvm-classpath";
-                    final FakeProcessFactory processFactory = new FakeProcessFactory(test.getParallelAsyncRunner(), currentFolder)
+                    final String jvmClassPath = "/fake-jvm-classpath";
+                    final FakeProcessFactory processFactory = FakeProcessFactory.create(test.getParallelAsyncRunner(), currentFolder)
                         .add(new FakeJavacProcessRun()
                             .setWorkingFolder(currentFolder)
                             .addVersion()
@@ -1541,8 +1609,10 @@ public interface QubTestRunTests
                             .addCoverage(Coverage.None)
                             .addFullClassNamesToTest(Iterable.create("A")));
                     final FakeDefaultApplicationLauncher defaultApplicationLauncher = FakeDefaultApplicationLauncher.create();
-                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder)
-                        .setVerbose(new VerboseCharacterWriteStream(true, output));
+                    final FakeTypeLoader typeLoader = FakeTypeLoader.create()
+                        .addTypeContainer(QubBuild.class, qubFolder.getCompiledSourcesFile("qub", "build-java", "7").await());
+                    final QubTestRunParameters parameters = new QubTestRunParameters(input, output, error, currentFolder, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubTestDataFolder, typeLoader)
+                        .setVerbose(VerboseCharacterToByteWriteStream.create(output));
 
                     final int exitCode = QubTestRun.run(parameters);
 
@@ -1550,19 +1620,20 @@ public interface QubTestRunTests
                             Iterable.create(
                                 "VERBOSE: Parsing project.json...",
                                 "VERBOSE: Getting javac version...",
-                                "VERBOSE: Running C:/current/folder/: javac --version...",
+                                "VERBOSE: Running /current/folder/: javac --version...",
+                                "VERBOSE: javac 14.0.1",
                                 "VERBOSE: Updating outputs/build.json...",
                                 "VERBOSE: Setting project.json...",
                                 "VERBOSE: Setting source files...",
                                 "VERBOSE: Detecting java source files to compile...",
                                 "VERBOSE: Compiling all source files.",
                                 "Compiling 1 file...",
-                                "VERBOSE: Running C:/current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath C:/current/folder/outputs/;C:/qub/me/b/versions/2/b.jar;C:/qub/me/c/versions/3/c.jar sources/A.java...",
+                                "VERBOSE: Running /current/folder/: javac -d outputs -Xlint:unchecked -Xlint:deprecation -classpath /current/folder/outputs/;/qub/me/b/versions/2/b.jar;/qub/me/c/versions/3/c.jar sources/A.java...",
                                 "VERBOSE: Compilation finished.",
                                 "VERBOSE: Writing build.json file...",
                                 "VERBOSE: Done writing build.json file.",
                                 "Running tests...",
-                                "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/qub/me/b/versions/2/b.jar;C:/qub/me/c/versions/3/c.jar;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                                "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/qub/me/b/versions/2/b.jar;/qub/me/c/versions/3/c.jar;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                                 ""),
                             Strings.getLines(output.getText().await()));
                     test.assertEqual(
@@ -1573,7 +1644,7 @@ public interface QubTestRunTests
                     test.assertEqual(
                         Iterable.create(
                             "Running tests...",
-                            "VERBOSE: Running C:/current/folder/: java -classpath C:/current/folder/outputs/;C:/qub/me/b/versions/2/b.jar;C:/qub/me/c/versions/3/c.jar;C:/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=C:/qub/qub/test-java/data/logs/1.log --output-folder=C:/current/folder/outputs/ --coverage=None A",
+                            "VERBOSE: Running /current/folder/: java -classpath /current/folder/outputs/;/qub/me/b/versions/2/b.jar;/qub/me/c/versions/3/c.jar;/fake-jvm-classpath qub.ConsoleTestRunner --profiler=false --verbose=true --testjson=true --logfile=/qub/qub/test-java/data/logs/1.log --output-folder=/current/folder/outputs/ --coverage=None A",
                             ""),
                         Strings.getLines(qubTestDataFolder.getFileContentsAsString("logs/1.log").await()));
                 });

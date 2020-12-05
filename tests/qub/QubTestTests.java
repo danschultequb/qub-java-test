@@ -15,7 +15,7 @@ public interface QubTestTests
                 });
             });
 
-            runner.testGroup("run(QubProcess)", () ->
+            runner.testGroup("run(DesktopProcess)", () ->
             {
                 runner.test("with null", (Test test) ->
                 {
@@ -26,7 +26,7 @@ public interface QubTestTests
                 runner.test("with --?", (Test test) ->
                 {
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
-                    try (final QubProcess process = QubProcess.create("--?"))
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create("--?"))
                     {
                         process.setOutputWriteStream(output);
 
@@ -50,7 +50,7 @@ public interface QubTestTests
                 runner.test("with foo", (Test test) ->
                 {
                     final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
-                    try (final QubProcess process = QubProcess.create("foo"))
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create("foo"))
                     {
                         process.setOutputWriteStream(output);
 

@@ -7,14 +7,14 @@ public interface QubTest
 
     static void main(String[] args)
     {
-        QubProcess.run(args, QubTest::run);
+        DesktopProcess.run(args, QubTest::run);
     }
 
-    static void run(QubProcess process)
+    static void run(DesktopProcess process)
     {
         PreCondition.assertNotNull(process, "process");
 
-        final CommandLineActions<QubProcess> actions = process.<QubProcess>createCommandLineActions()
+        final CommandLineActions<DesktopProcess> actions = process.createCommandLineActions()
             .setApplicationName(QubTest.applicationName)
             .setApplicationDescription(QubTest.applicationDescription);
 
@@ -22,7 +22,7 @@ public interface QubTest
             .setDescription(QubTestRun.actionDescription)
             .setDefaultAction();
 
-        CommandLineLogsAction.add(actions);
+        CommandLineLogsAction.addAction(actions);
 
         actions.run(process);
     }

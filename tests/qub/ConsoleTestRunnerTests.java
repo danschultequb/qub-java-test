@@ -16,7 +16,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with null pattern", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
                         test.assertEqual(0, testRunner.getFailedTestCount());
@@ -30,7 +30,7 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterToByteStream outputStream = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream errorStream = InMemoryCharacterToByteStream.create();
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         process.setOutputWriteStream(outputStream);
                         process.setErrorWriteStream(errorStream);
@@ -47,7 +47,7 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterToByteStream outputStream = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream errorStream = InMemoryCharacterToByteStream.create();
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         process.setOutputWriteStream(outputStream);
                         process.setErrorWriteStream(errorStream);
@@ -88,7 +88,7 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterToByteStream outputStream = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream errorStream = InMemoryCharacterToByteStream.create();
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         process.setOutputWriteStream(outputStream);
                         process.setErrorWriteStream(errorStream);
@@ -157,7 +157,7 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterToByteStream outputStream = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream errorStream = InMemoryCharacterToByteStream.create();
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         process.setOutputWriteStream(outputStream);
                         process.setErrorWriteStream(errorStream);
@@ -174,7 +174,7 @@ public interface ConsoleTestRunnerTests
                 {
                     final InMemoryCharacterToByteStream outputStream = InMemoryCharacterToByteStream.create();
                     final InMemoryCharacterToByteStream errorStream = InMemoryCharacterToByteStream.create();
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         process.setOutputWriteStream(outputStream);
                         process.setErrorWriteStream(errorStream);
@@ -191,7 +191,7 @@ public interface ConsoleTestRunnerTests
 
             runner.test("skip()", (Test test) ->
             {
-                try (final QubProcess process = QubProcess.create())
+                try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                 {
                     final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -207,7 +207,7 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with false", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -217,7 +217,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with true", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -235,7 +235,7 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with false and null message", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -246,7 +246,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with false and empty message", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -257,7 +257,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with false and non-empty message", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -267,7 +267,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with true and non-empty message", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -286,7 +286,7 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with null message", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -297,7 +297,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with empty message", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -308,7 +308,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with non-empty message", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -327,7 +327,7 @@ public interface ConsoleTestRunnerTests
             {
                 runner.test("with null testGroupName", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -338,7 +338,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with empty testGroupName", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 
@@ -349,7 +349,7 @@ public interface ConsoleTestRunnerTests
 
                 runner.test("with null testGroupAction", (Test test) ->
                 {
-                    try (final QubProcess process = QubProcess.create())
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
                         final ConsoleTestRunner testRunner = new ConsoleTestRunner(process, null);
 

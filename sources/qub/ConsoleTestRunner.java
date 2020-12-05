@@ -7,12 +7,12 @@ public class ConsoleTestRunner implements TestRunner, Disposable
 {
     public static void main(String[] args)
     {
-        QubProcess.run(args, (QubProcess process) -> ConsoleTestRunner.main(process));
+        DesktopProcess.run(args, (DesktopProcess process) -> ConsoleTestRunner.main(process));
     }
 
-    public static void main(QubProcess process)
+    public static void main(DesktopProcess process)
     {
-        PreCondition.assertNotNull(process, "console");
+        PreCondition.assertNotNull(process, "process");
 
         ConsoleTestRunnerParameters parameters = ConsoleTestRunner.getParameters(process);
         if (parameters != null)
@@ -21,7 +21,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         }
     }
 
-    public static ConsoleTestRunnerParameters getParameters(QubProcess process)
+    public static ConsoleTestRunnerParameters getParameters(DesktopProcess process)
     {
         PreCondition.assertNotNull(process, "console");
 
@@ -42,7 +42,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
 
         profilerParameter.await();
 
-        final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
+        final VerboseCharacterToByteWriteStream verbose = verboseParameter.getVerboseCharacterToByteWriteStream().await();
         final Folder outputFolder = outputFolderParameter.getValue().await();
         final Iterable<String> testClassNames = testClassNamesParameter.getValues().await();
         return new ConsoleTestRunnerParameters(process, verbose, outputFolder, testClassNames)
@@ -56,10 +56,10 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     {
         PreCondition.assertNotNull(parameters, "parameters");
 
-        final QubProcess process = parameters.getProcess();
+        final DesktopProcess process = parameters.getProcess();
 
-        final Stopwatch stopwatch = process.getStopwatch();
-        stopwatch.start();
+        final Stopwatch2 stopwatch = process.getClock().createStopwatch();
+        stopwatch.start2();
 
         final PathPattern pattern = parameters.getPattern();
         final Folder outputFolder = parameters.getOutputFolder();
@@ -68,24 +68,26 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         final File logFile = parameters.getLogFile();
         final Coverage coverage = parameters.getCoverage();
 
-        final CharacterToByteWriteStream logStream;
+        final LogStreams logStreams;
         final CharacterToByteWriteStream output;
-        final VerboseCharacterWriteStream parametersVerbose = parameters.getVerbose();
-        final CharacterWriteStream verbose;
+        final CharacterToByteWriteStream error;
+        final VerboseCharacterToByteWriteStream verbose;
         if (logFile == null)
         {
-            logStream = null;
+            logStreams = null;
             output = process.getOutputWriteStream();
+            error = process.getErrorWriteStream();
             verbose = parameters.getVerbose();
         }
         else
         {
-            logStream = logFile.getContentsCharacterWriteStream(OpenWriteType.CreateOrAppend).await();
+            logStreams = CommandLineLogsAction.addLogStream(logFile, process.getOutputWriteStream(), process.getErrorWriteStream(), parameters.getVerbose());
+            output = logStreams.getOutput();
+            error = logStreams.getError();
+            verbose = logStreams.getVerbose();
 
-            output = CharacterToByteWriteStreamList.create(process.getOutputWriteStream(), logStream);
             process.setOutputWriteStream(output);
-
-            verbose = CharacterWriteStreamList.create(parametersVerbose, new VerboseCharacterWriteStream(true, logStream));
+            process.setErrorWriteStream(error);
         }
 
         int result;
@@ -172,7 +174,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
                 if (runTestClass)
                 {
                     runner.testClass(testClassName)
-                        .catchError((Throwable error) -> verbose.writeLine(error.getMessage()).await())
+                        .catchError((Throwable e) -> verbose.writeLine(e.getMessage()).await())
                         .await();
                 }
             }
@@ -193,9 +195,9 @@ public class ConsoleTestRunner implements TestRunner, Disposable
         }
         finally
         {
-            if (logStream != null)
+            if (logStreams != null)
             {
-                logStream.dispose().await();
+                logStreams.getLogStream().dispose().await();
             }
         }
 
@@ -205,12 +207,12 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     private final BasicTestRunner testRunner;
     private final IndentedCharacterToByteWriteStream writeStream;
     private final CharacterToByteWriteStream processBackupWriteStream;
-    private final QubProcess process;
+    private final DesktopProcess process;
     private boolean isDisposed;
     private int unmodifiedPassedTests;
     private int unmodifiedSkippedTests;
 
-    public ConsoleTestRunner(QubProcess process, PathPattern pattern)
+    public ConsoleTestRunner(DesktopProcess process, PathPattern pattern)
     {
         PreCondition.assertNotNull(process, "console");
 
@@ -594,7 +596,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     /**
      * Write the current statistics of this ConsoleTestRunner.
      */
-    public void writeSummary(Stopwatch stopwatch)
+    public void writeSummary(Stopwatch2 stopwatch)
     {
         PreCondition.assertNotNull(stopwatch, "stopwatch");
 

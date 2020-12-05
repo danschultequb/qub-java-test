@@ -5,8 +5,8 @@ package qub;
  */
 public class ConsoleTestRunnerParameters
 {
-    private final QubProcess process;
-    private final VerboseCharacterWriteStream verbose;
+    private final DesktopProcess process;
+    private final VerboseCharacterToByteWriteStream verbose;
     private final Folder outputFolder;
     private final Iterable<String> testClassNames;
 
@@ -22,7 +22,7 @@ public class ConsoleTestRunnerParameters
      * @param outputFolder The folder where test classes to run will be found.
      * @param testClassNames The names of the classes that should have their tests run.
      */
-    public ConsoleTestRunnerParameters(QubProcess process, VerboseCharacterWriteStream verbose, Folder outputFolder, Iterable<String> testClassNames)
+    public ConsoleTestRunnerParameters(DesktopProcess process, VerboseCharacterToByteWriteStream verbose, Folder outputFolder, Iterable<String> testClassNames)
     {
         PreCondition.assertNotNull(process, "process");
         PreCondition.assertNotNull(verbose, "verbose");
@@ -39,7 +39,7 @@ public class ConsoleTestRunnerParameters
      * Get the process that is running the tests.
      * @return The process that is running the tests.
      */
-    public QubProcess getProcess()
+    public DesktopProcess getProcess()
     {
         return this.process;
     }
@@ -48,7 +48,7 @@ public class ConsoleTestRunnerParameters
      * Get the stream that verbose text will be written to.
      * @return The stream that verbose text will be written to.
      */
-    public VerboseCharacterWriteStream getVerbose()
+    public VerboseCharacterToByteWriteStream getVerbose()
     {
         return this.verbose;
     }

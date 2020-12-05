@@ -5,7 +5,7 @@ public interface QubTestRun
     String actionName = "run";
     String actionDescription = "Run tests in a source code project.";
 
-    static CommandLineParameter<Folder> addFolderToTestParameter(CommandLineParameters parameters, QubProcess process)
+    static CommandLineParameter<Folder> addFolderToTestParameter(CommandLineParameters parameters, DesktopProcess process)
     {
         PreCondition.assertNotNull(parameters, "parameters");
         PreCondition.assertNotNull(process, "process");
@@ -48,7 +48,7 @@ public interface QubTestRun
      * @param process The Process that is running.
      * @return The parameters for QubTest.run(), or null if QubTest.run() should not be run.
      */
-    static QubTestRunParameters getParameters(QubProcess process)
+    static QubTestRunParameters getParameters(DesktopProcess process)
     {
         PreCondition.assertNotNull(process, "process");
 
@@ -61,7 +61,7 @@ public interface QubTestRun
      * @param process The Process that is running.
      * @return The parameters for QubTest.run(), or null if QubTest.run() should not be run.
      */
-    static QubTestRunParameters getParameters(QubProcess process, Folder projectDataFolder)
+    static QubTestRunParameters getParameters(DesktopProcess process, Folder projectDataFolder)
     {
         PreCondition.assertNotNull(process, "process");
         PreCondition.assertNotNull(projectDataFolder, "projectDataFolder");
@@ -90,11 +90,12 @@ public interface QubTestRun
             final Folder folderToTest = folderToTestParameter.getValue().await();
             final EnvironmentVariables environmentVariables = process.getEnvironmentVariables();
             final ProcessFactory processFactory = process.getProcessFactory();
-            final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
+            final VerboseCharacterToByteWriteStream verbose = verboseParameter.getVerboseCharacterToByteWriteStream().await();
             final boolean profiler = profilerParameter.getValue().await();
             final String jvmClassPath = process.getJVMClasspath().await();
+            final TypeLoader typeLoader = process.getTypeLoader();
 
-            result = new QubTestRunParameters(input, output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, projectDataFolder)
+            result = new QubTestRunParameters(input, output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, projectDataFolder, typeLoader)
                 .setPattern(patternParameter.removeValue().await())
                 .setCoverage(coverageParameter.removeValue().await())
                 .setTestJson(testJsonParameter.removeValue().await())
@@ -115,7 +116,7 @@ public interface QubTestRun
         final CharacterToByteReadStream inputReadStream = parameters.getInputReadStream();
         final CharacterToByteWriteStream parametersOutput = parameters.getOutputWriteStream();
         final CharacterToByteWriteStream parametersError = parameters.getErrorWriteStream();
-        final VerboseCharacterWriteStream parametersVerbose = parameters.getVerbose();
+        final VerboseCharacterToByteWriteStream parametersVerbose = parameters.getVerbose();
         final DefaultApplicationLauncher defaultApplicationLauncher = parameters.getDefaultApplicationLauncher();
         final EnvironmentVariables environmentVariables = parameters.getEnvironmentVariables();
         final ProcessFactory processFactory = parameters.getProcessFactory();
@@ -123,9 +124,9 @@ public interface QubTestRun
         final boolean testJson = parameters.getTestJson();
         final Folder qubTestDataFolder = parameters.getQubTestDataFolder();
 
-        LogCharacterWriteStreams logStreams = CommandLineLogsAction.addLogStream(qubTestDataFolder, parametersOutput, parametersVerbose);
-        CharacterWriteStream output = logStreams.getCombinedStream(0);
-        CharacterWriteStream verbose = logStreams.getCombinedStream(1);
+        LogStreams logStreams = CommandLineLogsAction.addLogStream(qubTestDataFolder, parametersOutput, parametersVerbose);
+        CharacterToByteWriteStream output = logStreams.getOutput();
+        VerboseCharacterToByteWriteStream verbose = logStreams.getVerbose();
 
         int result;
         try
@@ -243,8 +244,8 @@ public interface QubTestRun
                 result = consoleTestRunner.run().await();
 
                 logStreams = CommandLineLogsAction.addLogStream(logStreams.getLogFile(), parametersOutput, parametersVerbose);
-                output = logStreams.getCombinedStream(0);
-                verbose = logStreams.getCombinedStream(1);
+                output = logStreams.getOutput();
+                verbose = logStreams.getVerbose();
 
                 if (jacocoFolder != null)
                 {
