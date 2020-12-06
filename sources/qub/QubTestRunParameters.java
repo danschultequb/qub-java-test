@@ -5,7 +5,6 @@ package qub;
  */
 public class QubTestRunParameters extends QubBuildCompileParameters
 {
-    private final CharacterToByteReadStream inputReadStream;
     private final CharacterToByteWriteStream errorWriteStream;
     private final DefaultApplicationLauncher defaultApplicationLauncher;
     private final Folder qubTestDataFolder;
@@ -17,7 +16,6 @@ public class QubTestRunParameters extends QubBuildCompileParameters
 
     /**
      * Create a new QubTestParameters object.
-     * @param inputReadStream The input read stream.
      * @param outputByteWriteStream The ByteWriteStream that output should be written to.
      * @param errorWriteStream The ByteWriteStream that errors should be written to.
      * @param folderToTest The folder that should have its tests run.
@@ -25,14 +23,13 @@ public class QubTestRunParameters extends QubBuildCompileParameters
      * @param processFactory The factory that will be used to create new processes.
      * @param typeLoader The TypeLoader that will be used to locate where the qub-build data folder is.
      */
-    public QubTestRunParameters(CharacterToByteReadStream inputReadStream, CharacterToByteWriteStream outputByteWriteStream,
-                                CharacterToByteWriteStream errorWriteStream, Folder folderToTest, EnvironmentVariables environmentVariables,
-                                ProcessFactory processFactory, DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath,
+    public QubTestRunParameters(CharacterToByteWriteStream outputByteWriteStream, CharacterToByteWriteStream errorWriteStream,
+                                Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory,
+                                DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath,
                                 Folder qubTestDataFolder, TypeLoader typeLoader)
     {
         super(outputByteWriteStream, folderToTest, environmentVariables, processFactory, QubTestRunParameters.getQubBuildDataFolder(folderToTest, typeLoader));
 
-        PreCondition.assertNotNull(inputReadStream, "inputReadStream");
         PreCondition.assertNotNull(outputByteWriteStream, "outputByteWriteStream");
         PreCondition.assertNotNull(errorWriteStream, "errorByteWriteStream");
         PreCondition.assertNotNull(folderToTest, "folderToTest");
@@ -42,7 +39,6 @@ public class QubTestRunParameters extends QubBuildCompileParameters
         PreCondition.assertNotNullAndNotEmpty(jvmClassPath, "jvmClassPath");
         PreCondition.assertNotNull(qubTestDataFolder, "qubTestDataFolder");
 
-        this.inputReadStream = inputReadStream;
         this.errorWriteStream = errorWriteStream;
         this.defaultApplicationLauncher = defaultApplicationLauncher;
         this.jvmClassPath = jvmClassPath;
@@ -69,15 +65,6 @@ public class QubTestRunParameters extends QubBuildCompileParameters
         }
         return QubProjectVersionFolder.get(projectVersionFolder)
             .getProjectDataFolder().await();
-    }
-
-    /**
-     * Get the read stream that input should be read from.
-     * @return The read stream that input should be read from.
-     */
-    public CharacterToByteReadStream getInputReadStream()
-    {
-        return this.inputReadStream;
     }
 
     /**

@@ -58,8 +58,8 @@ public class ConsoleTestRunner implements TestRunner, Disposable
 
         final DesktopProcess process = parameters.getProcess();
 
-        final Stopwatch2 stopwatch = process.getClock().createStopwatch();
-        stopwatch.start2();
+        final Stopwatch stopwatch = process.getClock().createStopwatch();
+        stopwatch.start();
 
         final PathPattern pattern = parameters.getPattern();
         final Folder outputFolder = parameters.getOutputFolder();
@@ -596,7 +596,7 @@ public class ConsoleTestRunner implements TestRunner, Disposable
     /**
      * Write the current statistics of this ConsoleTestRunner.
      */
-    public void writeSummary(Stopwatch2 stopwatch)
+    public void writeSummary(Stopwatch stopwatch)
     {
         PreCondition.assertNotNull(stopwatch, "stopwatch");
 

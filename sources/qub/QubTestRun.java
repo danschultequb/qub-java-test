@@ -83,7 +83,6 @@ public interface QubTestRun
             profilerParameter.await();
             profilerParameter.removeValue().await();
 
-            final CharacterToByteReadStream input = process.getInputReadStream();
             final CharacterToByteWriteStream output = process.getOutputWriteStream();
             final CharacterToByteWriteStream error = process.getErrorWriteStream();
             final DefaultApplicationLauncher defaultApplicationLauncher = process.getDefaultApplicationLauncher();
@@ -95,7 +94,7 @@ public interface QubTestRun
             final String jvmClassPath = process.getJVMClasspath().await();
             final TypeLoader typeLoader = process.getTypeLoader();
 
-            result = new QubTestRunParameters(input, output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, projectDataFolder, typeLoader)
+            result = new QubTestRunParameters(output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, projectDataFolder, typeLoader)
                 .setPattern(patternParameter.removeValue().await())
                 .setCoverage(coverageParameter.removeValue().await())
                 .setTestJson(testJsonParameter.removeValue().await())
@@ -113,7 +112,6 @@ public interface QubTestRun
         final Folder folderToTest = parameters.getFolderToTest();
         final String pattern = parameters.getPattern();
         final Coverage coverage = parameters.getCoverage();
-        final CharacterToByteReadStream inputReadStream = parameters.getInputReadStream();
         final CharacterToByteWriteStream parametersOutput = parameters.getOutputWriteStream();
         final CharacterToByteWriteStream parametersError = parameters.getErrorWriteStream();
         final VerboseCharacterToByteWriteStream parametersVerbose = parameters.getVerbose();
@@ -199,7 +197,6 @@ public interface QubTestRun
                 }
 
                 final ConsoleTestRunnerProcessBuilder consoleTestRunner = ConsoleTestRunnerProcessBuilder.create(processFactory).await()
-                    .redirectInput(inputReadStream)
                     .redirectOutput(parametersOutput)
                     .redirectError(parametersError)
                     .setVerbose(verbose);
