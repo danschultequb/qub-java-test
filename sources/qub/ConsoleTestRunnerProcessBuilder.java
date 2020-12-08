@@ -14,7 +14,7 @@ public class ConsoleTestRunnerProcessBuilder extends JavaProcessBuilderDecorator
      * @param process The Process to get the JavaProcessBuilder from.
      * @return The JavaProcessBuilder.
      */
-    public static Result<ConsoleTestRunnerProcessBuilder> create(DesktopProcess process)
+    public static Result<ConsoleTestRunnerProcessBuilder> create(RealDesktopProcess process)
     {
         PreCondition.assertNotNull(process, "process");
 

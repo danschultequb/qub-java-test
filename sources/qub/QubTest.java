@@ -14,7 +14,7 @@ public interface QubTest
     {
         PreCondition.assertNotNull(process, "process");
 
-        final CommandLineActions<DesktopProcess> actions = process.createCommandLineActions()
+        final CommandLineActions actions = process.createCommandLineActions()
             .setApplicationName(QubTest.applicationName)
             .setApplicationDescription(QubTest.applicationDescription);
 

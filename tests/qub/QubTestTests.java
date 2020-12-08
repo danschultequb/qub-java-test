@@ -25,11 +25,8 @@ public interface QubTestTests
 
                 runner.test("with --?", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     try (final FakeDesktopProcess process = FakeDesktopProcess.create("--?"))
                     {
-                        process.setOutputWriteStream(output);
-
                         QubTest.run(process);
 
                         test.assertEqual(
@@ -42,18 +39,15 @@ public interface QubTestTests
                                 "Actions:",
                                 "  logs:          Show the logs folder.",
                                 "  run (default): Run tests in a source code project."),
-                            Strings.getLines(output.getText().await()));
+                            Strings.getLines(process.getOutputWriteStream().getText().await()));
                         test.assertEqual(-1, process.getExitCode());
                     }
                 });
 
                 runner.test("with foo", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
                     try (final FakeDesktopProcess process = FakeDesktopProcess.create("foo"))
                     {
-                        process.setOutputWriteStream(output);
-
                         QubTest.run(process);
 
                         test.assertEqual(
@@ -68,7 +62,7 @@ public interface QubTestTests
                                 "Actions:",
                                 "  logs:          Show the logs folder.",
                                 "  run (default): Run tests in a source code project."),
-                            Strings.getLines(output.getText().await()));
+                            Strings.getLines(process.getOutputWriteStream().getText().await()));
                         test.assertEqual(-1, process.getExitCode());
                     }
                 });
