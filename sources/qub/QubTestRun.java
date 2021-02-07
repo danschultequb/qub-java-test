@@ -2,77 +2,39 @@ package qub;
 
 public interface QubTestRun
 {
-    String actionName = "run";
-    String actionDescription = "Run tests in a source code project.";
-
-    static CommandLineParameter<Folder> addFolderToTestParameter(CommandLineParameters parameters, DesktopProcess process)
+    static void addAction(CommandLineActions actions)
     {
-        PreCondition.assertNotNull(parameters, "parameters");
-        PreCondition.assertNotNull(process, "process");
+        PreCondition.assertNotNull(actions, "actions");
 
-        return parameters.addPositionalFolder("folder", process)
+        actions.addAction("run", QubTestRun::getParameters, QubTestRun::run)
+            .setDescription("Run tests in a source code project.")
+            .setDefaultAction();
+    }
+
+    /**
+     * Get the parameters for QubTest.run().
+     * @param process The Process that is running.
+     * @return The parameters for QubTest.run(), or null if QubTest.run() should not be run.
+     */
+    static QubTestRunParameters getParameters(DesktopProcess process, CommandLineAction action)
+    {
+        PreCondition.assertNotNull(process, "process");
+        PreCondition.assertNotNull(action, "action");
+
+        final CommandLineParameters parameters = action.createCommandLineParameters(process);
+        final CommandLineParameter<Folder> folderToTestParameter = parameters.addPositionalFolder("folder", process)
             .setValueName("<folder-to-test>")
             .setDescription("The folder to run tests in. Defaults to the current folder.");
-    }
-
-    static CommandLineParameter<String> addPatternParameter(CommandLineParameters parameters)
-    {
-        PreCondition.assertNotNull(parameters, "parameters");
-
-        return parameters.addString("pattern")
+        final CommandLineParameter<String> patternParameter = parameters.addString("pattern")
             .setValueName("<test-name-pattern>")
             .setDescription("The pattern to match against tests to determine if they will be run or not.");
-    }
-
-    static CommandLineParameter<Coverage> addCoverageParameter(CommandLineParameters parameters)
-    {
-        PreCondition.assertNotNull(parameters, "parameters");
-
-        return parameters.addEnum("coverage", QubTestRunParameters.getCoverageDefault(), Coverage.Sources)
+        final CommandLineParameter<Coverage> coverageParameter = parameters.addEnum("coverage", QubTestRunParameters.getCoverageDefault(), Coverage.Sources)
             .setValueRequired(false)
             .setValueName("<None|Sources|Tests|All>")
             .addAlias("c")
             .setDescription("Whether or not to collect code coverage information while running tests.");
-    }
-
-    static CommandLineParameterBoolean addTestJsonParameter(CommandLineParameters parameters)
-    {
-        PreCondition.assertNotNull(parameters, "parameters");
-
-        return parameters.addBoolean("testjson", QubTestRunParameters.getTestJsonDefault())
+        final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson", QubTestRunParameters.getTestJsonDefault())
             .setDescription("Whether or not to write the test results to a test.json file.");
-    }
-
-    /**
-     * Get the parameters for QubTest.run().
-     * @param process The Process that is running.
-     * @return The parameters for QubTest.run(), or null if QubTest.run() should not be run.
-     */
-    static QubTestRunParameters getParameters(DesktopProcess process)
-    {
-        PreCondition.assertNotNull(process, "process");
-
-        final Folder projectDataFolder = process.getQubProjectDataFolder().await();
-        return QubTestRun.getParameters(process, projectDataFolder);
-    }
-
-    /**
-     * Get the parameters for QubTest.run().
-     * @param process The Process that is running.
-     * @return The parameters for QubTest.run(), or null if QubTest.run() should not be run.
-     */
-    static QubTestRunParameters getParameters(DesktopProcess process, Folder projectDataFolder)
-    {
-        PreCondition.assertNotNull(process, "process");
-        PreCondition.assertNotNull(projectDataFolder, "projectDataFolder");
-
-        final CommandLineParameters parameters = process.createCommandLineParameters()
-            .setApplicationName(QubTest.getActionFullName(QubTestRun.actionName))
-            .setApplicationDescription(QubTestRun.actionDescription);
-        final CommandLineParameter<Folder> folderToTestParameter = QubTestRun.addFolderToTestParameter(parameters, process);
-        final CommandLineParameter<String> patternParameter = QubTestRun.addPatternParameter(parameters);
-        final CommandLineParameter<Coverage> coverageParameter = QubTestRun.addCoverageParameter(parameters);
-        final CommandLineParameterBoolean testJsonParameter = QubTestRun.addTestJsonParameter(parameters);
         final CommandLineParameterVerbose verboseParameter = parameters.addVerbose(process);
         final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(process, QubTest.class);
         final CommandLineParameterHelp helpParameter = parameters.addHelp();
@@ -92,6 +54,7 @@ public interface QubTestRun
             final VerboseCharacterToByteWriteStream verbose = verboseParameter.getVerboseCharacterToByteWriteStream().await();
             final boolean profiler = profilerParameter.getValue().await();
             final String jvmClassPath = process.getJVMClasspath().await();
+            final Folder projectDataFolder = process.getQubProjectDataFolder().await();
             final TypeLoader typeLoader = process.getTypeLoader();
 
             result = new QubTestRunParameters(output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, projectDataFolder, typeLoader)
@@ -122,7 +85,8 @@ public interface QubTestRun
         final boolean testJson = parameters.getTestJson();
         final Folder qubTestDataFolder = parameters.getQubTestDataFolder();
 
-        LogStreams logStreams = CommandLineLogsAction.addLogStream(qubTestDataFolder, parametersOutput, parametersVerbose);
+        LogStreams logStreams = CommandLineLogsAction.addLogStreamFromDataFolder(qubTestDataFolder, parametersOutput, parametersVerbose);
+        final File logFile = logStreams.getLogFile();
         CharacterToByteWriteStream output = logStreams.getOutput();
         VerboseCharacterToByteWriteStream verbose = logStreams.getVerbose();
 
@@ -213,7 +177,7 @@ public interface QubTestRun
                 consoleTestRunner.addProfiler(profiler);
                 consoleTestRunner.addVerbose(parametersVerbose.isVerbose());
                 consoleTestRunner.addTestJson(testJson);
-                consoleTestRunner.addLogFile(logStreams.getLogFile());
+                consoleTestRunner.addLogFile(logFile);
 
                 if (!Strings.isNullOrEmpty(pattern))
                 {
@@ -241,7 +205,7 @@ public interface QubTestRun
 
                 result = consoleTestRunner.run().await();
 
-                logStreams = CommandLineLogsAction.addLogStream(logStreams.getLogFile(), parametersOutput, parametersVerbose);
+                logStreams = CommandLineLogsAction.addLogStreamFromLogFile(logFile, parametersOutput, parametersVerbose);
                 output = logStreams.getOutput();
                 verbose = logStreams.getVerbose();
 

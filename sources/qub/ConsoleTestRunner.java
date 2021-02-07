@@ -68,7 +68,7 @@ public class ConsoleTestRunner implements TestRunner
         }
         else
         {
-            logStreams = CommandLineLogsAction.addLogStream(logFile, process.getOutputWriteStream(), parameters.getVerbose());
+            logStreams = CommandLineLogsAction.addLogStreamFromLogFile(logFile, process.getOutputWriteStream(), parameters.getVerbose());
             output = logStreams.getOutput();
             verbose = logStreams.getVerbose();
         }
