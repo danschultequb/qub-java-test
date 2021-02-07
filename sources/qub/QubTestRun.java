@@ -11,6 +11,44 @@ public interface QubTestRun
             .setDefaultAction();
     }
 
+    static CommandLineParameter<Folder> addFolderToTestParameter(CommandLineParameters parameters, DesktopProcess process)
+    {
+        PreCondition.assertNotNull(parameters, "parameters");
+        PreCondition.assertNotNull(process, "process");
+
+        return parameters.addPositionalFolder("folder", process)
+            .setValueName("<folder-to-test>")
+            .setDescription("The folder to run tests in. Defaults to the current folder.");
+    }
+
+    static CommandLineParameter<String> addPatternParameter(CommandLineParameters parameters)
+    {
+        PreCondition.assertNotNull(parameters, "parameters");
+
+        return parameters.addString("pattern")
+            .setValueName("<test-name-pattern>")
+            .setDescription("The pattern to match against tests to determine if they will be run or not.");
+    }
+
+    static CommandLineParameter<Coverage> addCoverageParameter(CommandLineParameters parameters)
+    {
+        PreCondition.assertNotNull(parameters, "parameters");
+
+        return parameters.addEnum("coverage", QubTestRunParameters.getCoverageDefault(), Coverage.Sources)
+            .setValueRequired(false)
+            .setValueName("<None|Sources|Tests|All>")
+            .addAlias("c")
+            .setDescription("Whether or not to collect code coverage information while running tests.");
+    }
+
+    static CommandLineParameterBoolean addTestJsonParameter(CommandLineParameters parameters)
+    {
+        PreCondition.assertNotNull(parameters, "parameters");
+
+        return parameters.addBoolean("testjson", QubTestRunParameters.getTestJsonDefault())
+            .setDescription("Whether or not to write the test results to a test.json file.");
+    }
+
     /**
      * Get the parameters for QubTest.run().
      * @param process The Process that is running.
@@ -22,19 +60,10 @@ public interface QubTestRun
         PreCondition.assertNotNull(action, "action");
 
         final CommandLineParameters parameters = action.createCommandLineParameters(process);
-        final CommandLineParameter<Folder> folderToTestParameter = parameters.addPositionalFolder("folder", process)
-            .setValueName("<folder-to-test>")
-            .setDescription("The folder to run tests in. Defaults to the current folder.");
-        final CommandLineParameter<String> patternParameter = parameters.addString("pattern")
-            .setValueName("<test-name-pattern>")
-            .setDescription("The pattern to match against tests to determine if they will be run or not.");
-        final CommandLineParameter<Coverage> coverageParameter = parameters.addEnum("coverage", QubTestRunParameters.getCoverageDefault(), Coverage.Sources)
-            .setValueRequired(false)
-            .setValueName("<None|Sources|Tests|All>")
-            .addAlias("c")
-            .setDescription("Whether or not to collect code coverage information while running tests.");
-        final CommandLineParameterBoolean testJsonParameter = parameters.addBoolean("testjson", QubTestRunParameters.getTestJsonDefault())
-            .setDescription("Whether or not to write the test results to a test.json file.");
+        final CommandLineParameter<Folder> folderToTestParameter = QubTestRun.addFolderToTestParameter(parameters, process);
+        final CommandLineParameter<String> patternParameter = QubTestRun.addPatternParameter(parameters);
+        final CommandLineParameter<Coverage> coverageParameter = QubTestRun.addCoverageParameter(parameters);
+        final CommandLineParameterBoolean testJsonParameter = QubTestRun.addTestJsonParameter(parameters);
         final CommandLineParameterVerbose verboseParameter = parameters.addVerbose(process);
         final CommandLineParameterProfiler profilerParameter = parameters.addProfiler(process, QubTest.class);
         final CommandLineParameterHelp helpParameter = parameters.addHelp();
