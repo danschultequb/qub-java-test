@@ -3,23 +3,26 @@ package qub;
 /**
  * The data of a test.json file.
  */
-public class TestJSON
+public class TestJSON extends JSONObjectWrapperBase
 {
     private static final String javaVersionPropertyName = "javaVersion";
     private static final String classFilesPropertyName = "classFiles";
 
-    private final JSONObject json;
-
     private TestJSON(JSONObject json)
     {
-        PreCondition.assertNotNull(json, "json");
-
-        this.json = json;
+        super(json);
     }
 
     public static TestJSON create()
     {
-        return new TestJSON(JSONObject.create());
+        return TestJSON.create(JSONObject.create());
+    }
+
+    public static TestJSON create(JSONObject rootObject)
+    {
+        PreCondition.assertNotNull(rootObject, "rootObject");
+
+        return new TestJSON(rootObject);
     }
 
     /**
@@ -32,7 +35,7 @@ public class TestJSON
         PreCondition.assertNotNull(testJsonFile, "testJsonFile");
 
         return JSON.parseObject(testJsonFile)
-            .then((JSONObject json) -> TestJSON.parse(json).await());
+            .then((JSONObject json) -> TestJSON.create(json));
     }
 
     public static Result<TestJSON> parse(ByteReadStream readStream)
@@ -41,7 +44,7 @@ public class TestJSON
         PreCondition.assertNotDisposed(readStream, "readStream.isDisposed()");
 
         return JSON.parseObject(readStream)
-            .then((JSONObject json) -> TestJSON.parse(json).await());
+            .then((JSONObject json) -> TestJSON.create(json));
     }
 
     public static Result<TestJSON> parse(CharacterReadStream readStream)
@@ -50,17 +53,7 @@ public class TestJSON
         PreCondition.assertNotDisposed(readStream, "readStream.isDisposed()");
 
         return JSON.parseObject(readStream)
-            .then((JSONObject json) -> TestJSON.parse(json).await());
-    }
-
-    public static Result<TestJSON> parse(JSONObject rootObject)
-    {
-        PreCondition.assertNotNull(rootObject, "rootObject");
-
-        return Result.create(() ->
-        {
-            return new TestJSON(rootObject);
-        });
+            .then((JSONObject json) -> TestJSON.create(json));
     }
 
     /**
@@ -130,40 +123,5 @@ public class TestJSON
             })
             .catchError(() -> Iterable.create())
             .await();
-    }
-
-    @Override
-    public boolean equals(Object rhs)
-    {
-        return rhs instanceof TestJSON && equals((TestJSON)rhs);
-    }
-
-    /**
-     * Get whether or not this TestJSON object is equal to the provided TestJSON object.
-     * @param rhs The TestJSON object to compare against this TestJSON object.
-     * @return Whether or not this TestJSON object is equal to the provided TestJSON object.
-     */
-    public boolean equals(TestJSON rhs)
-    {
-        return rhs != null &&
-            Comparer.equal(this.json, rhs.json);
-    }
-
-    @Override
-    public String toString()
-    {
-        return this.toString(JSONFormat.consise);
-    }
-
-    public String toString(JSONFormat format)
-    {
-        PreCondition.assertNotNull(format, "format");
-
-        return this.toJson().toString(format);
-    }
-
-    public JSONObject toJson()
-    {
-        return this.json;
     }
 }

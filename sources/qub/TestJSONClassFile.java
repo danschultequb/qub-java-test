@@ -109,8 +109,7 @@ public class TestJSONClassFile
 
     public int getPassedTestCount()
     {
-        return this.getPropertyValue().getNumber(TestJSONClassFile.passedTestCountPropertyName)
-            .then(Double::intValue)
+        return this.getPropertyValue().getInteger(TestJSONClassFile.passedTestCountPropertyName)
             .catchError(() -> 0)
             .await();
     }
@@ -126,8 +125,7 @@ public class TestJSONClassFile
 
     public int getSkippedTestCount()
     {
-        return this.getPropertyValue().getNumber(TestJSONClassFile.skippedTestCountPropertyName)
-            .then(Double::intValue)
+        return this.getPropertyValue().getInteger(TestJSONClassFile.skippedTestCountPropertyName)
             .catchError(() -> 0)
             .await();
     }
@@ -143,8 +141,7 @@ public class TestJSONClassFile
 
     public int getFailedTestCount()
     {
-        return this.getPropertyValue().getNumber(TestJSONClassFile.failedTestCountPropertyName)
-            .then(Double::intValue)
+        return this.getPropertyValue().getInteger(TestJSONClassFile.failedTestCountPropertyName)
             .catchError(() -> 0)
             .await();
     }
