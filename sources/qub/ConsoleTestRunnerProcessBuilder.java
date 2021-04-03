@@ -2,8 +2,6 @@ package qub;
 
 public class ConsoleTestRunnerProcessBuilder extends JavaProcessBuilderDecorator<ConsoleTestRunnerProcessBuilder> implements ConsoleTestRunnerArguments<ConsoleTestRunnerProcessBuilder>
 {
-    private Folder outputFolder;
-
     private ConsoleTestRunnerProcessBuilder(JavaProcessBuilder javaProcessBuilder)
     {
         super(javaProcessBuilder);
@@ -30,7 +28,7 @@ public class ConsoleTestRunnerProcessBuilder extends JavaProcessBuilderDecorator
     {
         PreCondition.assertNotNull(processFactory, "processFactory");
 
-        return Result.create(() ->
+        return Result.create2(() ->
         {
             return new ConsoleTestRunnerProcessBuilder(JavaProcessBuilder.create(processFactory).await());
         });

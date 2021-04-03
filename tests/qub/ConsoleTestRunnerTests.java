@@ -192,9 +192,10 @@ public interface ConsoleTestRunnerTests
 
                     final Skip skip1 = testRunner.skip();
                     test.assertNotNull(skip1);
-                    test.assertNull(skip1.getMessage());
+                    test.assertEqual("", skip1.getMessage());
                     final Skip skip2 = testRunner.skip();
-                    test.assertSame(skip1, skip2);
+                    test.assertEqual("", skip2.getMessage());
+                    test.assertNotSame(skip1, skip2);
                 }
             });
 
@@ -218,10 +219,11 @@ public interface ConsoleTestRunnerTests
 
                         final Skip skip1 = testRunner.skip(true);
                         test.assertNotNull(skip1);
-                        test.assertNull(skip1.getMessage());
+                        test.assertEqual("", skip1.getMessage());
                         final Skip skip2 = testRunner.skip(true);
                         test.assertNotNull(skip2);
-                        test.assertSame(skip1, skip2);
+                        test.assertEqual("", skip2.getMessage());
+                        test.assertNotSame(skip1, skip2);
                     }
                 });
             });

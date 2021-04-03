@@ -71,9 +71,9 @@ public interface TestJSONClassFileTests
                 runner.test("with non-null", (Test test) ->
                 {
                     final TestJSONClassFile classFile = TestJSONClassFile.create("hello.class");
-                    final DateTime now = test.getClock().getCurrentDateTime();
-                    test.assertSame(classFile, classFile.setLastModified(now));
-                    test.assertEqual(now, classFile.getLastModified());
+                    final DateTime dateTime = DateTime.create(3000, 10, 15);
+                    test.assertSame(classFile, classFile.setLastModified(dateTime));
+                    test.assertEqual(dateTime, classFile.getLastModified());
                 });
             });
 

@@ -83,10 +83,11 @@ public interface QubTestRun
             final VerboseCharacterToByteWriteStream verbose = verboseParameter.getVerboseCharacterToByteWriteStream().await();
             final boolean profiler = profilerParameter.getValue().await();
             final String jvmClassPath = process.getJVMClasspath().await();
+            final QubFolder qubFolder = process.getQubFolder().await();
             final Folder projectDataFolder = process.getQubProjectDataFolder().await();
             final TypeLoader typeLoader = process.getTypeLoader();
 
-            result = new QubTestRunParameters(output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, projectDataFolder, typeLoader)
+            result = new QubTestRunParameters(output, error, folderToTest, environmentVariables, processFactory, defaultApplicationLauncher, jvmClassPath, qubFolder, projectDataFolder, typeLoader)
                 .setPattern(patternParameter.removeValue().await())
                 .setCoverage(coverageParameter.removeValue().await())
                 .setTestJson(testJsonParameter.removeValue().await())
@@ -108,13 +109,13 @@ public interface QubTestRun
         final CharacterToByteWriteStream parametersError = parameters.getErrorWriteStream();
         final VerboseCharacterToByteWriteStream parametersVerbose = parameters.getVerbose();
         final DefaultApplicationLauncher defaultApplicationLauncher = parameters.getDefaultApplicationLauncher();
-        final EnvironmentVariables environmentVariables = parameters.getEnvironmentVariables();
         final ProcessFactory processFactory = parameters.getProcessFactory();
         final boolean profiler = parameters.getProfiler();
         final boolean testJson = parameters.getTestJson();
+        final QubFolder qubFolder = parameters.getQubFolder();
         final Folder qubTestDataFolder = parameters.getQubTestDataFolder();
 
-        LogStreams logStreams = CommandLineLogsAction.addLogStreamFromDataFolder(qubTestDataFolder, parametersOutput, parametersVerbose);
+        LogStreams logStreams = CommandLineLogsAction.getLogStreamsFromDataFolder(qubTestDataFolder, parametersOutput, parametersVerbose);
         final File logFile = logStreams.getLogFile();
         CharacterToByteWriteStream output = logStreams.getOutput();
         VerboseCharacterToByteWriteStream verbose = logStreams.getVerbose();
@@ -139,8 +140,6 @@ public interface QubTestRun
                 final ProjectJSON projectJson = ProjectJSON.parse(projectJsonFile).await();
                 final ProjectJSONJava projectJsonJava = projectJson.getJava();
 
-                final String qubHome = environmentVariables.get("QUB_HOME").await();
-                final QubFolder qubFolder = QubFolder.get(folderToTest.getFileSystem().getFolder(qubHome).await());
                 Iterable<ProjectSignature> dependencies = projectJsonJava.getDependencies();
                 if (!Iterable.isNullOrEmpty(dependencies))
                 {
@@ -234,7 +233,7 @@ public interface QubTestRun
 
                 result = consoleTestRunner.run().await();
 
-                logStreams = CommandLineLogsAction.addLogStreamFromLogFile(logFile, parametersOutput, parametersVerbose);
+                logStreams = CommandLineLogsAction.getLogStreamsFromLogFile(logFile, parametersOutput, parametersVerbose);
                 output = logStreams.getOutput();
                 verbose = logStreams.getVerbose();
 
@@ -388,7 +387,7 @@ public interface QubTestRun
     {
         PreCondition.assertNotNull(outputFolder, "outputFolder");
 
-        return Result.create(() ->
+        return Result.create2(() ->
         {
             final Iterable<File> allOutputFiles = outputFolder.getFilesRecursively()
                 .catchError(FolderNotFoundException.class, () -> Iterable.create())

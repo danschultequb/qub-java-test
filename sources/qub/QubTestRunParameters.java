@@ -26,9 +26,9 @@ public class QubTestRunParameters extends QubBuildCompileParameters
     public QubTestRunParameters(CharacterToByteWriteStream outputByteWriteStream, CharacterToByteWriteStream errorWriteStream,
                                 Folder folderToTest, EnvironmentVariables environmentVariables, ProcessFactory processFactory,
                                 DefaultApplicationLauncher defaultApplicationLauncher, String jvmClassPath,
-                                Folder qubTestDataFolder, TypeLoader typeLoader)
+                                QubFolder qubFolder, Folder qubTestDataFolder, TypeLoader typeLoader)
     {
-        super(outputByteWriteStream, folderToTest, environmentVariables, processFactory, QubTestRunParameters.getQubBuildDataFolder(folderToTest, typeLoader));
+        super(outputByteWriteStream, folderToTest, environmentVariables, processFactory, qubFolder, QubTestRunParameters.getQubBuildDataFolder(folderToTest, typeLoader));
 
         PreCondition.assertNotNull(outputByteWriteStream, "outputByteWriteStream");
         PreCondition.assertNotNull(errorWriteStream, "errorByteWriteStream");

@@ -17,7 +17,7 @@ public class ConsoleTestRunner implements TestRunner
         final CommandLineParameters parameters = process.createCommandLineParameters();
         final CommandLineParameter<PathPattern> patternParameter = parameters.add("pattern", (String argumentValue) ->
         {
-            return Result.success(Strings.isNullOrEmpty(argumentValue)
+            return Result.success2(Strings.isNullOrEmpty(argumentValue)
                 ? null
                 : PathPattern.parse(argumentValue));
         });
@@ -68,7 +68,7 @@ public class ConsoleTestRunner implements TestRunner
         }
         else
         {
-            logStreams = CommandLineLogsAction.addLogStreamFromLogFile(logFile, process.getOutputWriteStream(), parameters.getVerbose());
+            logStreams = CommandLineLogsAction.getLogStreamsFromLogFile(logFile, process.getOutputWriteStream(), parameters.getVerbose());
             output = logStreams.getOutput();
             verbose = logStreams.getVerbose();
         }
@@ -197,7 +197,7 @@ public class ConsoleTestRunner implements TestRunner
         PreCondition.assertNotNull(process, "process");
         PreCondition.assertNotNull(output, "output");
 
-        this.testRunner = new BasicTestRunner(process, pattern);
+        this.testRunner = BasicTestRunner.create(process, pattern);
 
         this.writeStream = IndentedCharacterToByteWriteStream.create(output);
 
@@ -242,17 +242,17 @@ public class ConsoleTestRunner implements TestRunner
         });
         this.testRunner.afterTestSuccess((Test test) ->
         {
-            this.writeStream.writeLine(" - Passed");
+            this.writeStream.writeLine(" - Passed").await();
         });
         this.testRunner.afterTestFailure((Test test, TestError failure) ->
         {
-            this.writeStream.writeLine(" - Failed");
+            this.writeStream.writeLine(" - Failed").await();
             this.writeFailure(failure);
         });
         this.testRunner.afterTestSkipped((Test test) ->
         {
             final String skipMessage = test.getSkipMessage();
-            this.writeStream.writeLine(" - Skipped" + (Strings.isNullOrEmpty(skipMessage) ? "" : ": " + skipMessage));
+            this.writeStream.writeLine(" - Skipped" + (Strings.isNullOrEmpty(skipMessage) ? "" : ": " + skipMessage)).await();
         });
         this.testRunner.afterTest((Test test) ->
         {
@@ -437,6 +437,24 @@ public class ConsoleTestRunner implements TestRunner
     }
 
     @Override
+    public <T1> void testGroup(String testGroupName, Skip skip, Function1<TestResources, Tuple1<T1>> resourcesFunction, Action1<T1> testGroupAction)
+    {
+        this.testRunner.testGroup(testGroupName, skip, resourcesFunction, testGroupAction);
+    }
+
+    @Override
+    public <T1, T2> void testGroup(String testGroupName, Skip skip, Function1<TestResources, Tuple2<T1, T2>> resourcesFunction, Action2<T1, T2> testGroupAction)
+    {
+        this.testRunner.testGroup(testGroupName, skip, resourcesFunction, testGroupAction);
+    }
+
+    @Override
+    public <T1, T2, T3> void testGroup(String testGroupName, Skip skip, Function1<TestResources, Tuple3<T1, T2, T3>> resourcesFunction, Action3<T1, T2, T3> testGroupAction)
+    {
+        this.testRunner.testGroup(testGroupName, skip, resourcesFunction, testGroupAction);
+    }
+
+    @Override
     public void testGroup(Class<?> testClass, Skip skip, Action0 testGroupAction)
     {
         this.testRunner.testGroup(testClass, skip, testGroupAction);
@@ -452,6 +470,24 @@ public class ConsoleTestRunner implements TestRunner
     public void test(String testName, Skip skip, Action1<Test> testAction)
     {
         this.testRunner.test(testName, skip, testAction);
+    }
+
+    @Override
+    public <T1> void test(String testName, Skip skip, Function1<TestResources, Tuple1<T1>> resourcesFunction, Action2<Test, T1> testAction)
+    {
+        this.testRunner.test(testName, skip, resourcesFunction, testAction);
+    }
+
+    @Override
+    public <T1, T2> void test(String testName, Skip skip, Function1<TestResources, Tuple2<T1, T2>> resourcesFunction, Action3<Test, T1, T2> testAction)
+    {
+        this.testRunner.test(testName, skip, resourcesFunction, testAction);
+    }
+
+    @Override
+    public <T1, T2, T3> void test(String testName, Skip skip, Function1<TestResources, Tuple3<T1, T2, T3>> resourcesFunction, Action4<Test, T1, T2, T3> testAction)
+    {
+        this.testRunner.test(testName, skip, resourcesFunction, testAction);
     }
 
     @Override
